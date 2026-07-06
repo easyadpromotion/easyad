@@ -31,13 +31,16 @@
       overflow: hidden;
     }
 
+    /* HEADER */
     .header { background: #ff9800; padding: 18px 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(255,152,0,0.2); z-index: 10; flex-shrink: 0; }
     .back-btn { font-size: 22px; text-decoration: none; color: white; margin-right: 10px; }
     .page-title { font-size: 15px; font-weight: 700; }
     .wallet-pill { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 
+    /* AD LIST */
     .ad-list { padding: 15px; overflow-y: auto; padding-bottom: 90px; flex: 1; }
 
+    /* AD CARD */
     .ad-card { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; }
     .ad-img-box { width: 100%; height: 190px; position: relative; background: #f5f5f5; }
     .ad-img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -54,6 +57,7 @@
     .earn-btn { background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 3px 10px rgba(76,175,80,0.3); font-family:'Poppins',sans-serif; }
     .view-again-btn { background: #fff3e0; color: #ff9800; border: 1px solid #ffcc80; padding: 7px 13px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 10px; white-space: nowrap; flex-shrink: 0; font-family:'Poppins',sans-serif; }
 
+    /* ENGAGE ROW */
     .engage-row { display: flex; align-items: center; justify-content: space-around; padding: 8px 10px 12px; border-top: 1px solid #f5f5f5; gap: 2px; }
     .eng-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; flex: 1; background: none; border: none; font-family: 'Poppins', sans-serif; transition: transform 0.15s; padding: 0; }
     .eng-btn:active { transform: scale(0.88); }
@@ -66,6 +70,9 @@
     .eng-web     .eng-icon { background: #e8f5e9; }
     .eng-map     .eng-icon { background: #fce4ec; }
 
+    /* ══ FULL SCREEN OVERLAY ══
+       Layout: [close btn top-right] → [16:9 image] → [title+meta] → [desc] → [earn zone]
+       No text is cut off — everything is in flow below the image */
     .ad-overlay {
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -75,6 +82,7 @@
       overflow: hidden;
     }
 
+    /* ✅ TOP BAR — close button always visible at top */
     .ov-topbar {
       position: relative;
       background: #1a1a1a;
@@ -98,6 +106,7 @@
       display: flex; align-items: center; justify-content: center;
     }
 
+    /* ✅ IMAGE — 16:9 ratio, below topbar, never overlaps text */
     .ov-img-section {
       width: 100%;
       aspect-ratio: 16 / 9;
@@ -125,6 +134,7 @@
       object-fit: cover; object-position: center;
       z-index: 2; display: block;
     }
+    /* Category badge over image */
     .ov-cat-badge {
       position: absolute; bottom: 10px; left: 12px;
       background: rgba(255,152,0,0.92); color: white;
@@ -133,12 +143,14 @@
       text-transform: uppercase; letter-spacing: 0.5px;
     }
 
+    /* ✅ WHITE CONTENT AREA below image — title, desc, earn */
     .ov-content {
       flex: 1; background: white;
       display: flex; flex-direction: column;
       overflow: hidden; min-height: 0;
     }
 
+    /* ✅ Title — always fully visible, not cut */
     .ov-title-area {
       padding: 12px 16px 8px;
       border-bottom: 1px solid #f0f0f0;
@@ -147,6 +159,7 @@
     .ov-title {
       font-size: 14px; font-weight: 800; color: #1a1a1a;
       line-height: 1.4; margin-bottom: 5px;
+      /* ✅ Allow wrapping — no clamp that cuts text */
       display: block;
       word-break: break-word;
     }
@@ -156,9 +169,11 @@
     .ov-verified { font-size: 10px; color: #aaa; }
     .ov-already-tag { background: #fff3e0; color: #ff9800; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #ffcc80; }
 
+    /* ✅ Description — scrollable, never clips title */
     .ov-desc-area { flex: 1; overflow-y: auto; padding: 10px 16px 6px; min-height: 0; }
     .ov-desc { font-size: 12px; color: #555; line-height: 1.7; word-break: break-word; }
 
+    /* ✅ Earn zone — always at bottom */
     .ov-earn-zone {
       background: white; border-top: 1px solid #f0f0f0;
       padding: 10px 16px 14px;
@@ -189,9 +204,11 @@
       font-family:'Poppins',sans-serif;
     }
 
+    /* BACKDROP */
     .modal-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 150; display: none; }
     .modal-backdrop.open { display: block; }
 
+    /* BOTTOM SHEET */
     .bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; z-index: 200; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); display: none; flex-direction: column; }
     .bottom-sheet.open { display: flex; }
     .sheet-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 14px auto 4px; flex-shrink: 0; }
@@ -228,7 +245,7 @@
     .loc-body { padding: 10px 20px 30px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
     .loc-map-frame { width: 100%; height: 200px; border-radius: 16px; border: none; }
     .loc-address { background: #fce4ec; border-radius: 12px; padding: 12px 16px; width: 100%; display: flex; align-items: center; gap: 10px; }
-    .loc-address-text { font-size: 12px; color: #333; font-weight: 600; line-height: 1.4; word-break: break-word; }
+    .loc-address-text { font-size: 12px; color: #333; font-weight: 600; line-height: 1.4; }
     .open-maps-btn { background: #fce4ec; color: #e53935; border: none; padding: 10px 0; border-radius: 20px; width: 100%; font-family:'Poppins',sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
     .loc-not-provided { text-align: center; padding: 20px 10px; }
     .loc-not-icon  { font-size: 48px; margin-bottom: 10px; }
@@ -250,6 +267,7 @@
 <body onload="loadAds()">
 <div class="mobile-screen">
 
+  <!-- HEADER -->
   <div class="header">
     <div style="display:flex;align-items:center;">
       <a href="home.html" class="back-btn">←</a>
@@ -258,21 +276,28 @@
     <div class="wallet-pill">💰 ₹<span id="headerBalance">0.00</span></div>
   </div>
 
+  <!-- AD LIST -->
   <div class="ad-list" id="adContainer"></div>
 
+  <!-- ✅ FULL SCREEN AD OVERLAY — fixed layout, no text cutting -->
   <div class="ad-overlay" id="adOverlay">
+
+    <!-- ✅ TOP BAR: title + close button — always at top, never cut -->
     <div class="ov-topbar">
       <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
       <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
     </div>
 
+    <!-- ✅ IMAGE: 16:9 ratio, below top bar -->
     <div class="ov-img-section">
       <div class="ov-img-bg" id="overlayBg"></div>
-      <img src="" class="full-img" id="overlayImg" alt="Ad image">
+      <img src="" class="full-img" id="overlayImg" alt="">
       <div class="ov-cat-badge" id="ovCat">General</div>
     </div>
 
+    <!-- ✅ WHITE CONTENT: title + desc + earn — all in flow, nothing cut -->
     <div class="ov-content">
+
       <div class="ov-title-area">
         <div class="ov-title" id="ovTitle">Loading…</div>
         <div class="ov-meta">
@@ -299,11 +324,14 @@
           Close
         </button>
       </div>
+
     </div>
   </div>
 
+  <!-- BACKDROP -->
   <div class="modal-backdrop" id="backdrop" onclick="closeAllModals()"></div>
 
+  <!-- SHARE SHEET -->
   <div class="bottom-sheet" id="shareSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -322,6 +350,7 @@
     </div>
   </div>
 
+  <!-- REFER SHEET -->
   <div class="bottom-sheet" id="referSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -336,10 +365,11 @@
         <div class="refer-code" id="referCodeDisplay">EAP0000</div>
       </div>
       <button class="full-btn btn-orange" onclick="copyReferCode()">📋 Copy Code</button>
-      <button class="full-btn btn-wa" onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
+      <button class="full-btn btn-wa"     onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
     </div>
   </div>
 
+  <!-- COMMENT SHEET -->
   <div class="bottom-sheet" id="commentSheet" style="max-height:70%;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -355,6 +385,7 @@
     </div>
   </div>
 
+  <!-- LOCATION SHEET -->
   <div class="bottom-sheet" id="locationSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
@@ -364,232 +395,133 @@
     <div class="loc-body" id="locBody"></div>
   </div>
 
+  <!-- TOAST -->
   <div class="toast" id="toast"></div>
 
+  <!-- BOTTOM NAV -->
   <div class="bottom-nav">
-    <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
+    <a href="home.html"      class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
     <a href="frame-ads.html" class="nav-item active"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
-    <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
-    <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+    <a href="wallet.html"    class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
+    <a href="settings.html"  class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
   </div>
 
 </div>
 
 <script>
-  var activeAdId = null, activeAdObj = null, canEarn = false, timerInterval = null;
-  var _shareAdId = null, _referCode = null, _commentAdId = null;
-  var activeMobile = localStorage.getItem("activeUser") || "";
-
-  function safeJSONParse(value, fallback){
-    try {
-      return value ? JSON.parse(value) : fallback;
-    } catch (e) {
-      return fallback;
-    }
-  }
-
-  function safeText(value, fallback){
-    if (value === null || value === undefined) return fallback || "";
-    return String(value);
-  }
-
-  function escapeHtml(str){
-    return safeText(str, "").replace(/[&<>"']/g, function(ch){
-      return ({
-        "&": "&amp;",
-        "<": "&lt;",
-        ">": "&gt;",
-        '"': "&quot;",
-        "'": "&#39;"
-      })[ch];
-    });
-  }
-
-  function escapeAttr(str){
-    return escapeHtml(str).replace(/`/g, "&#96;");
-  }
-
-  function getUser(){
-    return safeJSONParse(localStorage.getItem("userProfile_" + activeMobile), {
-      wallet: 0,
-      viewedAds: [],
-      adHistory: [],
-      name: ""
-    });
-  }
-
-  var user = getUser();
-
-  function persistUser(){
-    localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
-  }
-
-  function getStoredAds(){
-    var vendorAds = safeJSONParse(localStorage.getItem("vendorCampaigns"), null);
-    var frameAds = safeJSONParse(localStorage.getItem("all_frame_ads"), []);
-    return Array.isArray(vendorAds) ? vendorAds : frameAds;
-  }
-
-  function getAds(){
-    return Array.isArray(window._frameAds) ? window._frameAds : [];
-  }
-
-  function normalizeAd(ad){
-    ad = ad || {};
-    return {
-      id: safeText(ad.id, ""),
-      type: safeText(ad.type, ""),
-      status: safeText(ad.status, ""),
-      image: safeText(ad.image, "").trim(),
-      title: safeText(ad.title || ad.name, "Untitled Ad"),
-      desc: safeText(ad.desc || ad.description, "No description."),
-      category: safeText(ad.category, "General"),
-      webLink: safeText(ad.webLink || ad.website, "").trim(),
-      mapLink: safeText(ad.mapLink || ad.location || ad.address, "").trim(),
-      referCode: safeText(ad.referCode || ("EAP" + safeText(ad.id, "").slice(-4).toUpperCase()), "EAP0000"),
-      raw: ad
-    };
-  }
+  var activeAdId=null, activeAdObj=null, canEarn=false, timerInterval=null;
+  var _shareAdId=null, _referCode=null, _commentAdId=null;
+  var activeMobile = localStorage.getItem("activeUser");
+  var user = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {wallet:0,viewedAds:[],adHistory:[]};
 
   function loadAds(){
-    user = getUser();
-
-    var headerBalance = document.getElementById("headerBalance");
-    if (headerBalance) {
-      headerBalance.innerText = parseFloat(user.wallet || 0).toFixed(2);
-    }
-
-    var allAds = getStoredAds();
-    var frameAds = Array.isArray(allAds) ? allAds.filter(function(a){
-      return a && a.type === "Frame" && a.status !== "Rejected";
-    }) : [];
-
-    window._frameAds = frameAds;
+    document.getElementById("headerBalance").innerText = parseFloat(user.wallet||0).toFixed(2);
+    var allAds = JSON.parse(localStorage.getItem("vendorCampaigns"))
+              || JSON.parse(localStorage.getItem("all_frame_ads")) || [];
+    var frameAds = allAds.filter(function(a){ return a.type==="Frame" && a.status!=="Rejected"; });
     var container = document.getElementById("adContainer");
-    if (!container) return;
-
-    if (!frameAds.length){
-      container.innerHTML = '<div class="empty-msg">📭 No active frame ads found.<br>Check back soon!</div>';
+    if(!frameAds.length){
+      container.innerHTML='<div class="empty-msg">📭 No active frame ads found.<br>Check back soon!</div>';
       return;
     }
-
+    window._frameAds = frameAds;
     container.innerHTML = "";
-    var viewed = Array.isArray(user.viewedAds) ? user.viewedAds : [];
+    var viewed = user.viewedAds||[];
 
-    frameAds.forEach(function(rawAd){
-      var ad = normalizeAd(rawAd);
+    frameAds.forEach(function(ad){
       var isClaimed = viewed.indexOf(ad.id) !== -1;
+      var img      = ad.image||"";
+      var title    = ad.title||ad.name||"Untitled Ad";
+      var desc     = ad.desc||ad.description||"No description.";
+      var category = ad.category||"General";
+      var webLink  = ad.webLink||ad.website||"";
+      var mapLink  = ad.mapLink||ad.location||ad.address||"";
+      var refCode  = ad.referCode||("EAP"+String(ad.id).slice(-4).toUpperCase());
 
-      var card = document.createElement("div");
-      card.className = "ad-card";
-      card.id = "card_" + ad.id;
+      var imgHtml = img
+        ? '<img src="'+img+'" class="ad-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
+          +'<div class="img-placeholder" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;">📷<span style="font-size:11px">No Image</span></div>'
+        : '<div class="img-placeholder">📷<span style="font-size:11px">No Image</span></div>';
 
-      var webDisabledClass = ad.webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
+      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">₹0.70 Reward</span>';
+      var btnHtml   = isClaimed
+        ? '<button class="view-again-btn" onclick="openViewAgain(\''+ad.id+'\')">👁 View Again</button>'
+        : '<button class="earn-btn" onclick="openAd(\''+ad.id+'\')">Earn ₹0.70</button>';
 
-      card.innerHTML =
-        '<div class="ad-img-box">' +
-          (ad.image
-            ? '<img src="' + escapeAttr(ad.image) + '" class="ad-img" alt="Ad image" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
-              '<div class="img-placeholder" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;">📷<span style="font-size:11px">No Image</span></div>' +
-              '<div class="black-overlay"><div class="overlay-desc">' + escapeHtml(ad.desc) + '</div><div class="overlay-cat">' + escapeHtml(ad.category) + ' • Verified</div></div>'
-            : '<div class="img-placeholder">📷<span style="font-size:11px">No Image</span></div>'
-          ) +
-        '</div>' +
-        '<div class="action-row">' +
-          '<div style="flex:1;margin-right:10px;">' +
-            '<div class="ad-title-txt">' + escapeHtml(ad.title) + '</div>' +
-            '<div class="badges-row">' + (isClaimed
-              ? '<span class="claimed-tag">✔ Claimed</span>'
-              : '<span class="reward-tag">₹0.70 Reward</span>') +
-            '</div>' +
-          '</div>' +
-          (isClaimed
-            ? '<button class="view-again-btn" data-action="view-again">👁 View Again</button>'
-            : '<button class="earn-btn" data-action="open-ad">Earn ₹0.70</button>') +
-        '</div>' +
-        '<div class="engage-row">' +
-          '<button class="eng-btn eng-share" data-action="share"><div class="eng-icon">🔗</div><span class="eng-label">Share</span></button>' +
-          '<button class="eng-btn eng-refer" data-action="refer"><div class="eng-icon">🎁</div><span class="eng-label">Refer</span></button>' +
-          '<button class="eng-btn eng-comment" data-action="comment"><div class="eng-icon">💬</div><span class="eng-label">Comments</span></button>' +
-          '<button class="' + webDisabledClass + '" data-action="web"><div class="eng-icon">🌐</div><span class="eng-label">Website</span></button>' +
-          '<button class="eng-btn eng-map" data-action="map"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>' +
-        '</div>';
+      var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
+      var webClick = webLink ? 'onclick="openWeb(\''+encodeURIComponent(webLink)+'\')"' : "";
 
-      card.querySelector('[data-action="open-ad"]')?.addEventListener("click", function(){ openAd(ad.id); });
-      card.querySelector('[data-action="view-again"]')?.addEventListener("click", function(){ openViewAgain(ad.id); });
-      card.querySelector('[data-action="share"]').addEventListener("click", function(){ openShare(ad.id); });
-      card.querySelector('[data-action="refer"]').addEventListener("click", function(){ openRefer(ad.id, ad.referCode); });
-      card.querySelector('[data-action="comment"]').addEventListener("click", function(){ openComments(ad.id); });
-      card.querySelector('[data-action="web"]').addEventListener("click", function(){
-        if (ad.webLink) openWeb(ad.webLink);
-      });
-      card.querySelector('[data-action="map"]').addEventListener("click", function(){ openLocation(ad.mapLink); });
-
-      container.appendChild(card);
+      container.innerHTML +=
+        '<div class="ad-card" id="card_'+ad.id+'">'
+          +'<div class="ad-img-box">'+imgHtml
+            +(img?'<div class="black-overlay"><div class="overlay-desc">'+desc+'</div><div class="overlay-cat">'+category+' • Verified</div></div>':'')
+          +'</div>'
+          +'<div class="action-row">'
+            +'<div style="flex:1;margin-right:10px;"><div class="ad-title-txt">'+title+'</div><div class="badges-row">'+badgeHtml+'</div></div>'
+            +btnHtml
+          +'</div>'
+          +'<div class="engage-row">'
+            +'<button class="eng-btn eng-share" onclick="openShare(\''+ad.id+'\')"><div class="eng-icon">🔗</div><span class="eng-label">Share</span></button>'
+            +'<button class="eng-btn eng-refer" onclick="openRefer(\''+ad.id+'\',\''+refCode+'\')"><div class="eng-icon">🎁</div><span class="eng-label">Refer</span></button>'
+            +'<button class="eng-btn eng-comment" onclick="openComments(\''+ad.id+'\')"><div class="eng-icon">💬</div><span class="eng-label">Comments</span></button>'
+            +'<button class="'+webClass+'" '+webClick+'><div class="eng-icon">🌐</div><span class="eng-label">Website</span></button>'
+            +'<button class="eng-btn eng-map" onclick="openLocation(\''+encodeURIComponent(mapLink)+'\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
+          +'</div>'
+        +'</div>';
     });
   }
 
+  // ✅ Set both image and blurred bg
   function setOverlayImage(imgSrc){
-    var overlayImg = document.getElementById("overlayImg");
-    var overlayBg = document.getElementById("overlayBg");
-    if (overlayImg) overlayImg.src = imgSrc || "";
-    if (overlayBg) overlayBg.style.backgroundImage = imgSrc ? "url('" + imgSrc.replace(/'/g, "%27") + "')" : "none";
+    document.getElementById("overlayImg").src = imgSrc||"";
+    document.getElementById("overlayBg").style.backgroundImage = imgSrc ? "url('"+imgSrc+"')" : "none";
   }
 
-  function fillOverlay(rawAd){
-    var ad = normalizeAd(rawAd);
-    setOverlayImage(ad.image);
-    document.getElementById("ovTopTitle").innerText = ad.title;
-    document.getElementById("ovTitle").innerText = ad.title;
-    document.getElementById("ovDesc").innerText = ad.desc;
-    document.getElementById("ovCat").innerText = ad.category;
-    document.getElementById("ovCatLabel").innerText = ad.category;
-    document.getElementById("overlayImg").alt = ad.title;
+  // ✅ Fill ALL overlay fields including top bar title
+  function fillOverlay(ad){
+    var title = ad.title||ad.name||"Ad";
+    var cat   = ad.category||"General";
+    setOverlayImage(ad.image||"");
+    document.getElementById("ovTopTitle").innerText  = title;  // top bar
+    document.getElementById("ovTitle").innerText     = title;  // content area
+    document.getElementById("ovDesc").innerText      = ad.desc||ad.description||"";
+    document.getElementById("ovCat").innerText       = cat;
+    document.getElementById("ovCatLabel").innerText  = cat;
   }
 
   function openAd(id){
-    var ad = getAds().find(function(a){ return safeText(a.id, "") === safeText(id, ""); });
-    if (!ad) return;
-
-    activeAdId = id;
-    activeAdObj = ad;
-    canEarn = true;
+    var ad = getAds().find(function(a){ return a.id===id; });
+    if(!ad) return;
+    activeAdId=id; activeAdObj=ad; canEarn=true;
     fillOverlay(ad);
-
-    document.getElementById("ovBadge").style.display = "none";
-    document.getElementById("timerWrap").style.display = "flex";
-    document.getElementById("claimBtn").style.display = "none";
-    document.getElementById("closeBtn").style.display = "none";
-    document.getElementById("timerDisplay").innerText = "10";
-    document.getElementById("adOverlay").style.display = "flex";
-
+    document.getElementById("ovBadge").style.display    = "none";
+    document.getElementById("timerWrap").style.display  = "flex";
+    document.getElementById("claimBtn").style.display   = "none";
+    document.getElementById("closeBtn").style.display   = "none";
+    document.getElementById("timerDisplay").innerText   = "10";
+    document.getElementById("adOverlay").style.display  = "flex";
     clearInterval(timerInterval);
     var t = 10;
     timerInterval = setInterval(function(){
-      t--;
-      document.getElementById("timerDisplay").innerText = String(t);
-      if (t <= 0){
+      t--; document.getElementById("timerDisplay").innerText = t;
+      if(t <= 0){
         clearInterval(timerInterval);
         document.getElementById("timerWrap").style.display = "none";
-        document.getElementById("claimBtn").style.display = "block";
+        document.getElementById("claimBtn").style.display  = "block";
       }
     }, 1000);
   }
 
   function openViewAgain(id){
-    var ad = getAds().find(function(a){ return safeText(a.id, "") === safeText(id, ""); });
-    if (!ad) return;
-
-    activeAdId = id;
-    activeAdObj = ad;
-    canEarn = false;
+    var ad = getAds().find(function(a){ return a.id===id; });
+    if(!ad) return;
+    activeAdId=id; activeAdObj=ad; canEarn=false;
     fillOverlay(ad);
-
-    document.getElementById("ovBadge").style.display = "inline-block";
-    document.getElementById("timerWrap").style.display = "none";
-    document.getElementById("claimBtn").style.display = "none";
-    document.getElementById("closeBtn").style.display = "block";
-    document.getElementById("adOverlay").style.display = "flex";
+    document.getElementById("ovBadge").style.display    = "inline-block";
+    document.getElementById("timerWrap").style.display  = "none";
+    document.getElementById("claimBtn").style.display   = "none";
+    document.getElementById("closeBtn").style.display   = "block";
+    document.getElementById("adOverlay").style.display  = "flex";
     clearInterval(timerInterval);
   }
 
@@ -599,313 +531,100 @@
   }
 
   function claimReward(){
-    if (!canEarn || !activeAdId) return;
-
-    canEarn = false;
-    user = getUser();
-    user.wallet = parseFloat(user.wallet || 0) + 0.70;
-    user.adHistory = Array.isArray(user.adHistory) ? user.adHistory : [];
-    user.viewedAds = Array.isArray(user.viewedAds) ? user.viewedAds : [];
-
-    user.adHistory.push({
-      id: activeAdId,
-      name: activeAdObj ? safeText(activeAdObj.title || activeAdObj.name, activeAdId) : activeAdId,
-      type: "Frame",
-      amount: 0.70,
-      date: new Date().toLocaleDateString(),
-      time: new Date().toLocaleTimeString()
-    });
-
-    if (user.viewedAds.indexOf(activeAdId) === -1) {
-      user.viewedAds.push(activeAdId);
-    }
-
-    persistUser();
+    if(!canEarn) return; canEarn=false;
+    user.wallet = parseFloat(user.wallet||0)+0.70;
+    user.adHistory = user.adHistory||[];
+    user.adHistory.push({ id:activeAdId, name:activeAdObj?(activeAdObj.title||activeAdObj.name):activeAdId, type:"Frame", amount:0.70, date:new Date().toLocaleDateString(), time:new Date().toLocaleTimeString() });
+    user.viewedAds = user.viewedAds||[];
+    if(user.viewedAds.indexOf(activeAdId)===-1) user.viewedAds.push(activeAdId);
+    localStorage.setItem("userProfile_"+activeMobile, JSON.stringify(user));
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
-    closeOverlay();
-    loadAds();
-    showToast("₹0.70 Credited! 🎉");
+    closeOverlay(); loadAds(); showToast("₹0.70 Credited! 🎉");
   }
 
-  function openShare(adId){
-    _shareAdId = adId;
-    openSheet("shareSheet");
-  }
+  function openShare(adId){ _shareAdId=adId; openSheet("shareSheet"); }
 
   function doShare(platform){
-    var ad = normalizeAd(getAds().find(function(a){ return safeText(a.id, "") === safeText(_shareAdId, ""); }) || {});
-    var adTitle = ad.title || "EAP Ad";
-    var adDesc = ad.desc || "";
-    var webLink = ad.webLink;
-    var url = webLink ? (webLink.startsWith("http") ? webLink : "https://" + webLink) : "https://www.easyadpromotion.com";
-    var shortMsg = "🌟 " + adTitle + "\n💰 Earn by watching ads on EAP!\n👉 " + url;
-    var fullMsg = "🌟 " + adTitle + "\n\n" + adDesc + "\n\n💰 Earn money watching ads on EAP!\n👉 " + url;
+    var ad=getAds().find(function(a){ return a.id===_shareAdId; })||{};
+    var adTitle=ad.title||ad.name||"EAP Ad";
+    var adDesc=ad.desc||ad.description||"";
+    var webLink=(ad.webLink||ad.website||"").trim();
+    var url=webLink?(webLink.startsWith("http")?webLink:"https://"+webLink):"www.easyadpromotion.com";
+    var shortMsg="🌟 "+adTitle+"\n💰 Earn by watching ads on EAP!\n👉 "+url;
+    var fullMsg="🌟 "+adTitle+"\n\n"+adDesc+"\n\n💰 Earn money watching ads on EAP!\n👉 "+url;
     closeAllModals();
 
-    function doCopy(text, msg){
-      var ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      try {
-        document.execCommand("copy");
-        if (msg) showToast(msg);
-      } catch (e) {
-        showToast("Please copy manually");
-      }
-      document.body.removeChild(ta);
-    }
+    function doCopy(text,msg){ var ta=document.createElement("textarea"); ta.value=text; ta.style.cssText="position:fixed;top:0;left:0;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand("copy"); showToast(msg||"Copied ✅"); }catch(e){ showToast("Please copy manually"); } document.body.removeChild(ta); }
+    function openViaLink(href){ var a=document.createElement("a"); a.href=href; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); }
 
-    function openViaLink(href){
-      var a = document.createElement("a");
-      a.href = href;
-      a.target = "_blank";
-      a.rel = "noopener";
-      a.style.display = "none";
-      document.body.appendChild(a);
-      a.click();
-      setTimeout(function(){ document.body.removeChild(a); }, 300);
-    }
-
-    var urls = {
-      whatsapp: "https://api.whatsapp.com/send?text=" + encodeURIComponent(fullMsg),
-      telegram: "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent("🌟 " + adTitle),
-      facebook: "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url),
-      twitter: "https://twitter.com/intent/tweet?text=" + encodeURIComponent("🌟 " + adTitle + " " + url),
-      instagram: "https://www.instagram.com/",
-      sms: "sms:?body=" + encodeURIComponent(shortMsg),
-      email: "mailto:?subject=" + encodeURIComponent("Check this ad: " + adTitle) + "&body=" + encodeURIComponent(fullMsg)
-    };
-
-    if (platform === "copy"){
-      doCopy(shortMsg, "Link Copied! 🔗");
-      return;
-    }
-    if (platform === "sms"){
-      openViaLink(urls.sms);
-      showToast("Opening SMS… 📱");
-      return;
-    }
-    if (platform === "email"){
-      openViaLink(urls.email);
-      showToast("Opening Email… 📧");
-      return;
-    }
-
-    doCopy(fullMsg, "");
-    showSharePopup(platform, urls[platform], adTitle, fullMsg);
+    var urls={ whatsapp:"https://api.whatsapp.com/send?text="+encodeURIComponent(fullMsg), telegram:"https://t.me/share/url?url="+encodeURIComponent(url)+"&text="+encodeURIComponent("🌟 "+adTitle), facebook:"https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(url), twitter:"https://twitter.com/intent/tweet?text="+encodeURIComponent("🌟 "+adTitle+" "+url), instagram:"https://www.instagram.com/", sms:"sms:?body="+encodeURIComponent(shortMsg), email:"mailto:?subject="+encodeURIComponent("Check this ad: "+adTitle)+"&body="+encodeURIComponent(fullMsg) };
+    if(platform==="copy"){ doCopy(shortMsg,"Link Copied! 🔗"); return; }
+    if(platform==="sms"){ openViaLink(urls.sms); showToast("Opening SMS… 📱"); return; }
+    if(platform==="email"){ openViaLink(urls.email); showToast("Opening Email… 📧"); return; }
+    doCopy(fullMsg,""); showSharePopup(platform,urls[platform],adTitle,fullMsg);
   }
 
-  function showSharePopup(platform, shareUrl, adTitle, message){
-    var old = document.getElementById("_sp");
-    if (old) old.remove();
-
-    var meta = {
-      whatsapp: {icon:"💬",name:"WhatsApp",color:"#25D366",bg:"#dcf8c6"},
-      telegram: {icon:"✈️",name:"Telegram",color:"#0088cc",bg:"#d9efff"},
-      facebook: {icon:"👍",name:"Facebook",color:"#1877F2",bg:"#e7eeff"},
-      twitter: {icon:"🐦",name:"Twitter/X",color:"#1DA1F2",bg:"#e0f7fa"},
-      instagram: {icon:"📸",name:"Instagram",color:"#E1306C",bg:"#fce4ec"}
-    };
-    var m = meta[platform] || {icon:"📤",name:platform,color:"#ff9800",bg:"#fff3e0"};
-    var div = document.createElement("div");
-    div.id = "_sp";
-    div.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.72);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;";
-    div.innerHTML =
-      '<div style="background:white;border-radius:22px;width:100%;max-width:310px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">' +
-        '<div style="background:' + m.bg + ';padding:20px;text-align:center;"><div style="font-size:44px;">' + m.icon + '</div><div style="font-size:16px;font-weight:800;color:#333;margin-top:6px;">Share on ' + escapeHtml(m.name) + '</div></div>' +
-        '<div style="padding:14px 18px 0;"><div style="font-size:11px;color:#555;line-height:1.9;background:#f8f8f8;border-radius:12px;padding:10px 14px;">✅ Message copied to clipboard<br>👇 Tap <b>Open ' + escapeHtml(m.name) + '</b> below<br>📋 Paste the message &amp; send</div></div>' +
-        '<div style="padding:10px 18px 0;"><div style="font-size:9px;font-weight:700;color:#aaa;margin-bottom:4px;text-transform:uppercase;">Copied Message Preview</div><div style="background:#f0f0f0;border-radius:10px;padding:8px 12px;font-size:10px;color:#666;line-height:1.5;max-height:60px;overflow:hidden;">' + escapeHtml(message.substring(0,130)) + '…</div></div>' +
-        '<div style="padding:14px 18px 20px;display:flex;flex-direction:column;gap:8px;"><a href="' + escapeAttr(shareUrl) + '" target="_blank" rel="noopener" style="display:block;background:' + m.color + ';color:white;padding:13px;border-radius:20px;font-weight:800;font-size:14px;text-decoration:none;text-align:center;" onclick="document.getElementById(\'_sp\').remove()">Open ' + escapeHtml(m.name) + ' ↗</a><button onclick="document.getElementById(\'_sp\').remove()" style="background:#f5f5f5;color:#888;border:none;padding:10px;border-radius:16px;font-weight:700;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button></div>' +
-      '</div>';
+  function showSharePopup(platform,shareUrl,adTitle,message){
+    var old=document.getElementById("_sp"); if(old) old.remove();
+    var meta={ whatsapp:{icon:"💬",name:"WhatsApp",color:"#25D366",bg:"#dcf8c6"}, telegram:{icon:"✈️",name:"Telegram",color:"#0088cc",bg:"#d9efff"}, facebook:{icon:"👍",name:"Facebook",color:"#1877F2",bg:"#e7eeff"}, twitter:{icon:"🐦",name:"Twitter/X",color:"#1DA1F2",bg:"#e0f7fa"}, instagram:{icon:"📸",name:"Instagram",color:"#E1306C",bg:"#fce4ec"} };
+    var m=meta[platform]||{icon:"📤",name:platform,color:"#ff9800",bg:"#fff3e0"};
+    var div=document.createElement("div"); div.id="_sp";
+    div.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.72);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;";
+    div.innerHTML='<div style="background:white;border-radius:22px;width:100%;max-width:310px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">'
+      +'<div style="background:'+m.bg+';padding:20px;text-align:center;"><div style="font-size:44px;">'+m.icon+'</div><div style="font-size:16px;font-weight:800;color:#333;margin-top:6px;">Share on '+m.name+'</div></div>'
+      +'<div style="padding:14px 18px 0;"><div style="font-size:11px;color:#555;line-height:1.9;background:#f8f8f8;border-radius:12px;padding:10px 14px;">✅ Message copied to clipboard<br>👇 Tap <b>Open '+m.name+'</b> below<br>📋 Paste the message &amp; send</div></div>'
+      +'<div style="padding:10px 18px 0;"><div style="font-size:9px;font-weight:700;color:#aaa;margin-bottom:4px;text-transform:uppercase;">Copied Message Preview</div><div style="background:#f0f0f0;border-radius:10px;padding:8px 12px;font-size:10px;color:#666;line-height:1.5;max-height:60px;overflow:hidden;">'+message.substring(0,130)+'…</div></div>'
+      +'<div style="padding:14px 18px 20px;display:flex;flex-direction:column;gap:8px;"><a href="'+shareUrl+'" target="_blank" rel="noopener" style="display:block;background:'+m.color+';color:white;padding:13px;border-radius:20px;font-weight:800;font-size:14px;text-decoration:none;text-align:center;" onclick="document.getElementById(\'_sp\').remove()">Open '+m.name+' ↗</a><button onclick="document.getElementById(\'_sp\').remove()" style="background:#f5f5f5;color:#888;border:none;padding:10px;border-radius:16px;font-weight:700;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button></div>'
+      +'</div>';
     document.querySelector(".mobile-screen").appendChild(div);
   }
 
-  function openRefer(adId, code){
-    _shareAdId = adId;
-    _referCode = code || "EAP0000";
-    document.getElementById("referCodeDisplay").innerText = _referCode;
-    openSheet("referSheet");
-  }
+  function openRefer(adId,code){ _shareAdId=adId; _referCode=code; document.getElementById("referCodeDisplay").innerText=code; openSheet("referSheet"); }
+  function copyReferCode(){ var msg="Join EAP!\nReferral Code: "+_referCode+"\nSign up & earn now!"; var ta=document.createElement("textarea"); ta.value=msg; ta.style.cssText="position:fixed;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand("copy"); showToast("Referral code copied! 🎁"); }catch(e){} document.body.removeChild(ta); closeAllModals(); }
+  function shareReferWhatsApp(){ var msg="🎉 Join EAP!\nEarn money by watching ads.\n\n🔑 Referral Code: *"+_referCode+"*\n\n👉 Sign up & start earning now!"; var a=document.createElement("a"); a.href="https://api.whatsapp.com/send?text="+encodeURIComponent(msg); a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); closeAllModals(); }
 
-  function copyReferCode(){
-    var msg = "Join EAP!\nReferral Code: " + (_referCode || "EAP0000") + "\nSign up & earn now!";
-    var ta = document.createElement("textarea");
-    ta.value = msg;
-    ta.style.cssText = "position:fixed;opacity:0;";
-    document.body.appendChild(ta);
-    ta.focus();
-    ta.select();
-    try {
-      document.execCommand("copy");
-      showToast("Referral code copied! 🎁");
-    } catch (e) {
-      showToast("Please copy manually");
-    }
-    document.body.removeChild(ta);
-    closeAllModals();
-  }
-
-  function shareReferWhatsApp(){
-    var msg = "🎉 Join EAP!\nEarn money by watching ads.\n\n🔑 Referral Code: *" + (_referCode || "EAP0000") + "*\n\n👉 Sign up & start earning now!";
-    var a = document.createElement("a");
-    a.href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(msg);
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ document.body.removeChild(a); }, 300);
-    closeAllModals();
-  }
-
-  function openComments(adId){
-    _commentAdId = adId;
-    renderComments(adId);
-    openSheet("commentSheet");
-  }
-
+  function openComments(adId){ _commentAdId=adId; renderComments(adId); openSheet("commentSheet"); }
   function renderComments(adId){
-    var comments = safeJSONParse(localStorage.getItem("adComments_" + adId), []);
-    var list = document.getElementById("commentList");
-    if (!list) return;
-
-    if (!comments.length){
-      list.innerHTML = '<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>';
-      return;
-    }
-
-    list.innerHTML = "";
-    comments.forEach(function(c){
-      var item = document.createElement("div");
-      item.className = "comment-item";
-      item.innerHTML =
-        '<div class="c-avatar">' + escapeHtml(safeText(c.name || "U", "U").charAt(0).toUpperCase()) + '</div>' +
-        '<div class="c-body">' +
-          '<div class="c-name">' + escapeHtml(safeText(c.name, "User")) + '<span class="c-time">' + escapeHtml(safeText(c.time, "")) + '</span></div>' +
-          '<div class="c-text">' + escapeHtml(safeText(c.text, "")) + '</div>' +
-        '</div>';
-      list.appendChild(item);
-    });
-    list.scrollTop = list.scrollHeight;
+    var comments=JSON.parse(localStorage.getItem("adComments_"+adId))||[];
+    var list=document.getElementById("commentList");
+    if(!comments.length){ list.innerHTML='<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>'; return; }
+    list.innerHTML="";
+    comments.forEach(function(c){ list.innerHTML+='<div class="comment-item"><div class="c-avatar">'+(c.name||"U").charAt(0).toUpperCase()+'</div><div class="c-body"><div class="c-name">'+c.name+'<span class="c-time">'+c.time+'</span></div><div class="c-text">'+c.text+'</div></div></div>'; });
+    list.scrollTop=list.scrollHeight;
   }
-
   function postComment(){
-    var input = document.getElementById("commentInput");
-    if (!input || !_commentAdId) return;
-
-    var text = safeText(input.value, "").trim();
-    if (!text) return;
-
-    var key = "adComments_" + _commentAdId;
-    var comments = safeJSONParse(localStorage.getItem(key), []);
-    var name = safeText(user.name, "").trim() || ("User " + safeText(activeMobile, "").slice(-4));
-    var now = new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
-
-    comments.push({ name: name, text: text, time: now });
-    localStorage.setItem(key, JSON.stringify(comments));
-
-    var vk = "vendorComments_" + _commentAdId;
-    var vc = safeJSONParse(localStorage.getItem(vk), []);
-    vc.push({ name: name, text: text, time: now, date: new Date().toLocaleDateString() });
-    localStorage.setItem(vk, JSON.stringify(vc));
-
-    input.value = "";
-    renderComments(_commentAdId);
-    showToast("Comment posted ✅");
+    var input=document.getElementById("commentInput"); var text=(input.value||"").trim(); if(!text) return;
+    var key="adComments_"+_commentAdId; var comments=JSON.parse(localStorage.getItem(key))||[];
+    var name=user.name||("User "+String(activeMobile||"").slice(-4));
+    var now=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
+    comments.push({name:name,text:text,time:now}); localStorage.setItem(key,JSON.stringify(comments));
+    var vk="vendorComments_"+_commentAdId; var vc=JSON.parse(localStorage.getItem(vk))||[];
+    vc.push({name:name,text:text,time:now,date:new Date().toLocaleDateString()}); localStorage.setItem(vk,JSON.stringify(vc));
+    input.value=""; renderComments(_commentAdId); showToast("Comment posted ✅");
   }
+  document.getElementById("commentInput").addEventListener("keydown",function(e){ if(e.key==="Enter") postComment(); });
 
-  var commentInputEl = document.getElementById("commentInput");
-  if (commentInputEl){
-    commentInputEl.addEventListener("keydown", function(e){
-      if (e.key === "Enter") postComment();
-    });
-  }
+  function openWeb(enc){ var url=decodeURIComponent(enc); if(!url.startsWith("http")) url="https://"+url; var a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); }
 
-  function openWeb(url){
-    url = safeText(url, "").trim();
-    if (!url) {
-      showToast("Website not available");
-      return;
+  function openLocation(enc){
+    var loc=decodeURIComponent(enc).trim(); var body=document.getElementById("locBody");
+    if(!loc){ body.innerHTML='<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this ad yet.</div></div>'; }
+    else {
+      var isUrl=loc.startsWith("http");
+      var mapsUrl=isUrl?loc:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(loc);
+      var embedUrl=isUrl?"":"https://maps.google.com/maps?q="+encodeURIComponent(loc)+"&output=embed";
+      body.innerHTML=(embedUrl?'<iframe class="loc-map-frame" src="'+embedUrl+'" allowfullscreen loading="lazy"></iframe>':'')
+        +'<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">'+loc+'</div></div>'
+        +'<button class="open-maps-btn" onclick="openViaA(\''+mapsUrl+'\')">🗺️ Open in Google Maps</button>';
     }
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
-
-    var a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ document.body.removeChild(a); }, 300);
-  }
-
-  function openLocation(loc){
-    loc = safeText(loc, "").trim();
-    var body = document.getElementById("locBody");
-    if (!body) return;
-
-    if (!loc){
-      body.innerHTML =
-        '<div class="loc-not-provided">' +
-          '<div class="loc-not-icon">🗺️</div>' +
-          '<div class="loc-not-title">Location Not Available</div>' +
-          '<div class="loc-not-sub">This vendor has not provided<br>a location for this ad yet.</div>' +
-        '</div>';
-      openSheet("locationSheet");
-      return;
-    }
-
-    var isUrl = /^https?:\/\//i.test(loc);
-    var mapsUrl = isUrl ? loc : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(loc);
-    var canEmbed = !isUrl;
-
-    body.innerHTML =
-      (canEmbed
-        ? '<iframe class="loc-map-frame" src="https://maps.google.com/maps?q=' + encodeURIComponent(loc) + '&output=embed" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>'
-        : '<div class="loc-not-provided"><div class="loc-not-icon">📍</div><div class="loc-not-title">Open Location</div><div class="loc-not-sub">Tap the button below to open this location in Google Maps.</div></div>') +
-      '<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">' + escapeHtml(loc) + '</div></div>' +
-      '<button class="open-maps-btn" onclick="openViaA(\'' + mapsUrl.replace(/'/g, "\\'") + '\')">🗺️ Open in Google Maps</button>';
-
     openSheet("locationSheet");
   }
+  function openViaA(url){ var a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); }
 
-  function openViaA(url){
-    var a = document.createElement("a");
-    a.href = url;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    setTimeout(function(){ document.body.removeChild(a); }, 300);
-  }
-
-  function openSheet(id){
-    var backdrop = document.getElementById("backdrop");
-    var sheet = document.getElementById(id);
-    if (backdrop) backdrop.classList.add("open");
-    if (sheet) sheet.classList.add("open");
-  }
-
-  function closeAllModals(){
-    var backdrop = document.getElementById("backdrop");
-    if (backdrop) backdrop.classList.remove("open");
-    ["shareSheet","referSheet","commentSheet","locationSheet"].forEach(function(id){
-      var el = document.getElementById(id);
-      if (el) el.classList.remove("open");
-    });
-  }
-
-  function showToast(msg){
-    var t = document.getElementById("toast");
-    if (!t) return;
-    t.innerText = msg;
-    t.classList.add("show");
-    setTimeout(function(){ t.classList.remove("show"); }, 2500);
-  }
+  function openSheet(id){ document.getElementById("backdrop").classList.add("open"); document.getElementById(id).classList.add("open"); }
+  function closeAllModals(){ document.getElementById("backdrop").classList.remove("open"); ["shareSheet","referSheet","commentSheet","locationSheet"].forEach(function(id){ document.getElementById(id).classList.remove("open"); }); }
+  function showToast(msg){ var t=document.getElementById("toast"); t.innerText=msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); },2500); }
+  function getAds(){ return window._frameAds||[]; }
 </script>
 </body>
 </html>
