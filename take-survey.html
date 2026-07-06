@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EAP – Taking Survey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; }
+    
+    /* HEADER */
+    .header { background: #fff; padding: 15px 20px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; }
+    .close-btn { text-decoration: none; color: #888; font-size: 24px; font-weight: bold; }
+    
+    /* PROGRESS BAR */
+    .progress-container { background: #e0e0e0; height: 6px; width: 100%; }
+    .progress-bar { height: 100%; background: #2196f3; width: 0%; transition: width 0.3s; }
+
+    /* CONTENT */
+    .container { flex: 1; padding: 30px 20px; max-width: 600px; margin: 0 auto; width: 100%; }
+    
+    .question-box { background: #fff; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+    .q-number { font-size: 13px; color: #2196f3; font-weight: 700; text-transform: uppercase; margin-bottom: 10px; }
+    .q-text { font-size: 18px; color: #333; margin: 0 0 20px; font-weight: 600; line-height: 1.4; }
+
+    /* OPTIONS */
+    .option-group { display: flex; flex-direction: column; gap: 12px; }
+    .option-label {
+      background: #f9f9f9; padding: 15px; border-radius: 8px; border: 2px solid #eee;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 10px;
+    }
+    .option-label:hover { background: #e3f2fd; border-color: #bbdefb; }
+    .option-label input { accent-color: #2196f3; transform: scale(1.2); }
+
+    /* FOOTER */
+    .footer { padding: 20px; background: #fff; border-top: 1px solid #eee; text-align: center; }
+    .btn-next {
+      background: #2196f3; color: white; border: none; padding: 12px 30px; 
+      border-radius: 30px; font-weight: 700; font-size: 16px; cursor: pointer; width: 100%; max-width: 300px;
+    }
+    .btn-next:disabled { background: #ccc; cursor: not-allowed; }
+
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span style="font-weight:700; color:#555;">Survey</span>
+    <a href="#" onclick="confirmExit()" class="close-btn">&times;</a>
+  </div>
+  
+  <div class="progress-container">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+
+  <div class="container">
+    <div class="question-box">
+      <div class="q-number" id="qNum">Question 1</div>
+      <div class="q-text" id="qText">Loading question...</div>
+      
+      <div class="option-group" id="optionsContainer">
+        </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button class="btn-next" id="nextBtn" onclick="nextQuestion()">Next Question →</button>
+  </div>
+
+  <script>
+    let currentSurvey = {};
+    let currentQIndex = 0;
+    
+    // MOCK QUESTIONS DATABASE
+    const allQuestions = [
+      { text: "How often do you shop online?", options: ["Weekly", "Monthly", "Rarely", "Never"] },
+      { text: "Which brand of toothpaste do you use?", options: ["Colgate", "Pepsodent", "Sensodyne", "Other"] },
+      { text: "Do you own a vehicle?", options: ["Yes, a Car", "Yes, a Bike", "Both", "No"] },
+      { text: "What is your favorite beverage?", options: ["Tea", "Coffee", "Soft Drinks", "Juice"] }
+    ];
+
+    window.onload = function() {
+      currentSurvey = JSON.parse(sessionStorage.getItem("currentSurvey"));
+      if(!currentSurvey) { window.location.href='surveys.html'; return; }
+      
+      loadQuestion();
+    };
+
+    function loadQuestion() {
+      // Update Progress
+      const total = currentSurvey.questions;
+      const progress = ((currentQIndex + 1) / total) * 100;
+      document.getElementById("progressBar").style.width = progress + "%";
+      
+      document.getElementById("qNum").textContent = `QUESTION ${currentQIndex + 1} OF ${total}`;
+      
+      // Get mock question (cycling through if needed)
+      const q = allQuestions[currentQIndex % allQuestions.length];
+      document.getElementById("qText").textContent = q.text;
+
+      // Render Options
+      const container = document.getElementById("optionsContainer");
+      container.innerHTML = "";
+      
+      q.options.forEach((opt, index) => {
+        const div = document.createElement("label");
+        div.className = "option-label";
+        div.innerHTML = `
+          <input type="radio" name="answer" value="${opt}" onclick="enableNext()">
+          ${opt}
+        `;
+        container.appendChild(div);
+      });
+
+      // Reset Button
+      const btn = document.getElementById("nextBtn");
+      btn.disabled = true;
+      
+      // If last question, change button text
+      if (currentQIndex === total - 1) {
+        btn.textContent = "Submit & Earn ₹" + currentSurvey.payout.toFixed(2);
+      } else {
+        btn.textContent = "Next Question →";
+      }
+    }
+
+    function enableNext() {
+      document.getElementById("nextBtn").disabled = false;
+    }
+
+    function nextQuestion() {
+      if (currentQIndex < currentSurvey.questions - 1) {
+        currentQIndex++;
+        loadQuestion();
+      } else {
+        finishSurvey();
+      }
+    }
+
+    function finishSurvey() {
+      const mobile = localStorage.getItem("activeUserMobile");
+      const key = "userProfile_" + mobile;
+      let user = JSON.parse(localStorage.getItem(key)) || { wallet: 0 };
+
+      // Update Wallet
+      user.wallet = (parseFloat(user.wallet) + currentSurvey.payout).toFixed(2);
+      localStorage.setItem(key, JSON.stringify(user));
+
+      // Add Transaction
+      const txKey = "userTx_" + mobile;
+      let history = JSON.parse(localStorage.getItem(txKey)) || [];
+      history.unshift({
+        type: 'survey',
+        title: 'Survey: ' + currentSurvey.title,
+        date: new Date().toLocaleString(),
+        amount: currentSurvey.payout
+      });
+      localStorage.setItem(txKey, JSON.stringify(history));
+
+      alert(`Survey Completed! ₹${currentSurvey.payout.toFixed(2)} added to wallet.`);
+      window.location.href = "surveys.html";
+    }
+
+    function confirmExit() {
+      if(confirm("Exit survey? You will lose your progress.")) {
+        window.location.href = "surveys.html";
+      }
+    }
+  </script>
+</body>
+</html>

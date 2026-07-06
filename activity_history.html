@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Activity History</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+        
+        .mobile-screen { 
+            background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; 
+            display: flex; flex-direction: column; 
+            box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #ff9800; padding: 20px; color: white; display: flex; align-items: center; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 15px; }
+        .page-title { font-size: 18px; font-weight: 700; }
+
+        /* TABS */
+        .tabs { display: flex; background: white; border-bottom: 1px solid #eee; margin-top: 5px; }
+        .tab { 
+            flex: 1; text-align: center; padding: 15px; font-size: 13px; font-weight: 600; 
+            color: #888; cursor: pointer; border-bottom: 3px solid transparent; 
+        }
+        .tab.active { color: #ff9800; border-bottom: 3px solid #ff9800; }
+
+        /* SUMMARY CARD */
+        .summary-section { padding: 20px 20px 0; }
+        .summary-card {
+            background: linear-gradient(135deg, #ff9800, #f57c00); color: white;
+            border-radius: 20px; padding: 20px; text-align: center;
+            box-shadow: 0 10px 20px rgba(255, 152, 0, 0.3);
+        }
+        .sum-val { font-size: 32px; font-weight: 700; margin: 5px 0; }
+        .sum-lbl { font-size: 11px; opacity: 0.9; text-transform: uppercase; letter-spacing: 1px; }
+        
+        .sum-row { display: flex; justify-content: space-around; margin-top: 15px; border-top: 1px solid rgba(255,255,255,0.2); padding-top: 10px; }
+        .box-num { font-weight: 700; font-size: 18px; }
+        .box-txt { font-size: 10px; opacity: 0.8; }
+
+        /* LIST */
+        .history-list { flex: 1; padding: 15px; overflow-y: auto; background: #fafafa; }
+        
+        .h-item { 
+            background: white; padding: 15px; border-radius: 12px; margin-bottom: 10px; 
+            display: flex; justify-content: space-between; align-items: center; 
+            border: 1px solid #f0f0f0; box-shadow: 0 2px 5px rgba(0,0,0,0.02); 
+        }
+        
+        .h-left { display: flex; flex-direction: column; }
+        .h-name { font-size: 14px; font-weight: 700; color: #333; }
+        .h-date { font-size: 11px; color: #999; margin-top: 4px; display: flex; align-items: center; gap: 5px; }
+        
+        .h-right { font-size: 14px; font-weight: 700; color: #2e7d32; background: #e8f5e9; padding: 5px 10px; border-radius: 8px; }
+
+        .type-badge { font-size: 9px; padding: 2px 6px; border-radius: 4px; color: white; font-weight: bold; margin-right: 5px; }
+        .bg-Frame { background: #673ab7; }
+        .bg-Video { background: #e91e63; }
+        .bg-Survey { background: #03a9f4; }
+
+        .empty-state { text-align: center; color: #aaa; font-size: 13px; margin-top: 50px; }
+
+    </style>
+</head>
+<body onload="loadHistory('All')">
+
+<div class="mobile-screen">
+    <div class="header">
+        <a href="settings.html" class="back-btn">←</a>
+        <span class="page-title">Activity History</span>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="loadHistory('All')" id="tabAll">All</div>
+        <div class="tab" onclick="loadHistory('Frame')" id="tabFrame">Frame</div>
+        <div class="tab" onclick="loadHistory('Video')" id="tabVideo">Video</div>
+        <div class="tab" onclick="loadHistory('Survey')" id="tabSurvey">Survey</div>
+    </div>
+
+    <div class="summary-section">
+        <div class="summary-card" id="cardBg">
+            <div class="sum-lbl">Total Earnings</div>
+            <div class="sum-val" id="dispTotalEarn">₹ 0.00</div>
+            <div class="sum-row">
+                <div class="sum-box">
+                    <div class="box-num" id="dispTotalCount">0</div>
+                    <div class="box-txt">Ads Viewed</div>
+                </div>
+                <div class="sum-box">
+                    <div class="box-num">Active</div>
+                    <div class="box-txt">Status</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="history-list" id="listContainer">
+        </div>
+</div>
+
+<script>
+    function loadHistory(filterType) {
+        // 1. Update Tab UI
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.getElementById('tab' + filterType).classList.add('active');
+
+        // 2. Get Data
+        const activeMobile = localStorage.getItem("activeUser");
+        const user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile));
+        const list = user && user.adHistory ? user.adHistory : [];
+        
+        // 3. Filter Data
+        let filtered = list;
+        if(filterType !== 'All') {
+            filtered = list.filter(item => item.type === filterType);
+        }
+
+        // 4. Update Summary Card
+        let totalAmt = 0;
+        filtered.forEach(item => totalAmt += parseFloat(item.amount));
+        
+        document.getElementById("dispTotalEarn").innerText = "₹ " + totalAmt.toFixed(2);
+        document.getElementById("dispTotalCount").innerText = filtered.length;
+
+        // Change Card Color based on Type
+        const card = document.getElementById("cardBg");
+        if(filterType === 'All') card.style.background = "linear-gradient(135deg, #ff9800, #f57c00)";
+        if(filterType === 'Frame') card.style.background = "linear-gradient(135deg, #673ab7, #512da8)";
+        if(filterType === 'Video') card.style.background = "linear-gradient(135deg, #e91e63, #c2185b)";
+        if(filterType === 'Survey') card.style.background = "linear-gradient(135deg, #03a9f4, #0288d1)";
+
+        const container = document.getElementById("listContainer");
+        container.innerHTML = "";
+
+        if(filtered.length === 0) {
+            container.innerHTML = `<div class='empty-state'>No history found for ${filterType} ads.</div>`;
+            return;
+        }
+
+        // Show newest first (Reverse array)
+        filtered.slice().reverse().forEach(item => {
+            const html = `
+            <div class="h-item">
+                <div class="h-left">
+                    <span class="h-name">${item.name}</span>
+                    <div class="h-date">
+                        <span class="type-badge bg-${item.type}">${item.type}</span>
+                        ${item.date} • ${item.time}
+                    </div>
+                </div>
+                <span class="h-right">+ ₹${parseFloat(item.amount).toFixed(2)}</span>
+            </div>`;
+            container.innerHTML += html;
+        });
+    }
+</script>
+
+</body>
+</html>

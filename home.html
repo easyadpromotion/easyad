@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Home</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- ✅ Your actual API key with all required libraries -->
+    <script>
+        function initMap() {
+            // Maps SDK is ready — now detect location
+            if (typeof pendingLocationDetect === 'function') pendingLocationDetect();
+        }
+    </script>
+    <script async
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIYCrCcEG-A-tDPVrM2I8bcEQ6k3VeNxc&callback=initMap&libraries=maps,marker&v=beta">
+    </script>
+
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #e0e0e0; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; }
+        .mobile-screen { background: #f8f9fa; width: 100%; max-width: 380px; min-height: 100vh; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.1); }
+        @media (min-width: 450px) {
+            .mobile-screen { height: 95vh; min-height: 850px; border-radius: 40px; border: 12px solid #111; overflow: hidden; margin: 20px; }
+        }
+        .header { background: #ff9800; padding: 25px 20px 35px; border-radius: 0 0 35px 35px; color: white; box-shadow: 0 10px 20px rgba(255,152,0,0.2); flex-shrink: 0; }
+        .top-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .icon-btn { width: 45px; height: 45px; background: rgba(255,255,255,0.25); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; cursor: pointer; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.3); }
+        .app-logo-box { background: white; width: 60px; height: 60px; border-radius: 18px; display: flex; align-items: center; justify-content: center; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+        .logo-img { width: 40px; height: auto; object-fit: contain; }
+        .stats-row { display: flex; gap: 15px; }
+        .stat-card { flex: 1; background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); border-radius: 20px; padding: 15px 20px; position: relative; backdrop-filter: blur(5px); cursor: pointer; transition: background 0.2s; }
+        .stat-card:active { background: rgba(255,255,255,0.35); }
+        .stat-label { font-size: 10px; text-transform: uppercase; font-weight: 700; opacity: 0.9; letter-spacing: 0.5px; }
+        .stat-val { font-size: 18px; font-weight: 800; margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+        .stat-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); font-size: 20px; }
+
+        /* Pulsing dot while locating */
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+        .locating-dot { display: inline-block; width: 8px; height: 8px; background: white; border-radius: 50%; animation: pulse 1s infinite; margin-right: 4px; vertical-align: middle; }
+
+        /* MAP MODAL — uses min-height so it's in-flow, not fixed */
+        .map-overlay {
+            display: none;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.55);
+            z-index: 200;
+            align-items: center; justify-content: center;
+            min-height: 400px;
+        }
+        .map-overlay.open { display: flex; }
+        .map-box { background: white; border-radius: 25px; width: 90%; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: popIn 0.2s ease; }
+        @keyframes popIn { from{transform:scale(0.88);opacity:0} to{transform:scale(1);opacity:1} }
+        .map-header { background: #ff9800; color: white; padding: 14px 18px; display: flex; align-items: center; justify-content: space-between; }
+        .map-header-city { font-weight: 700; font-size: 14px; display: flex; align-items: center; gap: 7px; }
+        .map-close { background: rgba(255,255,255,0.25); border: none; color: white; border-radius: 50%; width: 30px; height: 30px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        #googleMap { width: 100%; height: 250px; }
+        .map-address { padding: 10px 16px; font-size: 11px; color: #777; display: flex; gap: 5px; align-items: flex-start; line-height: 1.4; }
+
+        .menu-grid { display: flex; justify-content: space-between; gap: 10px; padding: 20px; margin-top: -10px; }
+        .menu-item { flex: 1; background: white; padding: 15px 5px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #333; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; }
+        .menu-item:active { transform: scale(0.95); }
+        .menu-icon { font-size: 24px; margin-bottom: 8px; }
+        .menu-text { font-size: 11px; font-weight: 700; color: #444; }
+        .section-title { font-size: 14px; font-weight: 800; color: #333; padding: 0 25px; margin-bottom: 10px; }
+        .task-list { padding: 0 20px 100px; overflow-y: auto; flex: 1; }
+        .task-card { background: white; border-radius: 18px; padding: 15px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 3px 10px rgba(0,0,0,0.02); margin-bottom: 12px; border: 1px solid #f0f0f0; }
+        .t-left { display: flex; align-items: center; gap: 12px; }
+        .t-icon { width: 40px; height: 40px; background: #e0f2f1; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .t-info { display: flex; flex-direction: column; }
+        .t-name { font-size: 13px; font-weight: 700; color: #333; }
+        .t-sub { font-size: 10px; color: #888; margin-top: 2px; }
+        .start-btn { background: #ff9800; color: white; padding: 8px 18px; border-radius: 20px; font-size: 11px; font-weight: 700; border: none; cursor: pointer; text-decoration: none; }
+        .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #f5f5f5; display: flex; justify-content: space-around; padding: 15px 0 10px; border-radius: 30px 30px 0 0; z-index: 50; box-shadow: 0 -5px 20px rgba(0,0,0,0.03); }
+        .nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; color: #aaa; flex: 1; }
+        .nav-ico { font-size: 22px; margin-bottom: 4px; }
+        .nav-txt { font-size: 10px; font-weight: 600; }
+        .nav-item.active { color: #ff9800; }
+        .empty-state { text-align: center; color: #aaa; font-size: 12px; margin-top: 20px; }
+    </style>
+</head>
+
+<body onload="loadHome()">
+<div class="mobile-screen">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="top-row">
+            <div class="icon-btn" onclick="window.location.href='settings.html'">👤</div>
+            <div class="app-logo-box">
+                <img src="EAP-LOGO.jpg" class="logo-img" onerror="this.src='https://via.placeholder.com/40'">
+            </div>
+            <div class="icon-btn">🔔</div>
+        </div>
+        <div class="stats-row">
+            <div class="stat-card" onclick="openMap()" title="Tap to view map">
+                <div class="stat-label">LOCATION</div>
+                <div class="stat-val" id="dispCity">
+                    <span class="locating-dot"></span> Locating…
+                </div>
+                <div class="stat-icon">📍</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">BALANCE</div>
+                <div class="stat-val" id="dispBal">₹ 0.00</div>
+                <div class="stat-icon">💰</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAP MODAL -->
+    <div class="map-overlay" id="mapOverlay" onclick="handleOverlayClick(event)">
+        <div class="map-box" id="mapBox">
+            <div class="map-header">
+                <div class="map-header-city">📍 <span id="mapCity">Your Location</span></div>
+                <button class="map-close" onclick="closeMap()">✕</button>
+            </div>
+            <div id="googleMap">
+                <div style="display:flex;align-items:center;justify-content:center;height:250px;color:#aaa;font-size:13px;">
+                    Waiting for location…
+                </div>
+            </div>
+            <div class="map-address">🗺️ <span id="mapAddress">Fetching address…</span></div>
+        </div>
+    </div>
+
+    <!-- QUICK MENU -->
+    <div class="menu-grid">
+        <a href="frame-ads.html" class="menu-item"><div class="menu-icon">🖼️</div><div class="menu-text">Frame Ads</div></a>
+        <a href="video-ads.html" class="menu-item"><div class="menu-icon">▶</div><div class="menu-text">Video Ads</div></a>
+        <a href="surveys.html" class="menu-item"><div class="menu-icon">📝</div><div class="menu-text">Surveys</div></a>
+    </div>
+
+    <div class="section-title">Sponsored Tasks</div>
+    <div class="task-list" id="taskContainer"><div class="empty-state">Loading tasks…</div></div>
+
+    <!-- BOTTOM NAV -->
+    <div class="bottom-nav">
+        <a href="home.html" class="nav-item active"><div class="nav-ico">🏠</div><span class="nav-txt">Home</span></a>
+        <a href="frame-ads.html" class="nav-item"><div class="nav-ico">📢</div><span class="nav-txt">Ads</span></a>
+        <a href="wallet.html" class="nav-item"><div class="nav-ico">👛</div><span class="nav-txt">Wallet</span></a>
+        <a href="settings.html" class="nav-item"><div class="nav-ico">⚙️</div><span class="nav-txt">Settings</span></a>
+    </div>
+
+</div>
+
+<script>
+    // ── State ──────────────────────────────────────────────────
+    var userLat = null, userLng = null;
+    var mapInstance = null, markerInstance = null;
+    var mapsReady = false;
+    var activeMobile = null, userProfile = null;
+
+    // Called by Google Maps SDK once loaded
+    function initMap() {
+        mapsReady = true;
+    }
+
+    // Exposed so initMap callback can trigger it after SDK loads
+    function pendingLocationDetect() {}
+
+    // ── Page Load ──────────────────────────────────────────────
+    function loadHome() {
+        activeMobile = localStorage.getItem("activeUser");
+        if (!activeMobile) { window.location.href = "user_login.html"; return; }
+
+        userProfile = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [] };
+
+        // Balance
+        document.getElementById("dispBal").innerText = "₹ " + parseFloat(userProfile.wallet || 0).toFixed(2);
+
+        // Show saved city instantly if available
+        if (userProfile.city) setCity(userProfile.city);
+
+        // Start GPS
+        startLocationDetect();
+
+        // Tasks
+        loadTasks();
+    }
+
+    // ── Location Detection ─────────────────────────────────────
+    function startLocationDetect() {
+        if (!navigator.geolocation) {
+            setCity(userProfile.city || "India");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                userLat = pos.coords.latitude;
+                userLng  = pos.coords.longitude;
+                // Wait until Maps SDK is ready, then geocode
+                waitForMapsAndGeocode();
+            },
+            function(err) {
+                console.warn("GPS error:", err.message);
+                setCity(userProfile.city || "India");
+            },
+            { enableHighAccuracy: true, timeout: 10000 }
+        );
+    }
+
+    function waitForMapsAndGeocode() {
+        if (mapsReady && window.google && window.google.maps) {
+            doReverseGeocode();
+        } else {
+            // SDK not ready yet — retry in 300ms
+            setTimeout(waitForMapsAndGeocode, 300);
+        }
+    }
+
+    // ── Reverse Geocode using google.maps.Geocoder ─────────────
+    // This works on file:// because it uses the loaded SDK, not a raw fetch()
+    function doReverseGeocode() {
+        var geocoder = new google.maps.Geocoder();
+        geocoder.geocode({ location: { lat: userLat, lng: userLng } }, function(results, status) {
+            if (status === "OK" && results.length > 0) {
+                var comps = results[0].address_components;
+                var city  = getComp(comps, "locality")
+                         || getComp(comps, "administrative_area_level_2")
+                         || getComp(comps, "administrative_area_level_1")
+                         || "India";
+
+                var fullAddr = results[0].formatted_address || city;
+
+                setCity(city);
+                document.getElementById("mapCity").innerText    = city;
+                document.getElementById("mapAddress").innerText = fullAddr;
+
+                // Persist
+                userProfile.city = city;
+                userProfile.lat  = userLat;
+                userProfile.lng  = userLng;
+                localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(userProfile));
+
+            } else {
+                console.warn("Geocoder status:", status);
+                setCity(userProfile.city || "India");
+            }
+        });
+    }
+
+    function getComp(comps, type) {
+        var found = comps.find(function(c){ return c.types.indexOf(type) !== -1; });
+        return found ? found.long_name : null;
+    }
+
+    function setCity(name) {
+        document.getElementById("dispCity").innerHTML = name; // removes pulsing dot
+    }
+
+    // ── Map Modal ──────────────────────────────────────────────
+    function openMap() {
+        document.getElementById("mapOverlay").classList.add("open");
+        if (userLat && userLng && mapsReady) renderMap();
+    }
+
+    function closeMap() {
+        document.getElementById("mapOverlay").classList.remove("open");
+    }
+
+    function handleOverlayClick(e) {
+        if (e.target === document.getElementById("mapOverlay")) closeMap();
+    }
+
+    function renderMap() {
+        var pos = { lat: userLat, lng: userLng };
+        var mapDiv = document.getElementById("googleMap");
+
+        if (!mapInstance) {
+            mapInstance = new google.maps.Map(mapDiv, {
+                center: pos,
+                zoom: 15,
+                disableDefaultUI: true,
+                zoomControl: true,
+                styles: [
+                    { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+                    { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9d9e8" }] },
+                    { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
+                    { featureType: "poi", stylers: [{ visibility: "off" }] }
+                ]
+            });
+
+            // Orange pin
+            new google.maps.Marker({
+                position: pos,
+                map: mapInstance,
+                title: "You are here",
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 11,
+                    fillColor: "#ff9800",
+                    fillOpacity: 1,
+                    strokeColor: "#ffffff",
+                    strokeWeight: 3
+                }
+            });
+        } else {
+            mapInstance.setCenter(pos);
+        }
+    }
+
+    // ── Tasks ──────────────────────────────────────────────────
+    function loadTasks() {
+        var allAds   = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+        var viewed   = userProfile.viewedAds || [];
+        var active   = allAds.filter(function(ad){ return ad.status === "Active" && viewed.indexOf(ad.id) === -1; });
+        var container = document.getElementById("taskContainer");
+
+        container.innerHTML = "";
+
+        if (active.length === 0) {
+            container.innerHTML = '<div class="empty-state">No new tasks available.<br>Check back later!</div>';
+            if (allAds.length === 0) {
+                container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">🏦</div><div class="t-info"><div class="t-name">Business Loans</div><div class="t-sub">Finance • High Reward</div></div></div><a href="frame-ads.html" class="start-btn">Start</a></div>';
+            }
+            return;
+        }
+
+        active.forEach(function(ad) {
+            var link = "frame-ads.html", icon = "🖼️";
+             if (ad.type === "Video")  { link = "video-ads.html"; icon = "▶️"; }
+            if (ad.type === "Survey") { link = "surveys.html";   icon = "📝"; }
+            // Fix: use ad.name, ad.title, or ad.adName with fallback
+            var name = ad.name || ad.title || ad.adName || "Sponsored Ad";
+            var cat  = ad.category || ad.type || "Task";
+
+            container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">' + icon + '</div><div class="t-info"><div class="t-name">' + name + '</div><div class="t-sub">' + cat + '</div></div></div><a href="' + link + '" class="start-btn">Start</a></div>';
+        });
+    }
+</script>
+</body>
+</html>

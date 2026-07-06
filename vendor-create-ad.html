@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Create Campaign</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Poppins', sans-serif; background: #e0f2f1; 
+      margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+    }
+    
+    .mobile-screen { 
+      width: 100%; max-width: 380px; min-height: 100vh;
+      background: #ffffff; border: 8px solid #fff; border-radius: 40px; 
+      box-shadow: 0 30px 60px rgba(0,0,0,0.1), 0 0 0 2px #b2dfdb;
+      display: flex; flex-direction: column; position: relative; overflow: hidden;
+    }
+
+    /* HEADER */
+    .create-header {
+      background: #009688; padding: 25px 20px; color: white;
+      text-align: center; border-radius: 0 0 25px 25px; margin-bottom: 20px;
+    }
+    .page-title { font-size: 18px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+    .page-sub { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+    .back-arrow { position: absolute; left: 20px; top: 25px; font-size: 20px; font-weight: bold; cursor: pointer; color: white; }
+
+    /* FORM CONTENT */
+    .form-content { padding: 0 25px 30px 25px; flex: 1; overflow-y: auto; }
+    .form-content::-webkit-scrollbar { display: none; }
+
+    .input-group { margin-bottom: 15px; text-align: left; }
+    .label { font-size: 11px; font-weight: 700; color: #555; margin-bottom: 6px; display: block; }
+    
+    .inp { 
+      width: 100%; padding: 12px; border: 2px solid #e0f2f1; border-radius: 10px; 
+      font-size: 13px; font-family: 'Poppins', sans-serif; box-sizing: border-box; 
+      outline: none; transition: 0.3s; background: #fdfdfd; color: #333;
+    }
+    .inp:focus { border-color: #009688; background: #fff; }
+    textarea.inp { height: 70px; resize: none; }
+
+    /* FILE UPLOAD */
+    .file-upload-box {
+      border: 2px dashed #009688; background: #e0f2f1;
+      border-radius: 10px; padding: 15px; text-align: center; cursor: pointer;
+    }
+    .upload-text { font-size: 12px; color: #00695c; font-weight: 600; }
+
+    /* SURVEY QUESTION BLOCK */
+    .q-block {
+      background: #f1f8e9; border: 1px solid #c5e1a5; border-radius: 10px;
+      padding: 15px; margin-bottom: 15px; animation: fadeIn 0.3s;
+    }
+    .q-title { font-size: 12px; font-weight: 800; color: #33691e; margin-bottom: 8px; }
+    .ans-inp { margin-bottom: 8px; padding: 10px; font-size: 12px; }
+    
+    /* ADD FIELD BUTTON */
+    .add-field-btn {
+      font-size: 11px; color: #009688; font-weight: 700;
+      cursor: pointer; margin-top: 5px; display: inline-block;
+    }
+    .add-field-btn:hover { text-decoration: underline; }
+
+    /* BUDGET BOX */
+    .budget-section {
+      background: #e8f5e9; border: 1px dashed #4caf50; border-radius: 12px;
+      padding: 15px; margin-top: 20px; margin-bottom: 20px;
+    }
+    .sec-head { font-size: 12px; font-weight: 800; color: #2e7d32; margin-bottom: 10px; text-transform: uppercase; }
+    
+    .calc-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px; }
+    .calc-label { color: #555; }
+    .calc-val { font-weight: 700; color: #333; }
+    
+    .total-row { 
+      border-top: 1px solid #c8e6c9; margin-top: 10px; padding-top: 10px; 
+      display: flex; justify-content: space-between; align-items: center; 
+    }
+    .total-label { font-size: 14px; font-weight: 800; color: #1b5e20; }
+    .total-val { font-size: 18px; font-weight: 900; color: #009688; }
+
+    /* BUTTON */
+    .btn-submit { 
+      width: 100%; padding: 15px; background: #009688; color: white; border: none; 
+      border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer; 
+      box-shadow: 0 8px 20px rgba(0, 150, 136, 0.25); margin-bottom: 30px;
+    }
+    .btn-submit:active { transform: scale(0.98); }
+
+    .hidden { display: none; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+  </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+  
+  <div class="create-header">
+    <div class="back-arrow" onclick="window.location.href='vendor-dashboard.html'">←</div>
+    <div class="page-title">Create Ad</div>
+    <div class="page-sub">Targeting & Budget</div>
+  </div>
+
+  <div class="form-content">
+    
+    <div class="input-group">
+      <label class="label">Ad Title (Headline)</label>
+      <input type="text" class="inp" placeholder="e.g. 50% OFF on All Items!">
+    </div>
+
+    <div class="input-group">
+      <label class="label">Ad Type</label>
+      <select class="inp" id="adType" onchange="updateFormLogic()">
+        <option value="frame">Frame Ad (Image)</option>
+        <option value="video">Video Ad</option>
+        <option value="survey">Survey Ad</option>
+      </select>
+    </div>
+
+    <div class="input-group">
+      <label class="label">Select Ad Category</label>
+      <select class="inp">
+        <option>Banking & Financial Services</option>
+        <option>Information Technology (IT & ITES)</option>
+        <option>FMCG</option>
+        <option>Pharmaceuticals & Healthcare</option>
+        <option>Automobile</option>
+        <option>Oil&Gas / Energy</option>
+        <option>Retail & E-Commerce</option> 
+        <option>Metals & Mining</option>
+        <option>Power & Utilities</option>
+        <option>Infrastructure</option>
+        <option>Chemicals & Fertilizers</option>
+        <option>Capital Goods & Engineering</option>
+        <option>Textiles & Apparel</option>
+        <option>Consumer Durables</option>
+        <option>Retail & E-Commerce</option>
+        <option>Logistics & Transportation</option>
+        <option>Agriculture & Allied</option>
+        <option>Family & Relatives </option>
+        <option>Food & Dining</option>
+        <option>Education</option>
+        <option>Real Estate & Construction</option>
+        <option>Media & Entertainment</option>
+        <option>Fashion & Lifestyle</option>
+        <option>Political</option>
+        <option>Cinema / Celebrities</option>
+        <option>Other</option>
+      </select>
+    </div>
+
+    <div class="input-group hidden" id="videoFields">
+      <label class="label">Video Duration (Seconds)</label>
+      <input type="number" id="vidSec" class="inp" placeholder="e.g. 15" value="15" oninput="calculateBudget()">
+      <div style="font-size:10px; color:#009688; margin-top:3px;">Rate: ₹0.10 per second</div>
+    </div>
+
+    <div class="input-group hidden" id="surveyCountField">
+      <label class="label">Number of Questions</label>
+      <input type="number" id="surQues" class="inp" placeholder="e.g. 4" oninput="generateSurveyInputs()">
+      <div style="font-size:10px; color:#009688; margin-top:3px;">Rate: ₹1.00 per question</div>
+    </div>
+
+    <div id="surveyQuestionsContainer"></div>
+
+    <div class="input-group" id="mainUploadBox">
+      <label class="label">Upload Banner/Video</label>
+      <div class="file-upload-box" onclick="document.getElementById('fileIn').click()">
+        <div class="upload-text">📂 Tap to Upload</div>
+      </div>
+      <input type="file" id="fileIn" style="display:none">
+    </div>
+
+    <div class="input-group">
+      <label class="label">Description</label>
+      <textarea class="inp" placeholder="Describe your offer..."></textarea>
+    </div>
+
+    <div class="input-group">
+      <label class="label">Office / Shop Location (Map Link)</label>
+      <input type="text" class="inp" placeholder="Paste Google Maps Link">
+    </div>
+
+    <div class="budget-section">
+      <div class="sec-head">Targeting & Budget</div>
+      
+      <div class="input-group">
+        <label class="label">Target Location</label>
+        <select class="inp">
+          <option>Local Area (PIN based)</option>
+          <option>City Wide</option>
+          <option>State Wide</option>
+          <option>National</option>
+        </select>
+      </div>
+
+      <div class="input-group">
+        <label class="label">Target Views / Responses</label>
+        <input type="number" id="targetViews" class="inp" value="100" oninput="calculateBudget()">
+      </div>
+
+      <div class="calc-row">
+        <span class="calc-label">Cost Per Unit:</span>
+        <span class="calc-val" id="costPerUnit">₹ 1.00</span>
+      </div>
+
+      <div class="total-row">
+        <span class="total-label">Total Budget:</span>
+        <span class="total-val" id="totalBudget">₹ 100.00</span>
+      </div>
+    </div>
+
+    <button class="btn-submit" onclick="publishAd()">Publish Campaign</button>
+
+  </div>
+
+</div>
+
+<script>
+  function updateFormLogic() {
+    const type = document.getElementById("adType").value;
+    const vidBox = document.getElementById("videoFields");
+    const surCountBox = document.getElementById("surveyCountField");
+    const uploadBox = document.getElementById("mainUploadBox");
+    const surveyContainer = document.getElementById("surveyQuestionsContainer");
+
+    // Reset visibility
+    vidBox.classList.add("hidden");
+    surCountBox.classList.add("hidden");
+    surveyContainer.innerHTML = ""; // Clear generated questions
+    uploadBox.classList.remove("hidden"); // Show upload by default
+
+    // Logic
+    if(type === "video") {
+      vidBox.classList.remove("hidden");
+    } 
+    else if(type === "survey") {
+      surCountBox.classList.remove("hidden");
+      uploadBox.classList.add("hidden"); // Hide main upload for survey
+    }
+
+    calculateBudget();
+  }
+
+  function generateSurveyInputs() {
+    const count = parseInt(document.getElementById("surQues").value) || 0;
+    const container = document.getElementById("surveyQuestionsContainer");
+    container.innerHTML = ""; // Clear existing
+
+    if(count > 10) { alert("Max 10 questions allowed"); return; }
+
+    for(let i = 1; i <= count; i++) {
+      const block = document.createElement("div");
+      block.className = "q-block";
+      block.id = `q-block-${i}`;
+      
+      // Header & Question Input
+      let html = `
+        <div class="q-title">Question ${i}</div>
+        <input type="text" class="inp" style="margin-bottom:10px;" placeholder="Enter Question text...">
+        <div class="label" style="margin-bottom:5px; color:#33691e;">Answer Options</div>
+        <div id="ans-container-${i}">
+      `;
+
+      // Add 2 default answer fields
+      html += `<input type="text" class="inp ans-inp" placeholder="Option 1">`;
+      html += `<input type="text" class="inp ans-inp" placeholder="Option 2">`;
+      
+      html += `</div>`; // Close container
+
+      // Add Field Button
+      html += `<div class="add-field-btn" onclick="addAnswerField(${i})">+ Add Answer Field</div>`;
+
+      block.innerHTML = html;
+      container.appendChild(block);
+    }
+    calculateBudget();
+  }
+
+  function addAnswerField(questionId) {
+    const container = document.getElementById(`ans-container-${questionId}`);
+    const currentCount = container.getElementsByClassName('ans-inp').length + 1;
+
+    if(currentCount > 10) { alert("Max 10 options per question"); return; }
+
+    const newInput = document.createElement("input");
+    newInput.type = "text";
+    newInput.className = "inp ans-inp";
+    newInput.placeholder = `Option ${currentCount}`;
+    
+    container.appendChild(newInput);
+  }
+
+  function calculateBudget() {
+    const type = document.getElementById("adType").value;
+    const views = parseFloat(document.getElementById("targetViews").value) || 0;
+    
+    let unitCost = 0;
+
+    if (type === "frame") {
+      unitCost = 1.00; // Fixed Rs 1
+    } 
+    else if (type === "video") {
+      const seconds = parseFloat(document.getElementById("vidSec").value) || 0;
+      unitCost = seconds * 0.10; // Rs 0.10 per sec
+    } 
+    else if (type === "survey") {
+      const questions = parseFloat(document.getElementById("surQues").value) || 0;
+      unitCost = questions * 1.00; // Rs 1 per question
+    }
+
+    const total = unitCost * views;
+
+    // Update UI
+    document.getElementById("costPerUnit").innerText = "₹ " + unitCost.toFixed(2);
+    document.getElementById("totalBudget").innerText = "₹ " + total.toFixed(2);
+  }
+
+  function publishAd() {
+    const btn = document.querySelector('.btn-submit');
+    const cost = document.getElementById("totalBudget").innerText;
+    
+    if(confirm("Publish this campaign for " + cost + "?")) {
+      btn.innerText = "Processing...";
+      setTimeout(() => {
+        alert("Campaign Published Successfully! Waiting for Admin Approval.");
+        window.location.href = "vendor-dashboard.html";
+      }, 1500);
+    }
+  }
+
+  // Init
+  updateFormLogic();
+</script>
+
+</body>
+</html>

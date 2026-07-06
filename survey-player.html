@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Take Survey</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 0; display: flex; justify-content: center; min-height: 100vh; }
+    
+    .mobile-screen { 
+      background: #fff; width: 100%; max-width: 380px; min-height: 100vh; 
+      display: flex; flex-direction: column; position: relative;
+    }
+
+    /* HEADER */
+    .header { background: #03a9f4; color: white; padding: 20px; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px; display: flex; align-items: center; justify-content: space-between; box-shadow: 0 5px 15px rgba(3, 169, 244, 0.3); }
+    .back-btn { font-size: 24px; text-decoration: none; color: white; font-weight: bold; }
+    
+    /* CONTENT */
+    .content { padding: 30px 20px; flex: 1; }
+    
+    .q-badge { background: #e1f5fe; color: #0288d1; padding: 5px 10px; border-radius: 5px; font-size: 11px; font-weight: 700; display: inline-block; margin-bottom: 15px; }
+    
+    .question-text { font-size: 18px; font-weight: 700; color: #333; margin-bottom: 25px; line-height: 1.4; }
+
+    /* OPTIONS */
+    .option { 
+      padding: 15px; border: 2px solid #eee; border-radius: 12px; margin-bottom: 12px; 
+      font-size: 14px; color: #555; font-weight: 600; cursor: pointer; transition: 0.2s;
+    }
+    .option:active { background: #e1f5fe; transform: scale(0.98); }
+    .option.selected { border-color: #03a9f4; background: #e1f5fe; color: #0277bd; }
+
+    /* FOOTER BUTTON */
+    .footer { padding: 20px; text-align: center; }
+    .btn-next { 
+      width: 100%; padding: 15px; background: #03a9f4; color: white; border: none; 
+      border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; 
+      box-shadow: 0 5px 15px rgba(3, 169, 244, 0.4); opacity: 0.5; pointer-events: none;
+    }
+    .btn-next.active { opacity: 1; pointer-events: all; }
+
+  </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+  
+  <div class="header">
+    <a href="surveys.html" class="back-btn">←</a>
+    <div style="font-size:18px; font-weight:700;">Survey</div>
+    <div style="font-size:12px;">₹ 5.00</div>
+  </div>
+
+  <div class="content">
+    <div id="quizArea">
+      <span class="q-badge" id="qCount">Question 1 of 5</span>
+      <div class="question-text" id="qText">Loading question...</div>
+      
+      <div id="optionsList">
+        </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <button id="nextBtn" class="btn-next" onclick="nextQuestion()">Next Question</button>
+  </div>
+
+</div>
+
+<script>
+  // QUESTIONS DATA
+  const questions = [
+    { q: "Which brand of toothpaste do you use?", opts: ["Colgate", "Pepsodent", "Sensodyne", "Other"] },
+    { q: "Do you own a car?", opts: ["Yes", "No", "Planning to buy"] },
+    { q: "Which mobile network is best in your area?", opts: ["Jio", "Airtel", "Vi", "BSNL"] },
+    { q: "How often do you shop online?", opts: ["Weekly", "Monthly", "Rarely"] },
+    { q: "Are you interested in Health Insurance?", opts: ["Yes", "No"] }
+  ];
+
+  let currentIdx = 0;
+  const TOTAL_REWARD = 5.00;
+
+  window.onload = function() {
+    loadQuestion();
+  };
+
+  function loadQuestion() {
+    const data = questions[currentIdx];
+    document.getElementById("qCount").innerText = `Question ${currentIdx + 1} of ${questions.length}`;
+    document.getElementById("qText").innerText = data.q;
+    
+    const list = document.getElementById("optionsList");
+    list.innerHTML = ""; // Clear old options
+    
+    data.opts.forEach(opt => {
+      list.innerHTML += `<div class="option" onclick="selectOption(this)">${opt}</div>`;
+    });
+
+    document.getElementById("nextBtn").classList.remove("active");
+    document.getElementById("nextBtn").innerText = (currentIdx === questions.length - 1) ? "Submit & Claim ₹5.00" : "Next Question";
+  }
+
+  function selectOption(el) {
+    // Remove active class from all
+    document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+    // Add to clicked
+    el.classList.add("selected");
+    // Enable button
+    document.getElementById("nextBtn").classList.add("active");
+  }
+
+  function nextQuestion() {
+    currentIdx++;
+    if (currentIdx < questions.length) {
+      loadQuestion();
+    } else {
+      claimReward();
+    }
+  }
+
+  function claimReward() {
+    const mobile = localStorage.getItem("activeUser");
+    let user = JSON.parse(localStorage.getItem("userProfile_" + mobile));
+    
+    user.wallet = (parseFloat(user.wallet) + TOTAL_REWARD).toFixed(2);
+    localStorage.setItem("userProfile_" + mobile, JSON.stringify(user));
+
+    alert("Survey Complete! ₹ 5.00 Added to Wallet.");
+    window.location.href = "surveys.html";
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EAP – Post New Ad</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f4f7f6; margin: 0; padding: 0; color: #333; }
+    .header { background: #9c27b0; padding: 15px 20px; display: flex; align-items: center; color: white; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px; }
+    .container { max-width: 700px; margin: 30px auto; padding: 0 20px; }
+    .ad-form-card { background: #fff; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-top: 5px solid #9c27b0; }
+    .section-title { font-size: 14px; font-weight: 700; color: #9c27b0; text-transform: uppercase; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 5px; }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-size: 13px; font-weight: 600; color: #555; margin-bottom: 8px; }
+    input[type="text"], input[type="number"], select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; background: #fafafa; }
+    input[type="file"] { padding: 10px; background: #fff; border: 1px dashed #9c27b0; width: 100%; border-radius: 6px; }
+    .budget-box { background: #f3e5f5; padding: 15px; border-radius: 8px; border: 1px dashed #9c27b0; margin-bottom: 20px; }
+    .total-cost { font-size: 18px; font-weight: 800; color: #7b1fa2; text-align: right; }
+    .btn-submit { width: 100%; padding: 14px; background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 16px; cursor: pointer; }
+    .btn-submit:disabled { background: #ccc; cursor: not-allowed; }
+    .status-msg { margin-top: 5px; font-size: 12px; font-weight: 700; }
+    .status-processing { color: #f57c00; }
+    .status-ready { color: #2e7d32; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <button class="back-btn" onclick="location.href='dashboard.html'">←</button>
+    <h2>Create Advertisement</h2>
+  </div>
+  <div class="container">
+    <div class="ad-form-card">
+      <div class="section-title">1. Ad Details</div>
+      <div class="form-group"><label>Business Name</label><input type="text" id="bizName" placeholder="e.g. CMR Shopping Mall"></div>
+      
+      <div class="form-group"><label>Ad Type</label>
+        <select id="adType" onchange="updateForm()">
+          <option value="Frame">Frame Ad (Image)</option>
+          <option value="Video">Video Ad</option>
+          <option value="Survey">Survey Ad</option>
+        </select>
+      </div>
+
+      <div class="form-group"><label>Category</label>
+        <select id="adCategory">
+          <option value="Shopping">Shopping</option><option value="Education">Education</option><option value="RealEstate">Real Estate</option><option value="Other">Other</option>
+        </select>
+      </div>
+
+      <div class="form-group"><label>Headline</label><input type="text" id="adTitle" placeholder="e.g. Flat 50% Off"></div>
+      <div class="form-group"><label>Description</label><textarea id="adDesc" rows="3" placeholder="Describe your offer details here..."></textarea></div>
+
+      <div class="form-group" id="urlGroup">
+        <label id="mediaLabel">Upload Ad Image</label>
+        <input type="file" id="mediaFile" accept="image/*" onchange="compressImage(this)">
+        <div id="uploadStatus" class="status-msg"></div>
+        <input type="hidden" id="finalBase64"> 
+      </div>
+
+      <div id="surveyBuilder"></div> 
+      <div class="form-group" id="qCountGroup" style="display:none;"><label>Questions</label><input type="number" id="qCount" oninput="generateQuestions(); calcTotal();"></div>
+      <div class="form-group" id="videoDurationGroup" style="display:none;"><label>Duration (Sec)</label><input type="number" id="vidDuration" oninput="calcTotal()"></div>
+
+      <div class="section-title">2. Budget</div>
+      <div class="form-group"><label>Location</label><input type="text" id="targetLoc" placeholder="e.g. Visakhapatnam"></div>
+      <div class="budget-box">
+        <div class="form-group"><label>Target Views</label><input type="number" id="views" value="100" oninput="calcTotal()"></div>
+        <div class="form-group"><label id="cpvLabel">Cost Per View (₹)</label><input type="number" id="cpv" value="1.00" readonly></div>
+        <div class="total-cost" id="totalCost">Total: ₹ 100.00</div>
+      </div>
+      
+      <button id="submitBtn" class="btn-submit" onclick="submitAd()">Publish Campaign</button>
+    </div>
+  </div>
+
+  <script>
+    function compressImage(input) {
+      const btn = document.getElementById("submitBtn");
+      const status = document.getElementById("uploadStatus");
+      if (!input.files || !input.files[0]) return;
+      btn.disabled = true;
+      btn.textContent = "Processing Image...";
+      status.textContent = "Compressing... Please wait.";
+      status.className = "status-msg status-processing";
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const ctx = canvas.getContext("2d");
+          const maxWidth = 800;
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth) {
+            height = Math.round(height * (maxWidth / width));
+            width = maxWidth;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.6);
+          document.getElementById("finalBase64").value = dataUrl;
+          status.textContent = "✔ Image Ready!";
+          status.className = "status-msg status-ready";
+          btn.disabled = false;
+          btn.textContent = "Publish Campaign";
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+    }
+
+    function submitAd() {
+      const type = document.getElementById("adType").value;
+      const biz = document.getElementById("bizName").value;
+      const title = document.getElementById("adTitle").value;
+      const desc = document.getElementById("adDesc").value; // Capture Description
+      const category = document.getElementById("adCategory").value;
+      const targetLoc = document.getElementById("targetLoc").value;
+      const views = document.getElementById("views").value;
+      const total = document.getElementById("totalCost").textContent;
+      
+      let finalMedia = "";
+      let surveyData = null;
+
+      if (type === "Frame") {
+        finalMedia = document.getElementById("finalBase64").value;
+        if (!finalMedia) { alert("Image not processed yet."); return; }
+      } else if (type === "Survey") {
+        const qCards = document.querySelectorAll(".question-card");
+        let questions = [];
+        qCards.forEach(card => {
+           questions.push({ text: card.querySelector(".q-input-text").value, options: ["A","B","C","D"] });
+        });
+        surveyData = questions;
+        finalMedia = questions.length;
+      }
+      
+      if(!biz || !title) { alert("Please fill details"); return; }
+
+      const newAd = {
+        id: Date.now(),
+        bizName: biz, 
+        title: title, 
+        description: desc, // SAVING DESCRIPTION NOW
+        type: type, 
+        category: category,
+        mediaUrl: finalMedia, 
+        surveyData: surveyData, 
+        targetLoc: targetLoc,
+        viewsTarget: views, 
+        viewsCurrent: 0, 
+        cost: total,
+        status: "Active", 
+        date: new Date().toLocaleDateString()
+      };
+
+      let myAds = JSON.parse(localStorage.getItem("vendorAds")) || [];
+      myAds.unshift(newAd);
+      try {
+        localStorage.setItem("vendorAds", JSON.stringify(myAds));
+        alert("Success! Ad Published.");
+        window.location.href = localStorage.getItem("activeVendorMobile") ? "vendor-ads.html" : "dashboard.html";
+      } catch (e) {
+        alert("Storage Full! Please clear old ads.");
+      }
+    }
+    
+    // Existing helper functions...
+    window.onload = function() { if(localStorage.getItem("userLocation")) document.getElementById("targetLoc").value = localStorage.getItem("userLocation"); updateForm(); };
+    function updateForm() {
+       const type = document.getElementById("adType").value;
+       const urlGroup = document.getElementById("urlGroup");
+       const qGroup = document.getElementById("qCountGroup");
+       const vGroup = document.getElementById("videoDurationGroup");
+       const cpv = document.getElementById("cpv");
+       if(type === "Frame") { urlGroup.style.display="block"; qGroup.style.display="none"; vGroup.style.display="none"; cpv.value="1.00"; }
+       else if (type === "Video") { urlGroup.style.display="block"; qGroup.style.display="none"; vGroup.style.display="block"; cpv.value="0.00"; }
+       else { urlGroup.style.display="none"; qGroup.style.display="block"; vGroup.style.display="none"; cpv.value="2.00"; }
+       calcTotal();
+    }
+    function calcTotal() {
+       const type = document.getElementById("adType").value;
+       const views = document.getElementById("views").value || 0;
+       let price = 1.00;
+       if(type==="Video") price = (document.getElementById("vidDuration").value || 0) * 0.10;
+       if(type==="Survey") price = (document.getElementById("qCount").value || 0) * 2.00;
+       document.getElementById("cpv").value = price.toFixed(2);
+       document.getElementById("totalCost").textContent = "Total: ₹ " + (views * price).toFixed(2);
+    }
+    function generateQuestions() {
+        const count = document.getElementById("qCount").value;
+        const b = document.getElementById("surveyBuilder"); b.innerHTML="";
+        for(let i=0; i<count; i++) { b.innerHTML += `<div class='question-card' style='background:#eee; padding:10px; margin-bottom:10px;'>Question ${i+1}<br><input class='q-input-text' style='width:100%'></div>`; }
+    }
+  </script>
+</body>
+</html>

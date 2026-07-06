@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Survey Ad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* APP FRAME STYLES */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #e0f2f1; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f8f9fa; border: 8px solid #fff; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1), 0 0 0 2px #b2dfdb;
+            display: flex; flex-direction: column;
+            box-sizing: border-box; position: relative; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #009688; padding: 25px 20px 20px 20px; color: white;
+            display: flex; align-items: center; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0,150,136,0.2); z-index: 10;
+        }
+        .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
+        .page-title { font-size: 18px; font-weight: 700; }
+
+        /* SCROLL AREA */
+        .container { 
+            padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 50px; 
+        }
+        .container::-webkit-scrollbar { display: none; }
+
+        /* CARDS */
+        .form-card { 
+            background: white; padding: 20px; border-radius: 15px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 20px; 
+        }
+
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; font-size: 13px; }
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin-bottom: 15px; 
+            border: 2px solid #eee; border-radius: 10px; font-size: 13px; 
+            box-sizing: border-box; font-family: 'Poppins', sans-serif;
+        }
+        input:focus, select:focus { border-color: #009688; outline: none; }
+
+        /* QUESTION BLOCK */
+        .question-block { 
+            background: #f0fdfc; border: 1px solid #b2dfdb; padding: 15px; 
+            border-radius: 10px; margin-bottom: 15px; position: relative; padding-top: 25px;
+        }
+        .q-number { 
+            position: absolute; top: -10px; left: -5px; 
+            background: #009688; color: white; width: 24px; height: 24px; 
+            border-radius: 50%; text-align: center; line-height: 24px; 
+            font-weight: bold; font-size: 11px; border: 2px solid white;
+        }
+        
+        /* COST SECTION */
+        .cost-box { 
+            background: #e0f2f1; padding: 15px; border-radius: 10px; 
+            border: 1px dashed #009688; margin-top: 10px; 
+        }
+        .cost-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #555; }
+        .cost-total { 
+            border-top: 1px solid #b2dfdb; padding-top: 10px; margin-top: 10px; 
+            font-weight: 700; color: #00796b; font-size: 16px; 
+            display: flex; justify-content: space-between; 
+        }
+
+        .btn-add { background: #333; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; margin-bottom: 10px; }
+        .btn-submit {
+            background-color: #009688; color: white; width: 100%; padding: 15px; 
+            border: none; border-radius: 12px; font-size: 15px; font-weight: 700; 
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,150,136,0.3); transition: 0.2s;
+        }
+        .btn-submit:active { transform: scale(0.98); }
+
+    </style>
+</head>
+<body onload="generateQuestions()">
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <a href="select_ad_type.html" class="back-btn">&larr;</a>
+        <div class="page-title">Post Survey Ad</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="form-card">
+            <label>Campaign Name</label>
+            <input type="text" id="campName" placeholder="e.g., Market Research 2026">
+
+            <label>Survey Tagline</label>
+            <input type="text" id="campTag" placeholder="e.g., Share your opinion!">
+
+            <label>Target Category</label>
+            <select id="campCat">
+                <option>Banking & Financial Services</option>
+        <option>Information Technology (IT & ITES)</option>
+        <option>FMCG</option>
+        <option>Pharmaceuticals & Healthcare</option>
+        <option>Automobile</option>
+        <option>Oil&Gas / Energy</option>
+        <option>Retail & E-Commerce</option> 
+        <option>Metals & Mining</option>
+        <option>Power & Utilities</option>
+        <option>Infrastructure</option>
+        <option>Chemicals & Fertilizers</option>
+        <option>Capital Goods & Engineering</option>
+        <option>Textiles & Apparel</option>
+        <option>Consumer Durables</option>
+        <option>Retail & E-Commerce</option>
+        <option>Logistics & Transportation</option>
+        <option>Agriculture & Allied</option>
+        <option>Family & Relatives </option>
+        <option>Food & Dining</option>
+        <option>Education</option>
+        <option>Real Estate & Construction</option>
+        <option>Media & Entertainment</option>
+        <option>Fashion & Lifestyle</option>
+        <option>Political</option>
+        <option>Cinema / Celebrities</option>
+        <option>Other</option>
+            </select>
+        </div>
+
+        <div class="form-card">
+            <h3 style="margin-top:0; font-size: 15px; color:#333;">Survey Questions</h3>
+            
+            <label>How many questions?</label>
+            <input type="number" id="numQuestions" value="1" min="1" max="10" onchange="generateQuestions()">
+            
+            <div id="questionsContainer"></div>
+            <button class="btn-add" onclick="addOneQuestion()">+ Add Another Question</button>
+        </div>
+
+        <div class="form-card">
+            <h3 style="margin-top: 0; font-size: 15px; color:#333;">Budget & Costing</h3>
+
+            <label>Target Responses</label>
+            <input type="number" id="responses" value="200" min="100" oninput="calculateCost()">
+
+            <div class="cost-box">
+                <div class="cost-row">
+                    <span>Questions</span>
+                    <span id="qCountDisplay">1</span>
+                </div>
+                <div class="cost-row">
+                    <span>Subtotal</span>
+                    <span id="subtotalDisplay">₹ 200.00</span>
+                </div>
+                <div class="cost-total">
+                    <span>Total Payable</span>
+                    <span id="totalDisplay">₹ 236.00</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="publishSurvey()">PAY & PUBLISH SURVEY</button>
+
+    </div>
+
+</div>
+
+<script>
+    function generateQuestions() {
+        var count = document.getElementById('numQuestions').value;
+        var container = document.getElementById('questionsContainer');
+        container.innerHTML = "";
+
+        for (var i = 1; i <= count; i++) {
+            var html = `
+            <div class="question-block">
+                <div class="q-number">${i}</div>
+                <label>Question ${i}</label>
+                <input type="text" placeholder="Type question here...">
+                <input type="text" placeholder="Option 1" style="margin-bottom:5px;">
+                <input type="text" placeholder="Option 2">
+            </div>`;
+            container.innerHTML += html;
+        }
+        calculateCost();
+    }
+
+    function addOneQuestion() {
+        var input = document.getElementById('numQuestions');
+        input.value = parseInt(input.value) + 1;
+        generateQuestions();
+    }
+
+    function calculateCost() {
+        var qCount = document.getElementById('numQuestions').value;
+        var responses = document.getElementById('responses').value;
+        var subtotal = qCount * 1.00 * responses;
+        var total = subtotal * 1.18; // Adding GST
+
+        document.getElementById('qCountDisplay').innerText = qCount;
+        document.getElementById('subtotalDisplay').innerText = "₹ " + subtotal.toFixed(2);
+        document.getElementById('totalDisplay').innerText = "₹ " + total.toFixed(2);
+    }
+
+    // --- NEW: FUNCTION TO SAVE AD ---
+    function publishSurvey() {
+        const name = document.getElementById('campName').value;
+        const category = document.getElementById('campCat').value;
+        const totalCost = document.getElementById('totalDisplay').innerText;
+        const responses = document.getElementById('responses').value;
+
+        if(!name) { alert("Please enter Campaign Name"); return; }
+
+        // 1. Create Ad Object
+        const newAd = {
+            id: "SUR" + Math.floor(Math.random() * 9999),
+            type: "Survey",
+            name: name,
+            category: category,
+            stats: { views: 0, clicks: 0, spent: 0 },
+            budget: totalCost,
+            target: responses,
+            status: "Pending", // Important: Starts as Pending
+            date: new Date().toLocaleDateString()
+        };
+
+        // 2. Get Existing Ads & Save
+        let ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+        ads.push(newAd);
+        localStorage.setItem("vendorCampaigns", JSON.stringify(ads));
+
+        // 3. Redirect
+        alert("Survey Submitted! Sent to Admin for Approval.");
+        window.location.href = "manage_campaigns.html"; // Go to list
+    }
+</script>
+
+</body>
+</html>

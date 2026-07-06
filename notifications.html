@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Notifications</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+        .mobile-screen { background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden; }
+        .header { background: #ff9800; padding: 20px; color: white; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 15px; }
+        .page-title { font-size: 18px; font-weight: 700; }
+        .list { padding: 20px; flex: 1; overflow-y: auto; }
+        .notif-card { background: #fff3e0; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #ff9800; }
+        .n-title { font-weight: 700; font-size: 13px; color: #333; margin-bottom: 5px; }
+        .n-msg { font-size: 11px; color: #555; }
+        .n-time { font-size: 10px; color: #999; margin-top: 8px; text-align: right; }
+    </style>
+</head>
+<body>
+<div class="mobile-screen">
+    <div class="header">
+        <a href="settings.html" class="back-btn">←</a>
+        <span class="page-title">Notifications</span>
+    </div>
+    <div class="list">
+        <div class="notif-card">
+            <div class="n-title">🎉 Welcome to EAP!</div>
+            <div class="n-msg">Start viewing ads and earning money today. Check out Frame Ads for instant rewards.</div>
+            <div class="n-time">Just Now</div>
+        </div>
+        <div class="notif-card" style="background:#e8f5e9; border-color:#4caf50;">
+            <div class="n-title">✅ Account Verified</div>
+            <div class="n-msg">Your mobile number has been successfully verified.</div>
+            <div class="n-time">Yesterday</div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

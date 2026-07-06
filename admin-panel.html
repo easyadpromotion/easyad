@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EAP - Super Admin</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 0; }
+    .mobile-screen { max-width: 400px; margin: 0 auto; min-height: 100vh; background: #fff; display: flex; flex-direction: column; }
+    
+    /* HEADER */
+    .header { background: #212121; color: white; padding: 20px; text-align: center; border-bottom: 4px solid #ff9800; }
+    .admin-title { font-size: 20px; font-weight: 700; letter-spacing: 1px; }
+    .admin-sub { font-size: 11px; opacity: 0.7; }
+
+    /* TABS */
+    .tabs { display: flex; background: #333; }
+    .tab { flex: 1; text-align: center; padding: 15px; color: #aaa; cursor: pointer; font-size: 12px; font-weight: 600; border-bottom: 3px solid transparent; }
+    .tab.active { color: #ff9800; border-bottom-color: #ff9800; background: #2a2a2a; }
+
+    /* CONTENT AREA */
+    .content-area { padding: 20px; background: #f4f7f6; flex: 1; }
+    .hidden { display: none; }
+
+    /* CARDS */
+    .card { background: white; padding: 15px; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 4px solid #ddd; }
+    
+    .card-title { font-weight: 700; font-size: 14px; margin-bottom: 5px; color: #333; }
+    .card-sub { font-size: 11px; color: #777; margin-bottom: 10px; }
+    
+    /* AD PREVIEW */
+    .ad-preview img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; }
+    
+    /* BUTTONS */
+    .btn-row { display: flex; gap: 10px; }
+    .btn { flex: 1; padding: 10px; border: none; border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 12px; }
+    .btn-approve { background: #4caf50; color: white; }
+    .btn-reject { background: #f44336; color: white; }
+    .btn-pay { background: #2196f3; color: white; }
+
+    /* STATUS BADGES */
+    .badge { padding: 3px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
+    .b-pending { background: #fff3e0; color: #ff9800; }
+    .b-live { background: #e8f5e9; color: #2e7d32; }
+
+    /* STATS GRID */
+    .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .stat-box { background: white; padding: 20px; border-radius: 10px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .st-num { font-size: 24px; font-weight: 800; color: #212121; }
+    .st-lbl { font-size: 10px; color: #888; text-transform: uppercase; }
+  </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+  
+  <div class="header">
+    <div class="admin-title">SUPER ADMIN</div>
+    <div class="admin-sub">Control Panel</div>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('ads')">AD REQUESTS</div>
+    <div class="tab" onclick="switchTab('payouts')">WITHDRAWALS</div>
+    <div class="tab" onclick="switchTab('stats')">STATS</div>
+  </div>
+
+  <div id="tab-ads" class="content-area">
+    <h3 style="margin-top:0;">Pending Approvals</h3>
+    
+    <div id="adList">
+      <div class="card" id="pendingAdCard">
+        <div style="display:flex; justify-content:space-between;">
+          <div class="card-title" id="adminVendorName">Loading...</div>
+          <span class="badge b-pending">Pending</span>
+        </div>
+        <div class="card-sub">📍 <span id="adminAdLoc">...</span></div>
+        
+        <div class="ad-preview">
+          <img id="adminAdImg" src="EAP-LOGO.jpg">
+        </div>
+        
+        <div class="btn-row">
+          <button class="btn btn-reject" onclick="rejectAd()">❌ Reject</button>
+          <button class="btn btn-approve" onclick="approveAd()">✓ Approve & Go Live</button>
+        </div>
+      </div>
+      
+      <div id="noAdsMsg" style="display:none; text-align:center; color:#999; margin-top:20px;">
+        No pending ads.
+      </div>
+    </div>
+  </div>
+
+  <div id="tab-payouts" class="content-area hidden">
+    <h3 style="margin-top:0;">Payment Requests</h3>
+    
+    <div class="card" style="border-left-color: #2196f3;">
+      <div class="card-title">Chukka Naidu</div>
+      <div class="card-sub">UPI: 9988776655@ybl</div>
+      <div style="font-size:20px; font-weight:800; margin-bottom:10px;">₹ 450.00</div>
+      <button class="btn btn-pay" onclick="alert('Payment Marked as Sent!')">💸 Mark as Paid</button>
+    </div>
+
+    <div class="card" style="border-left-color: #2196f3;">
+      <div class="card-title">Ravi Kumar</div>
+      <div class="card-sub">GPay: 8877665544</div>
+      <div style="font-size:20px; font-weight:800; margin-bottom:10px;">₹ 1,200.00</div>
+      <button class="btn btn-pay" onclick="alert('Payment Marked as Sent!')">💸 Mark as Paid</button>
+    </div>
+  </div>
+
+  <div id="tab-stats" class="content-area hidden">
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="st-num">125</div>
+        <div class="st-lbl">Total Users</div>
+      </div>
+      <div class="stat-box">
+        <div class="st-num">12</div>
+        <div class="st-lbl">Active Vendors</div>
+      </div>
+      <div class="stat-box">
+        <div class="st-num">₹ 5k</div>
+        <div class="st-lbl">Paid Out</div>
+      </div>
+      <div class="stat-box">
+        <div class="st-num">450</div>
+        <div class="st-lbl">Ads Viewed</div>
+      </div>
+    </div>
+    
+    <button class="btn" style="background:#333; color:white; margin-top:30px;" onclick="window.location.href='index.html'">Logout</button>
+  </div>
+
+</div>
+
+<script>
+  // 1. Load Data on Start
+  window.onload = function() {
+    loadPendingAd();
+  };
+
+  function switchTab(tabName) {
+    // Hide all
+    document.getElementById("tab-ads").classList.add("hidden");
+    document.getElementById("tab-payouts").classList.add("hidden");
+    document.getElementById("tab-stats").classList.add("hidden");
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    
+    // Show selected
+    document.getElementById("tab-" + tabName).classList.remove("hidden");
+    event.target.classList.add("active");
+  }
+
+  function loadPendingAd() {
+    const vendor = localStorage.getItem("currentAdVendor");
+    const loc = localStorage.getItem("currentAdLoc");
+    const img = localStorage.getItem("demoAdImage");
+    const isApproved = localStorage.getItem("adIsLive");
+
+    if(vendor && !isApproved) {
+      document.getElementById("adminVendorName").innerText = vendor;
+      document.getElementById("adminAdLoc").innerText = loc;
+      if(img) document.getElementById("adminAdImg").src = img;
+    } else {
+      // Hide card if already approved or no ad
+      document.getElementById("pendingAdCard").style.display = "none";
+      document.getElementById("noAdsMsg").style.display = "block";
+    }
+  }
+
+  function approveAd() {
+    // Set a flag that User App can check
+    localStorage.setItem("adIsLive", "true");
+    alert("Ad Approved! It is now visible to all users.");
+    loadPendingAd(); // Refresh view
+  }
+
+  function rejectAd() {
+    localStorage.removeItem("currentAdVendor"); // Delete the ad data
+    localStorage.removeItem("demoAdImage");
+    alert("Ad Rejected & Removed.");
+    loadPendingAd();
+  }
+</script>
+<a href="admin-ads.html">📢 Manage Banner Ads</a></body>
+</html>

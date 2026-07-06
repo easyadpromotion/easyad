@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Account</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* 1. DESKTOP BACKGROUND */
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #e0e0e0; 
+            margin: 0; padding: 0; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh;
+        }
+
+        /* 2. MOBILE FRAME CONTAINER */
+        .mobile-screen {
+            background: #29b6f6; /* Cyan Blue Background (Visible in gap) */
+            width: 100%; 
+            max-width: 360px; 
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.25); 
+        }
+
+        /* Desktop Mode: Phone Look */
+        @media (min-width: 450px) {
+            .mobile-screen {
+                height: 95vh; 
+                min-height: 850px; 
+                border-radius: 45px; 
+                border: 14px solid #111; 
+                overflow: hidden; 
+                margin: 10px;
+            }
+        }
+
+        /* 3. REGISTRATION CARD - FULL WIDTH & TOP */
+        .reg-card {
+            background: white;
+            width: 100%;
+            flex: 1; /* Fills space */
+            margin-top: 0; /* Touches Top Edge */
+            margin-bottom: 15px; /* THE BLUE GAP */
+            border-radius: 0 0 35px 35px;
+            padding: 30px 25px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow-y: auto; /* Scrollable if content is long */
+        }
+
+        /* BACK BUTTON */
+        .back-btn {
+            position: absolute; top: 25px; left: 25px;
+            width: 40px; height: 40px; background: #f5f5f5;
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            color: #333; font-size: 20px; text-decoration: none; cursor: pointer;
+            border: none; z-index: 100;
+        }
+
+        /* LOGO & TITLE */
+        .logo-box { width: 80px; height: 80px; margin: 20px auto 10px; background: white; border-radius: 20px; box-shadow: 0 5px 15px rgba(0,0,0,0.05); display: flex; align-items: center; justify-content: center; }
+        .logo-img { width: 50px; height: auto; }
+        .brand-title { text-align: center; color: #ff9800; font-weight: 800; font-size: 24px; margin-bottom: 20px; }
+
+        /* ALERT BANNER */
+        .alert-box {
+            background: #fff3e0; border: 1px dashed #ffb74d; border-radius: 12px;
+            padding: 12px; text-align: center; font-size: 11px; color: #e65100; font-weight: 700;
+            margin-bottom: 20px;
+        }
+
+        /* STEPS UI */
+        .step-indicator { text-align: right; font-size: 12px; color: #999; margin-bottom: 5px; }
+        .step-title { font-size: 26px; font-weight: 800; color: #333; margin-bottom: 5px; }
+        .step-desc { font-size: 14px; color: #777; margin-bottom: 25px; }
+
+        /* MOBILE NUMBER DISPLAY */
+        .mobile-display {
+            background: #e3f2fd; color: #0277bd; padding: 15px; border-radius: 15px;
+            font-size: 15px; font-weight: 600; margin-bottom: 25px; border: 1px solid #bbdefb;
+            text-align: center;
+        }
+
+        /* INPUTS - BIG STYLE */
+        .inp { 
+            width: 100%; padding: 22px; border: 2px solid #f0f0f0; border-radius: 18px; 
+            box-sizing: border-box; font-size: 18px; outline: none; transition: 0.3s;
+            background: #fafafa; font-family: 'Poppins', sans-serif; color: #333; font-weight: 600;
+        }
+        .inp:focus { border-color: #ff9800; background: white; }
+
+        /* OPTIONS BUTTONS */
+        .opt-list { display: flex; flex-direction: column; gap: 12px; }
+        .opt-btn { 
+            width: 100%; padding: 18px; border: 1px solid #eee; background: white; 
+            border-radius: 15px; text-align: left; font-size: 16px; color: #444; 
+            font-weight: 600; cursor: pointer; transition: 0.2s; 
+        }
+        .opt-btn:hover { background: #fff8e1; border-color: #ff9800; }
+        .opt-btn.selected { background: #ff9800; color: white; border-color: #ff9800; }
+
+        /* NEXT BUTTON - BIG ORANGE */
+        .btn-next { 
+            width: 100%; padding: 22px; background: #ff9800; color: white; border: none; 
+            border-radius: 18px; font-weight: 700; font-size: 18px; cursor: pointer; 
+            box-shadow: 0 10px 25px rgba(255, 152, 0, 0.3); margin-top: auto;
+            display: flex; justify-content: center; align-items: center; gap: 10px;
+        }
+        .btn-next:active { transform: scale(0.98); }
+
+        /* SCREENS LOGIC */
+        .screen { display: none; flex-direction: column; flex: 1; }
+        .screen.active { display: flex; animation: fadeIn 0.4s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 4. BOTTOM AD SPACE */
+        .ad-footer {
+            background: white;
+            width: 100%;
+            padding: 25px 30px 40px; 
+            box-sizing: border-box;
+            text-align: center;
+            border-radius: 35px 35px 0 0;
+            flex-shrink: 0;
+        }
+        .trip-icon { font-size: 36px; margin-bottom: 5px; display: block; }
+        .trip-badge {
+            background: #fff3e0; color: #ff8f00; border: 1px solid #ffe082;
+            font-size: 11px; font-weight: 800; padding: 5px 15px; 
+            border-radius: 20px; display: inline-block; margin-bottom: 8px; letter-spacing: 1px;
+        }
+        .ad-title { font-size: 18px; font-weight: 800; color: #333; margin-bottom: 5px; }
+        .ad-desc { font-size: 12px; color: #666; line-height: 1.5; margin: 0 auto; max-width: 280px; }
+
+    </style>
+</head>
+<body onload="initReg()">
+
+<div class="mobile-screen">
+    <div class="reg-card">
+        
+        <div class="back-btn" onclick="handleBack()">←</div>
+
+        <div class="logo-box">
+            <img src="EAP-LOGO.jpg" class="logo-img" onerror="this.src='https://via.placeholder.com/50'">
+        </div>
+        <div class="brand-title">EAP</div>
+
+        <div class="alert-box">🚀 Complete your profile to start earning!</div>
+
+        <form id="regForm" onsubmit="return false;" style="flex:1; display:flex; flex-direction:column;">
+            
+            <div class="screen active" id="scFName">
+                <div class="step-indicator">Step 1 of 6</div>
+                <div class="mobile-display" id="dispMobile">Mobile: ...</div>
+                
+                <div class="step-title">First Name</div>
+                <div class="step-desc">Enter your legal first name.</div>
+                <input type="text" id="inpFName" class="inp" placeholder="e.g. Rahul">
+            </div>
+
+            <div class="screen" id="scLName">
+                <div class="step-indicator">Step 2 of 6</div>
+                <div class="step-title">Last Name</div>
+                <div class="step-desc">Enter your surname.</div>
+                <input type="text" id="inpLName" class="inp" placeholder="e.g. Verma">
+            </div>
+
+            <div class="screen" id="scDOB">
+                <div class="step-indicator">Step 3 of 6</div>
+                <div class="step-title">Date of Birth</div>
+                <div class="step-desc">Select your date of birth.</div>
+                <input type="date" id="inpDOB" class="inp">
+            </div>
+
+            <div class="screen" id="scGender">
+                <div class="step-indicator">Step 4 of 6</div>
+                <div class="step-title">Gender</div>
+                <div class="step-desc">Select your gender.</div>
+                <div class="opt-list">
+                    <button class="opt-btn" onclick="selectOpt(this, 'gender', 'Male')">Male</button>
+                    <button class="opt-btn" onclick="selectOpt(this, 'gender', 'Female')">Female</button>
+                    <button class="opt-btn" onclick="selectOpt(this, 'gender', 'Transgender')">Transgender</button>
+                </div>
+            </div>
+
+            <div class="screen" id="scProf">
+                <div class="step-indicator">Step 5 of 6</div>
+                <div class="step-title">Profession</div>
+                <div class="step-desc">What do you do?</div>
+                <div class="opt-list">
+                    <button class="opt-btn" onclick="selProf('Salaried')">Salaried</button>
+                    <button class="opt-btn" onclick="selProf('Self Employed')">Self Employed</button>
+                    <button class="opt-btn" onclick="selProf('Student')">Student</button>
+                    <button class="opt-btn" onclick="selProf('Homemaker')">Homemaker</button>
+                    <button class="opt-btn" onclick="selProf('Agriculture')">Agriculture</button>
+                    <button class="opt-btn" onclick="selProf('Other')">Other</button>
+                </div>
+            </div>
+
+            <div class="screen" id="scSubProf">
+                <div class="step-indicator">Step 6 of 6</div>
+                <div class="step-title">Specific Role</div>
+                <div class="step-desc">Select your specific role.</div>
+                <div id="subList" class="opt-list"></div>
+            </div>
+
+            <div style="margin-top:20px;">
+                <button class="btn-next" id="btnNext" onclick="goNext()">Next ➔</button>
+            </div>
+        </form>
+
+    </div>
+
+    <div class="ad-footer">
+        <span class="trip-icon">✈️🌴</span>
+        <span class="trip-badge">EAP MEGA GIVEAWAY</span>
+        <div class="ad-title">Win a Trip to Dubai!</div>
+        <div class="ad-desc">
+            Complete your profile to qualify for the lucky draw. 
+            <strong>Join now</strong> to claim your free bonus points!
+        </div>
+    </div>
+</div>
+
+<script>
+    let userData = { mobile: '', firstName: '', lastName: '', dob: '', gender: '', profession: '', subProfession: '' };
+    const screens = ["scFName", "scLName", "scDOB", "scGender", "scProf", "scSubProf"];
+    let currentStep = 0;
+    
+    // Sub-professions list
+    const subProfs = {
+        'Salaried': ['Private Sector', 'Govt Sector', 'PSU'],
+        'Self Employed': ['Shop Owner', 'Freelancer', 'Business Owner', 'Doctor/Lawyer'],
+        'Student': ['School', 'College', 'Graduated'],
+        'Homemaker': ['House Wife'],
+        'Agriculture': ['Farmer', 'Dairy Farming'],
+        'Other': ['Retired', 'Unemployed', 'Gig Worker']
+    };
+
+    function initReg() {
+        const params = new URLSearchParams(window.location.search);
+        let mobile = params.get('mobile');
+        if(!mobile) mobile = "Guest";
+        userData.mobile = mobile.trim();
+        document.getElementById("dispMobile").innerText = "Mobile: " + mobile;
+    }
+
+    function handleBack() {
+        if (currentStep > 0) {
+            // If on Step 2+, go back one step
+            currentStep--;
+            updateUI();
+        } else {
+            // If on Step 1, go back to Login Page
+            window.location.href = 'user_login.html';
+        }
+    }
+
+    function goNext() {
+        // Validation
+        if(currentStep === 0 && !document.getElementById("inpFName").value) { alert("Please enter First Name"); return; }
+        if(currentStep === 1 && !document.getElementById("inpLName").value) { alert("Please enter Last Name"); return; }
+        if(currentStep === 2 && !document.getElementById("inpDOB").value) { alert("Please enter Date of Birth"); return; }
+        if(currentStep === 3 && !userData.gender) { alert("Please select Gender"); return; }
+
+        // Save Data
+        if(currentStep === 0) userData.firstName = document.getElementById("inpFName").value;
+        if(currentStep === 1) userData.lastName = document.getElementById("inpLName").value;
+        if(currentStep === 2) userData.dob = document.getElementById("inpDOB").value;
+
+        // Final Submit
+        if(currentStep === 5) {
+            finishSignup();
+            return;
+        }
+
+        currentStep++;
+        updateUI();
+    }
+
+    function updateUI() {
+        // Hide all screens
+        screens.forEach(id => document.getElementById(id).classList.remove("active"));
+        // Show current screen
+        document.getElementById(screens[currentStep]).classList.add("active");
+        
+        // Update Button Text
+        document.getElementById("btnNext").innerText = (currentStep === 5) ? "Submit & Start Earning" : "Next ➔";
+    }
+
+    function selectOpt(btn, key, val) {
+        // UI Highlight
+        let siblings = btn.parentElement.children;
+        for(let i=0; i<siblings.length; i++) siblings[i].classList.remove('selected');
+        btn.classList.add('selected');
+        
+        // Data Save
+        userData[key] = val;
+    }
+
+    function selProf(profKey) {
+        userData.profession = profKey;
+        
+        // Generate Sub-list
+        const list = subProfs[profKey] || ['Other'];
+        const container = document.getElementById("subList");
+        container.innerHTML = "";
+        
+        list.forEach(sub => {
+            let btn = document.createElement("button");
+            btn.className = "opt-btn";
+            btn.innerText = sub;
+            btn.onclick = function() { 
+                selectOpt(this, 'subProfession', sub); 
+            };
+            container.appendChild(btn);
+        });
+
+        goNext(); // Auto advance after selection
+    }
+
+    function finishSignup() {
+        if(!userData.subProfession) { alert("Please select a specific role"); return; }
+
+        const finalProfile = {
+            mobile: userData.mobile,
+            name: userData.firstName + " " + userData.lastName,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            dob: userData.dob,
+            gender: userData.gender,
+            profession: userData.profession,
+            subProfession: userData.subProfession,
+            wallet: 0.00,
+            viewedAds: []
+        };
+        
+        // SAVE USER DATA
+        localStorage.setItem("userProfile_" + userData.mobile, JSON.stringify(finalProfile));
+        localStorage.setItem("activeUser", userData.mobile);
+        
+        alert("Profile Completed! Welcome to EAP.");
+        window.location.href = "home.html";
+    }
+</script>
+
+</body>
+</html>

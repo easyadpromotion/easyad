@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* 1. DESKTOP BACKGROUND */
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #e0e0e0; 
+            margin: 0; padding: 0; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh;
+        }
+
+        /* 2. MOBILE FRAME CONTAINER */
+        .mobile-screen {
+            background: #29b6f6; /* Cyan Blue Background (Visible only in the gap) */
+            width: 100%; 
+            max-width: 360px; 
+            min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.25); 
+        }
+
+        /* Desktop Mode: Phone Look */
+        @media (min-width: 450px) {
+            .mobile-screen {
+                height: 95vh; 
+                min-height: 850px; 
+                border-radius: 45px; 
+                border: 14px solid #111; 
+                overflow: hidden; 
+                margin: 10px;
+            }
+        }
+
+        /* 3. LOGIN CARD - FULL WIDTH & TOP */
+        .login-card {
+            background: white;
+            width: 100%; /* Full Width */
+            flex: 1; /* Fills space */
+            margin-top: 0; /* Touches Top Edge */
+            margin-bottom: 15px; /* THE BLUE GAP */
+            border-radius: 0 0 35px 35px;
+            padding: 40px 30px;
+            box-sizing: border-box;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* --- BACK BUTTON FACILITY --- */
+        .back-btn {
+            position: absolute; 
+            top: 25px; 
+            left: 25px;
+            width: 45px; 
+            height: 45px; 
+            background: #f5f5f5; /* Light Grey BG */
+            border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center;
+            color: #333; /* Dark Icon */
+            font-size: 24px; 
+            text-decoration: none; 
+            cursor: pointer;
+            border: 1px solid #eee;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transition: 0.2s;
+            z-index: 100;
+        }
+        .back-btn:active { transform: scale(0.95); background: #e0e0e0; }
+
+        /* BIGGER LOGO */
+        .logo-box { width: 120px; height: 120px; margin: 40px auto 20px; background: #f0f8ff; border-radius: 30px; display: flex; align-items: center; justify-content: center; }
+        .logo-img { width: 80px; height: auto; }
+
+        /* BIGGER TEXT */
+        h2 { color: #333; font-size: 30px; margin-bottom: 5px; font-weight: 800; }
+        p { color: #888; font-size: 15px; margin-bottom: 40px; }
+
+        /* BIGGER INPUTS */
+        .input-group { margin-bottom: 25px; text-align: left; width: 100%; }
+        .label { display: block; font-size: 14px; font-weight: 700; color: #555; margin-bottom: 10px; margin-left: 5px; }
+        .inp { 
+            width: 100%; padding: 22px; border: 2px solid #f0f0f0; border-radius: 18px; 
+            box-sizing: border-box; font-size: 18px; outline: none; transition: 0.3s;
+            background: #fafafa; font-family: inherit; font-weight: 600; color: #333;
+        }
+        .inp:focus { border-color: #29b6f6; background: white; }
+
+        /* BIGGER BUTTONS */
+        .btn { 
+            width: 100%; padding: 22px; background: #ff9800; color: white; border: none; 
+            border-radius: 18px; font-weight: 700; font-size: 19px; cursor: pointer; 
+            box-shadow: 0 10px 25px rgba(255, 152, 0, 0.3); transition: 0.2s;
+            margin-top: 10px;
+        }
+        .btn:active { transform: scale(0.98); }
+        .btn:disabled { background: #e0e0e0; color: #999; box-shadow: none; cursor: not-allowed;}
+
+        .footer-link { margin-top: 30px; font-size: 14px; color: #999; }
+        .link { color: #0277bd; text-decoration: none; font-weight: 700; }
+
+        /* 4. BOTTOM AD SPACE */
+        .ad-footer {
+            background: white;
+            width: 100%;
+            padding: 25px 30px 40px; 
+            box-sizing: border-box;
+            text-align: center;
+            border-radius: 35px 35px 0 0;
+            flex-shrink: 0;
+        }
+        .trip-icon { font-size: 36px; margin-bottom: 5px; display: block; }
+        .trip-badge {
+            background: #fff3e0; color: #ff8f00; border: 1px solid #ffe082;
+            font-size: 11px; font-weight: 800; padding: 5px 15px; 
+            border-radius: 20px; display: inline-block; margin-bottom: 8px; letter-spacing: 1px;
+        }
+        .ad-title { font-size: 18px; font-weight: 800; color: #333; margin-bottom: 5px; }
+        .ad-desc { font-size: 12px; color: #666; line-height: 1.5; margin: 0 auto; max-width: 280px; }
+
+        /* OTP ANIMATION */
+        #otpSection { display: none; animation: fadeIn 0.5s; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .status-msg { font-size: 13px; text-align: center; margin-top: 15px; color: #d32f2f; display: none; font-weight: 600; }
+        .success-msg { color: #388e3c; }
+
+    </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+    
+    <div class="login-card">
+        
+        <a href="index.html" class="back-btn">←</a>
+
+        <div class="logo-box">
+            <img src="EAP-LOGO.jpg" class="logo-img" onerror="this.src='https://via.placeholder.com/80'">
+        </div>
+        <h2>Welcome Back</h2>
+        <p>Login to your User account</p>
+
+        <div id="mobileGroup" style="width:100%">
+            <div class="input-group">
+                <label class="label">Mobile Number</label>
+                <input type="number" id="mobileInput" class="inp" placeholder="e.g. 9876543210">
+            </div>
+            <button class="btn" id="getOtpBtn" onclick="sendOTP()">Get OTP</button>
+        </div>
+
+        <div id="otpSection" style="width:100%">
+            <div class="input-group">
+                <label class="label" id="otpLabel">Enter OTP</label>
+                <input type="number" id="otpInput" class="inp" placeholder="Enter 6-digit OTP">
+            </div>
+            <button class="btn" id="verifyBtn" onclick="verifyOTP()">Verify & Login</button>
+            <div style="text-align:center; margin-top:20px;">
+                <span style="font-size:13px; color:#888; cursor:pointer; text-decoration:underline;" onclick="location.reload()">Change Number</span>
+            </div>
+        </div>
+        
+        <div class="status-msg" id="statusMsg"></div>
+
+        <div class="footer-link">
+            New here? <a href="registration.html" class="link">Create Account</a>
+        </div>
+    </div>
+
+    <div class="ad-footer">
+        <span class="trip-icon">✈️🌴</span>
+        <span class="trip-badge">EAP MEGA GIVEAWAY</span>
+        <div class="ad-title">Win a Trip to Dubai!</div>
+        <div class="ad-desc">
+            Complete daily tasks to enter the lucky draw. 
+            <strong>Login now</strong> to claim your free bonus points!
+        </div>
+    </div>
+
+</div>
+
+<script>
+    const API_KEY = "a22c0ac1-5a46-11eb-8153-0200cd936042"; 
+    let sessionId = "";
+    let mobileNumber = "";
+
+    function sendOTP() {
+        const rawMobile = document.getElementById("mobileInput").value;
+        mobileNumber = rawMobile.trim(); 
+        
+        const btn = document.getElementById("getOtpBtn");
+        const msg = document.getElementById("statusMsg");
+
+        if(mobileNumber.length !== 10) {
+            alert("Please enter a valid 10-digit mobile number");
+            return;
+        }
+
+        btn.innerText = "Sending SMS...";
+        btn.disabled = true;
+        msg.style.display = "none";
+
+        const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${mobileNumber}/AUTOGEN`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if(data.Status === "Success") {
+                    sessionId = data.Details;
+                    
+                    document.getElementById("mobileGroup").style.display = "none";
+                    document.getElementById("otpSection").style.display = "block";
+                    document.getElementById("otpLabel").innerText = `OTP sent to ${mobileNumber}`;
+                    
+                    msg.innerText = "SMS Sent Successfully!";
+                    msg.className = "status-msg success-msg";
+                    msg.style.display = "block";
+                } else {
+                    msg.innerText = "Error: " + (data.Details || "SMS Failed");
+                    msg.className = "status-msg";
+                    msg.style.display = "block";
+                    btn.innerText = "Get OTP";
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                msg.innerText = "Network Error. Please try again.";
+                msg.style.display = "block";
+                btn.innerText = "Get OTP";
+                btn.disabled = false;
+            });
+    }
+
+    function verifyOTP() {
+        const otpValue = document.getElementById("otpInput").value.trim();
+        const btn = document.getElementById("verifyBtn");
+        
+        if(otpValue.length < 4) {
+            alert("Enter valid OTP");
+            return;
+        }
+
+        btn.innerText = "Verifying...";
+        btn.disabled = true;
+
+        const url = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otpValue}`;
+
+        fetch(url)
+            .then(res => res.json())
+            .then(data => {
+                if(data.Status === "Success") {
+                    finalizeLogin();
+                } else {
+                    alert("Incorrect OTP");
+                    btn.innerText = "Verify & Login";
+                    btn.disabled = false;
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Verification Error");
+                btn.innerText = "Verify & Login";
+                btn.disabled = false;
+            });
+    }
+
+    function finalizeLogin() {
+        const userKey = "userProfile_" + mobileNumber;
+        const existingProfile = localStorage.getItem(userKey);
+        
+        if(existingProfile) {
+            localStorage.setItem("activeUser", mobileNumber);
+            window.location.href = "home.html"; 
+        } else {
+            window.location.href = "registration.html?mobile=" + mobileNumber;
+        }
+    }
+</script>
+
+</body>
+</html>

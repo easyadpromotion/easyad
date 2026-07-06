@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EAP – Campaign Manager</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 0; color: #333; }
+    
+    /* HEADER (Teal) */
+    .header {
+      background: #00796b; padding: 15px 20px; display: flex; align-items: center; color: white;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px; }
+    h2 { margin: 0; font-size: 18px; }
+
+    .container { max-width: 800px; margin: 20px auto; padding: 0 15px; }
+
+    /* SUMMARY CARDS */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 20px; }
+    .s-card { background: #fff; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    .s-val { font-size: 20px; font-weight: 700; color: #00796b; }
+    .s-lbl { font-size: 11px; color: #666; text-transform: uppercase; }
+
+    /* CAMPAIGN LIST */
+    .campaign-card {
+      background: #fff; border-radius: 10px; padding: 20px; margin-bottom: 15px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #ccc;
+      transition: transform 0.2s;
+    }
+    .campaign-card:hover { transform: translateY(-2px); }
+
+    /* Border colors based on type */
+    .type-Frame { border-left-color: #ff9800; }
+    .type-Video { border-left-color: #e91e63; }
+    .type-Survey { border-left-color: #2196f3; }
+
+    .c-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .c-title { font-size: 16px; font-weight: 700; color: #333; }
+    .c-status { 
+      font-size: 11px; padding: 4px 8px; border-radius: 12px; font-weight: 700; text-transform: uppercase; 
+    }
+    .st-active { background: #e8f5e9; color: #2e7d32; }
+    .st-paused { background: #fff3e0; color: #ef6c00; }
+
+    .c-stats { display: flex; gap: 20px; font-size: 13px; color: #666; margin-bottom: 15px; }
+    .c-stats span b { color: #333; }
+
+    .progress-bg { height: 6px; background: #eee; border-radius: 3px; overflow: hidden; margin-bottom: 15px; }
+    .progress-fill { height: 100%; background: #009688; width: 0%; transition: width 0.5s; }
+
+    .c-actions { display: flex; gap: 10px; }
+    .btn-act {
+      padding: 8px 12px; border: 1px solid #ddd; background: #fff; border-radius: 4px;
+      cursor: pointer; font-size: 12px; font-weight: 600; flex: 1;
+    }
+    .btn-pause { color: #d32f2f; border-color: #ffcdd2; }
+    .btn-edit { color: #1976d2; border-color: #bbdefb; }
+
+    .empty-msg { text-align: center; padding: 40px; color: #888; }
+    .fab {
+      position: fixed; bottom: 20px; right: 20px; background: #00796b; color: white;
+      width: 56px; height: 56px; border-radius: 50%; display: flex; justify-content: center;
+      align-items: center; font-size: 24px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      cursor: pointer; text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <button class="back-btn" onclick="location.href='vendor-dashboard.html'">←</button>
+    <h2>Manage Campaigns</h2>
+  </div>
+
+  <div class="container">
+    
+    <div class="summary-grid">
+      <div class="s-card"><div class="s-val" id="totalAds">0</div><div class="s-lbl">Total Ads</div></div>
+      <div class="s-card"><div class="s-val" id="totalViews">0</div><div class="s-lbl">Total Views</div></div>
+      <div class="s-card"><div class="s-val" id="totalSpend">₹0</div><div class="s-lbl">Spend</div></div>
+    </div>
+
+    <div id="campaignList">
+      </div>
+
+    <div class="empty-msg" id="emptyMsg" style="display:none;">
+      No active campaigns found.<br>Click the + button to create one.
+    </div>
+
+  </div>
+
+  <a href="post-ad.html" class="fab">+</a>
+
+  <script>
+    window.onload = function() {
+      // 1. Get Ads from Storage
+      const ads = JSON.parse(localStorage.getItem("vendorAds")) || [];
+      
+      document.getElementById("totalAds").textContent = ads.length;
+      
+      const list = document.getElementById("campaignList");
+      
+      if(ads.length === 0) {
+        document.getElementById("emptyMsg").style.display = "block";
+        return;
+      }
+
+      let totalV = 0;
+
+      ads.forEach((ad, index) => {
+        // Calculate Progress (Mock data for views if 0)
+        // In real app, viewsCurrent would update when users watch ads
+        const progress = Math.min(100, (ad.viewsCurrent / ad.viewsTarget) * 100);
+        totalV += parseInt(ad.viewsCurrent || 0);
+
+        const html = `
+          <div class="campaign-card type-${ad.type}">
+            <div class="c-header">
+              <div class="c-title">${ad.bizName} - ${ad.type} Ad</div>
+              <div class="c-status ${ad.status === 'Active' ? 'st-active' : 'st-paused'}">${ad.status}</div>
+            </div>
+            
+            <div style="font-size:14px; margin-bottom:8px; color:#555;">${ad.title}</div>
+            
+            <div class="c-stats">
+              <span><b>${ad.viewsCurrent}</b> / ${ad.viewsTarget} Views</span>
+              <span>Budget: <b>${ad.cost}</b></span>
+              <span>Date: ${ad.date}</span>
+            </div>
+
+            <div class="progress-bg">
+              <div class="progress-fill" style="width: ${progress}%"></div>
+            </div>
+
+            <div class="c-actions">
+              <button class="btn-act btn-pause" onclick="toggleStatus(${index})">
+                ${ad.status === 'Active' ? '⏸ Pause Campaign' : '▶ Resume Campaign'}
+              </button>
+              <button class="btn-act btn-edit" onclick="alert('Edit feature coming soon')">✏ Edit Details</button>
+            </div>
+          </div>
+        `;
+        list.innerHTML += html;
+      });
+
+      document.getElementById("totalViews").textContent = totalV;
+    };
+
+    function toggleStatus(index) {
+      let ads = JSON.parse(localStorage.getItem("vendorAds"));
+      // Toggle
+      if(ads[index].status === "Active") ads[index].status = "Paused";
+      else ads[index].status = "Active";
+      
+      // Save and Refresh
+      localStorage.setItem("vendorAds", JSON.stringify(ads));
+      location.reload();
+    }
+  </script>
+</body>
+</html>

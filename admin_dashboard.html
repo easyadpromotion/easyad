@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 1. APP FRAME STYLES */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #2d3436; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f0f2f5; border: 8px solid #444; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 2px #2d3436;
+            display: flex; flex-direction: column;
+            box-sizing: border-box; position: relative; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #2d3436; padding: 25px 20px 40px 20px; color: white;
+            border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .admin-title { font-size: 20px; font-weight: 700; }
+        .logout-btn { 
+            background: rgba(255,255,255,0.2); padding: 5px 12px; 
+            border-radius: 15px; font-size: 11px; color: white; text-decoration: none; font-weight: 600;
+        }
+
+        /* STATS GRID (Overlaps Header) */
+        .stats-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
+            padding: 0 20px; margin-top: -30px; 
+        }
+        .stat-card { 
+            background: white; padding: 15px; border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; 
+        }
+        .stat-num { font-size: 20px; font-weight: 700; color: #2d3436; display: block; }
+        .stat-label { font-size: 11px; color: #888; font-weight: 500; text-transform: uppercase; }
+
+        /* ACTION LIST */
+        .section-title { margin: 25px 20px 10px; font-size: 14px; font-weight: 700; color: #555; }
+        
+        .action-list { padding: 0 20px; flex: 1; overflow-y: auto; padding-bottom: 50px; }
+        .action-list::-webkit-scrollbar { display: none; }
+
+        .action-card { 
+            background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; 
+            display: flex; align-items: center; text-decoration: none; color: inherit;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: transform 0.2s;
+        }
+        .action-card:active { transform: scale(0.98); background: #f9f9f9; }
+
+        .icon-box { 
+            width: 45px; height: 45px; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; margin-right: 15px; 
+        }
+        .ac-text h4 { margin: 0; font-size: 14px; color: #333; font-weight: 700; }
+        .ac-text p { margin: 2px 0 0; font-size: 11px; color: #888; }
+        .arrow { margin-left: auto; color: #ccc; font-weight: bold; }
+
+        /* BADGE */
+        .badge { 
+            background: #d63031; color: white; font-size: 10px; font-weight: 700;
+            padding: 2px 8px; border-radius: 10px; margin-left: 8px; 
+        }
+
+        /* COLORS */
+        .bg-orange { background: #fff3e0; color: #e65100; }
+        .bg-blue { background: #e3f2fd; color: #1565c0; }
+        .bg-green { background: #e8f5e9; color: #2e7d32; }
+        .bg-purple { background: #f3e5f5; color: #7b1fa2; }
+
+    </style>
+</head>
+<body onload="loadStats()">
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <div class="header-top">
+            <div class="admin-title">Master Control 🛡️</div>
+            <a href="admin_login.html" class="logout-btn">Log Out</a>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <span class="stat-num">₹ 45.2k</span>
+            <span class="stat-label">Revenue</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num">1,250</span>
+            <span class="stat-label">Users</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num">85</span>
+            <span class="stat-label">Live Ads</span>
+        </div>
+        <div class="stat-card">
+            <span class="stat-num" style="color:#d63031;" id="totalPending">0</span>
+            <span class="stat-label">Pending</span>
+        </div>
+    </div>
+
+    <div class="section-title">Management Tools</div>
+
+    <div class="action-list">
+
+        <a href="admin_approve_ads.html" class="action-card">
+            <div class="icon-box bg-orange">⏳</div>
+            <div class="ac-text">
+                <h4>Ad Approvals <span class="badge" id="badgePending">0</span></h4>
+                <p>Verify & Publish campaigns</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+        <a href="admin_withdrawals.html" class="action-card">
+            <div class="icon-box bg-blue">💸</div>
+            <div class="ac-text">
+                <h4>Withdrawals <span class="badge">7</span></h4>
+                <p>Approve bank transfers</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+        <a href="admin_users.html" class="action-card">
+            <div class="icon-box bg-green">👥</div>
+            <div class="ac-text">
+                <h4>User Management</h4>
+                <p>View & Block users</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+        <a href="admin_settings.html" class="action-card">
+            <div class="icon-box bg-purple">⚙️</div>
+            <div class="ac-text">
+                <h4>App Settings</h4>
+                <p>Set rates & commissions</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+    </div>
+
+</div>
+
+<script>
+    function loadStats() {
+        // Count Pending Ads from Memory
+        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+        const pendingCount = ads.filter(ad => ad.status === "Pending").length;
+
+        // Update UI
+        document.getElementById("totalPending").innerText = pendingCount;
+        
+        // Update Badge
+        const badge = document.getElementById("badgePending");
+        if(pendingCount > 0) {
+            badge.innerText = pendingCount;
+            badge.style.display = "inline-block";
+        } else {
+            badge.style.display = "none";
+        }
+    }
+</script>
+
+</body>
+</html>

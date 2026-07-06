@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>My Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f4f7f6; margin: 0; padding: 0; }
+    .mobile-screen { max-width: 380px; margin: 0 auto; min-height: 100vh; background: #fff; }
+    
+    /* HEADER (Orange) */
+    .header { background: #ff9800; padding: 20px; color: white; border-bottom-left-radius: 30px; border-bottom-right-radius: 30px; text-align: center; position: relative; }
+    .back-btn { position: absolute; left: 20px; top: 20px; color: white; text-decoration: none; font-weight: bold; }
+    
+    /* PROFILE PIC */
+    .pic-area { margin-top: -50px; display: flex; justify-content: center; }
+    .pic-box { width: 100px; height: 100px; border-radius: 50%; background: white; padding: 4px; position: relative; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
+    .p-img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid #ddd; }
+    .cam { position: absolute; bottom: 0; right: 0; background: #333; color: white; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; }
+
+    /* FORM */
+    .form-area { padding: 30px 20px; }
+    .f-group { margin-bottom: 15px; }
+    .f-label { font-size: 11px; color: #888; font-weight: 600; text-transform: uppercase; margin-bottom: 5px; display: block; }
+    .f-input { width: 100%; padding: 12px; background: #f9f9f9; border: 1px solid #eee; border-radius: 8px; font-size: 14px; color: #333; font-weight: 600; box-sizing: border-box; outline: none; }
+    .f-input:focus { border-color: #ff9800; background: #fff; }
+
+    .btn-save { width: 100%; padding: 15px; background: #ff9800; color: white; border: none; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+    .btn-logout { width: 100%; padding: 15px; background: transparent; color: red; border: 1px solid #ffebee; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+
+  </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+  <div class="header">
+    <a href="dashboard.html" class="back-btn">←</a>
+    <div style="font-size:18px; font-weight:700; margin-top:10px;">My Profile</div>
+    <div style="height:40px;"></div>
+  </div>
+
+  <div class="pic-area">
+    <div class="pic-box" onclick="document.getElementById('fileIn').click()">
+      <img id="pPic" src="https://via.placeholder.com/150?text=User" class="p-img">
+      <div class="cam">📷</div>
+    </div>
+    <input type="file" id="fileIn" style="display:none;" accept="image/*" onchange="uploadPhoto(this)">
+  </div>
+
+  <div class="form-area">
+    
+    <div style="display:flex; gap:10px;">
+      <div class="f-group" style="flex:1">
+        <label class="f-label">First Name</label>
+        <input type="text" class="f-input" id="fName" value="Chukka">
+      </div>
+      <div class="f-group" style="flex:1">
+        <label class="f-label">Last Name</label>
+        <input type="text" class="f-input" id="lName" value="Naidu">
+      </div>
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Date of Birth</label>
+      <input type="date" class="f-input" value="1985-01-01">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Profession</label>
+      <input type="text" class="f-input" value="Salaried - Pvt Employee">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">Location</label>
+      <input type="text" class="f-input" value="Visakhapatnam">
+    </div>
+
+    <div class="f-group">
+      <label class="f-label">UPI ID / GPay / PhonePe</label>
+      <input type="text" class="f-input" id="upiId" placeholder="e.g. 9988776655@ybl">
+    </div>
+
+    <button class="btn-save" onclick="saveProfile()">Save Changes</button>
+    <button class="btn-logout" onclick="window.location.href='index.html'">Log Out</button>
+
+  </div>
+
+</div>
+
+<script>
+  let mobile = "";
+  
+  window.onload = function() {
+    mobile = localStorage.getItem("activeUser");
+    if(!mobile) { window.location.href="login.html"; return; }
+    
+    // Load Photo
+    const savedPic = localStorage.getItem("userPhoto_" + mobile);
+    if(savedPic) document.getElementById("pPic").src = savedPic;
+
+    // Load Data
+    const user = JSON.parse(localStorage.getItem("userProfile_" + mobile));
+    if(user.name) {
+      // Split name logic just for demo
+      const parts = user.name.split(" ");
+      if(parts[0]) document.getElementById("fName").value = parts[0];
+      if(parts[1]) document.getElementById("lName").value = parts[1];
+    }
+  };
+
+  function uploadPhoto(input) {
+    if (input.files && input.files[0]) {
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        document.getElementById("pPic").src = e.target.result;
+        localStorage.setItem("userPhoto_" + mobile, e.target.result);
+      };
+      reader.readAsDataURL(input.files[0]);
+    }
+  }
+
+  function saveProfile() {
+    // Save logic
+    const fName = document.getElementById("fName").value;
+    const lName = document.getElementById("lName").value;
+    
+    let user = JSON.parse(localStorage.getItem("userProfile_" + mobile));
+    user.name = fName + " " + lName;
+    localStorage.setItem("userProfile_" + mobile, JSON.stringify(user));
+    
+    alert("Profile Saved Successfully!");
+  }
+</script>
+</body>
+</html>

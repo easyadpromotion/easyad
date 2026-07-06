@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EAP – Invoices</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+    .header { background: #00796b; padding: 15px 20px; display: flex; align-items: center; color: white; }
+    .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px; }
+    .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+    
+    .invoice-card {
+      background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 15px;
+      display: flex; justify-content: space-between; align-items: center;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #009688;
+    }
+    .inv-info h4 { margin: 0 0 5px; color: #333; }
+    .inv-info p { margin: 0; font-size: 13px; color: #666; }
+    .inv-amt { font-size: 18px; font-weight: 700; color: #333; text-align: right; }
+    .btn-dl { 
+      background: #e0f2f1; color: #00695c; border: none; padding: 5px 10px; 
+      border-radius: 4px; font-weight: 600; cursor: pointer; margin-top: 5px; font-size: 12px;
+    }
+    .btn-dl:hover { background: #b2dfdb; }
+  </style>
+</head>
+<body>
+  <div class="header"><button class="back-btn" onclick="location.href='vendor-dashboard.html'">←</button><h2>Billing & Invoices</h2></div>
+  <div class="container" id="invList"></div>
+
+  <script>
+    window.onload = function() {
+      const list = document.getElementById("invList");
+      const ads = JSON.parse(localStorage.getItem("vendorAds")) || [];
+
+      if(ads.length === 0) {
+        list.innerHTML = "<p style='text-align:center; color:#888;'>No invoices found.</p>";
+        return;
+      }
+
+      ads.forEach((ad, index) => {
+        // Generate a fake Invoice ID based on timestamp
+        const invId = "INV-" + ad.id; 
+        const html = `
+          <div class="invoice-card">
+            <div class="inv-info">
+              <h4>${ad.bizName} - ${ad.type} Ad</h4>
+              <p>Date: ${ad.date} • ID: ${invId}</p>
+            </div>
+            <div>
+              <div class="inv-amt">₹${ad.cost}</div>
+              <button class="btn-dl" onclick="alert('Downloading PDF for ${invId}...')">⬇ Download PDF</button>
+            </div>
+          </div>
+        `;
+        list.innerHTML += html;
+      });
+    };
+  </script>
+</body>
+</html>

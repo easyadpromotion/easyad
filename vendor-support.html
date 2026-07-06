@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EAP – Vendor Support</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #f0f4f8; margin: 0; padding: 0; }
+    .header { background: #00796b; padding: 15px 20px; display: flex; align-items: center; color: white; }
+    .back-btn { background: none; border: none; color: white; font-size: 24px; cursor: pointer; margin-right: 15px; }
+    .container { max-width: 600px; margin: 30px auto; padding: 0 20px; }
+    
+    .form-card { background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    .form-group { margin-bottom: 20px; }
+    label { display: block; font-weight: 600; margin-bottom: 8px; color: #555; }
+    input, textarea, select { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 6px; }
+    .btn-send { width: 100%; padding: 12px; background: #00796b; color: white; border: none; border-radius: 6px; font-weight: 700; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="header"><button class="back-btn" onclick="location.href='vendor-dashboard.html'">←</button><h2>Vendor Support</h2></div>
+  <div class="container">
+    <div class="form-card">
+      <div class="form-group">
+        <label>Issue Type</label>
+        <select>
+          <option>Ad Approval Issue</option>
+          <option>Billing / Payment</option>
+          <option>Account Settings</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Message</label>
+        <textarea rows="5" placeholder="Describe your issue..."></textarea>
+      </div>
+      <button class="btn-send" onclick="alert('Ticket Raised! Support team will contact you shortly.')">Submit Ticket</button>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vendor Login</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    /* 1. BACKGROUND & LAYOUT */
+    body { 
+      font-family: 'Poppins', sans-serif; 
+      background: #e0f2f1; /* Light Green BG */
+      margin: 0; padding: 0; 
+      display: flex; justify-content: center; align-items: center; 
+      min-height: 100vh;
+    }
+    
+    .mobile-screen { 
+      width: 100%; max-width: 380px; min-height: 100vh;
+      background: #009688; /* TEAL BACKGROUND FOR TOP */
+      box-shadow: 0 30px 60px rgba(0,0,0,0.2); 
+      display: flex; flex-direction: column; 
+      position: relative; overflow: hidden;
+    }
+
+    /* 2. BIG BRIGHT LOGO (TOP) */
+    .top-section {
+      flex: 1; /* Takes top space */
+      display: flex; flex-direction: column; 
+      align-items: center; justify-content: center;
+      padding-top: 40px; padding-bottom: 20px;
+    }
+
+    .logo-container {
+      background: white;
+      padding: 15px;
+      border-radius: 25px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      margin-bottom: 15px;
+    }
+
+    .logo-img { 
+      width: 110px; height: 110px; /* INCREASED SIZE */
+      object-fit: contain; display: block;
+    }
+
+    .app-title {
+      font-size: 24px; font-weight: 800; color: white;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      letter-spacing: 1px;
+    }
+    .app-sub { font-size: 13px; color: rgba(255,255,255,0.9); margin-top: 5px; }
+
+    /* 3. WHITE LOGIN CARD (MIDDLE) */
+    .login-card {
+      background: white;
+      border-top-left-radius: 35px; border-top-right-radius: 35px;
+      padding: 35px 30px;
+      box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
+      position: relative; z-index: 10;
+    }
+
+    .inp {
+      width: 100%; padding: 16px; margin-bottom: 15px;
+      border: 2px solid #eee; border-radius: 15px;
+      font-size: 16px; outline: none; box-sizing: border-box;
+      background: #f9f9f9; transition: 0.3s;
+    }
+    .inp:focus { border-color: #009688; background: #fff; }
+
+    .btn-main {
+      width: 100%; padding: 18px; background: #009688; color: white;
+      border: none; border-radius: 15px; font-size: 16px; font-weight: 700;
+      cursor: pointer; transition: 0.3s; 
+      box-shadow: 0 8px 20px rgba(0, 150, 136, 0.3);
+    }
+    .btn-main:active { transform: scale(0.98); }
+    .btn-main:disabled { background: #ccc; cursor: not-allowed; box-shadow: none; }
+
+    /* 4. AD SPACE (BOTTOM - VENDOR TRIPS) */
+    .ad-space {
+      background: #e0f2f1; /* Light Green Ad BG */
+      padding: 25px 20px 40px;
+      text-align: center;
+    }
+    .trip-icon { font-size: 32px; display: block; margin-bottom: 5px; }
+    .trip-badge { 
+      background: #fff; color: #00796b; 
+      font-size: 10px; font-weight: 800; padding: 4px 10px; 
+      border-radius: 10px; border: 1px solid #b2dfdb;
+      display: inline-block; margin-bottom: 5px;
+    }
+    .ad-title { font-size: 18px; font-weight: 800; color: #004d40; }
+    .ad-desc { font-size: 12px; color: #555; margin-top: 5px; line-height: 1.4; }
+
+    /* UTILS */
+    .hidden { display: none; }
+    .fade-in { animation: fadeIn 0.5s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    
+    .back-link { 
+        margin-top: 15px; font-size: 13px; color: #888; text-decoration: none; display: block; text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+  
+  <div class="top-section">
+    <div class="logo-container">
+      <img src="EAP-LOGO.jpg" class="logo-img" alt="Vendor Logo" onerror="this.src='https://via.placeholder.com/110/009688/fff?text=LOGO'">
+    </div>
+    <div class="app-title">VENDOR PORTAL</div>
+    <div class="app-sub">Grow your business with EAP</div>
+  </div>
+
+  <div class="login-card">
+    
+    <div id="view-mobile" class="fade-in">
+      <input type="number" id="mobile" class="inp" placeholder="Mobile Number">
+      <button class="btn-main" onclick="sendOtp()" id="sendBtn">Get OTP</button>
+      <a href="index.html" class="back-link">← Back to Home</a>
+    </div>
+
+    <div id="view-otp" class="hidden fade-in">
+      <div style="font-size:13px; color:#00796b; font-weight:700; margin-bottom:15px; background:#e0f2f1; padding:12px; border-radius:10px; text-align: center;">
+        ✅ OTP Sent Successfully!
+      </div>
+
+      <input type="number" id="otpInput" class="inp" placeholder="Enter 4-Digit OTP">
+      <button class="btn-main" onclick="verifyOtp()" id="verifyBtn">Verify & Login</button>
+      
+      <div style="margin-top:20px; font-size:13px; color:#777; cursor:pointer; text-align: center; text-decoration: underline;" onclick="location.reload()">
+        Change Number
+      </div>
+    </div>
+  </div>
+
+  <div class="ad-space">
+    <div class="trip-icon">✈️🌍</div>
+    <span class="trip-badge">VENDOR EXCLUSIVE</span>
+    <div class="ad-title">Win a Business Trip to Singapore!</div>
+    <div class="ad-desc">
+      Top performing vendors this month get a fully sponsored trip.
+      Login now to check your rank!
+    </div>
+  </div>
+
+</div>
+
+<script>
+    const API_KEY = "a22c0ac1-5a46-11eb-8153-0200cd936042"; 
+    let sessionId = ""; 
+    let userMobile = "";
+
+    function sendOtp() {
+        const mobile = document.getElementById("mobile").value.trim();
+        const btn = document.getElementById("sendBtn");
+
+        if(mobile.length !== 10) { alert("Please enter valid 10-digit number"); return; }
+
+        userMobile = mobile;
+        btn.innerText = "Sending..."; btn.disabled = true;
+
+        const url = `https://2factor.in/API/V1/${API_KEY}/SMS/${mobile}/AUTOGEN`;
+
+        fetch(url).then(res => res.json()).then(data => {
+            if(data.Status === "Success") {
+                sessionId = data.Details;
+                document.getElementById("view-mobile").classList.add("hidden");
+                document.getElementById("view-otp").classList.remove("hidden");
+            } else {
+                alert("Error sending OTP"); btn.innerText = "Get OTP"; btn.disabled = false;
+            }
+        }).catch(() => { alert("Network Error"); btn.innerText = "Get OTP"; btn.disabled = false; });
+    }
+
+    function verifyOtp() {
+        const otp = document.getElementById("otpInput").value.trim();
+        const btn = document.getElementById("verifyBtn");
+
+        if(otp.length < 4) { alert("Enter valid OTP"); return; }
+        btn.innerText = "Verifying..."; btn.disabled = true;
+
+        const url = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
+
+        fetch(url).then(res => res.json()).then(data => {
+            if(data.Status === "Success") {
+                finalizeLogin();
+            } else {
+                alert("Incorrect OTP"); btn.innerText = "Verify & Login"; btn.disabled = false;
+            }
+        }).catch(() => { alert("Verification Failed"); btn.innerText = "Verify & Login"; btn.disabled = false; });
+    }
+
+    function finalizeLogin() {
+        localStorage.setItem("activeVendor", userMobile);
+        if(!localStorage.getItem("vendorProfile_" + userMobile)) {
+            const newVendor = { mobile: userMobile, wallet: 0.00, campaigns: [] };
+            localStorage.setItem("vendorProfile_" + userMobile, JSON.stringify(newVendor));
+            window.location.href = "vendor-register.html"; 
+        } else {
+            window.location.href = "vendor-dashboard.html";
+        }
+    }
+</script>
+
+</body>
+</html>

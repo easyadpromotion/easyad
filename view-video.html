@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>EAP – Watching Video</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: 'Segoe UI', sans-serif; background: #fff; margin: 0; padding: 0; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+    
+    .top-bar { padding: 10px 15px; background: #222; display: flex; justify-content: space-between; align-items: center; color: white; flex-shrink: 0; }
+    .close-btn { color: #fff; text-decoration: none; font-size: 24px; font-weight: bold; }
+    
+    /* VIDEO SECTION (Top Fixed) */
+    .video-section {
+      background: #000; display: flex; justify-content: center; align-items: center;
+      width: 100%; min-height: 250px; /* Fixed height for player */
+    }
+    video { width: 100%; max-height: 300px; }
+
+    /* DETAILS SECTION (Bottom Scrollable) */
+    .details-section {
+      flex: 1; padding: 20px; overflow-y: auto; background: #fff; padding-bottom: 100px;
+    }
+    .brand-tag { font-size: 12px; font-weight: 700; color: #e91e63; text-transform: uppercase; margin-bottom: 5px; }
+    .ad-headline { font-size: 22px; font-weight: 800; color: #333; margin: 0 0 15px 0; }
+    .ad-desc { font-size: 15px; color: #555; line-height: 1.6; background: #f9f9f9; padding: 15px; border-radius: 8px; border-left: 4px solid #e91e63; }
+
+    /* FOOTER */
+    .footer-bar {
+      position: absolute; bottom: 0; left: 0; width: 100%;
+      background: #fff; padding: 15px; border-top: 1px solid #eee;
+      box-shadow: 0 -5px 20px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 10px;
+    }
+    .status-text { text-align: center; color: #666; font-size: 14px; }
+    
+    .btn-claim {
+      width: 100%; padding: 12px; border-radius: 8px; border: none; font-size: 16px; font-weight: 700;
+      background: #e0e0e0; color: #888; cursor: not-allowed;
+    }
+    .btn-claim.active {
+      background: linear-gradient(135deg, #e91e63, #c2185b); color: white; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <span style="font-size:14px;">Sponsored Video</span>
+    <a href="video-ads.html" class="close-btn">&times;</a>
+  </div>
+
+  <div class="video-section">
+    <video id="mainVideo" controls autoplay playsinline>
+      <source src="" type="video/mp4">
+      Your browser does not support HTML5 video.
+    </video>
+  </div>
+
+  <div class="details-section">
+    <div class="brand-tag" id="brandDisplay">Brand</div>
+    <h2 class="ad-headline" id="titleDisplay">Video Title</h2>
+    <div class="ad-desc" id="descDisplay">Loading details...</div>
+  </div>
+
+  <div class="footer-bar">
+    <div class="status-text" id="statusMsg">Watch full video to unlock reward...</div>
+    <button id="claimBtn" class="btn-claim" onclick="claimReward()" disabled>Reward Locked</button>
+  </div>
+
+  <script>
+    let currentAd = {};
+
+    window.onload = function() {
+      currentAd = JSON.parse(sessionStorage.getItem("currentVideoAd")) || { title: "Demo", payout: 0 };
+      
+      document.getElementById("brandDisplay").textContent = currentAd.bizName || "SPONSORED";
+      document.getElementById("titleDisplay").textContent = currentAd.title;
+      document.getElementById("descDisplay").textContent = currentAd.description || "No description provided.";
+
+      const video = document.getElementById("mainVideo");
+      video.src = currentAd.src || "";
+      
+      video.addEventListener('ended', function() {
+        unlockReward();
+      });
+    };
+
+    function unlockReward() {
+      const btn = document.getElementById("claimBtn");
+      const status = document.getElementById("statusMsg");
+      
+      // DISPLAY 70% PAYOUT
+      btn.innerHTML = `Claim Reward ₹${parseFloat(currentAd.payout).toFixed(2)}`;
+      btn.classList.add("active");
+      btn.disabled = false;
+      
+      status.textContent = "Video Completed!";
+      status.style.color = "#e91e63";
+      status.style.fontWeight = "bold";
+    }
+
+    function claimReward() {
+      const mobile = localStorage.getItem("activeUserMobile");
+      if(!mobile) { window.location.href='login.html'; return; }
+
+      const key = "userProfile_" + mobile;
+      let user = JSON.parse(localStorage.getItem(key)) || { wallet: 0 };
+
+      user.wallet = (parseFloat(user.wallet) + parseFloat(currentAd.payout)).toFixed(2);
+      localStorage.setItem(key, JSON.stringify(user));
+
+      const txKey = "userTx_" + mobile;
+      let history = JSON.parse(localStorage.getItem(txKey)) || [];
+      history.unshift({ type: 'video', title: currentAd.title, date: new Date().toLocaleString(), amount: currentAd.payout });
+      localStorage.setItem(txKey, JSON.stringify(history));
+
+      alert("Reward Added!");
+      window.location.href = "video-ads.html";
+    }
+  </script>
+</body>
+</html>

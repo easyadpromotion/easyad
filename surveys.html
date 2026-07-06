@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Surveys</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .mobile-screen { background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden; }
+    
+    /* HEADER (Blue for Survey) */
+    .header { background: #03a9f4; padding: 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(3, 169, 244, 0.3); z-index: 10; }
+    .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 10px; }
+    .page-title { font-size: 16px; font-weight: 700; }
+    .wallet-pill { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+    /* LIST */
+    .list { padding: 20px; overflow-y: auto; padding-bottom: 80px; flex: 1; }
+    .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #03a9f4; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    
+    .s-title { font-weight: 700; font-size: 14px; margin-bottom: 5px; }
+    .s-desc { font-size: 11px; color: #666; margin-bottom: 10px; }
+    .start-btn { background: #03a9f4; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; float: right; }
+    .start-btn.completed { background: #eee; color: #888; cursor: default; }
+
+    /* MODAL */
+    .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; }
+    .modal-box { background: white; width: 85%; padding: 20px; border-radius: 15px; }
+    .q-text { font-weight: 700; font-size: 14px; margin-bottom: 15px; }
+    .opt { padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; font-size: 12px; cursor: pointer; }
+    .opt.sel { background: #e1f5fe; border-color: #03a9f4; color: #0277bd; font-weight: bold; }
+    .submit-btn { width: 100%; background: #03a9f4; color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+
+    /* BOTTOM NAV */
+    .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; z-index: 50; }
+    .nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; color: #999; flex: 1; }
+    .nav-icon { font-size: 20px; margin-bottom: 2px; }
+    .nav-text { font-size: 9px; font-weight: 600; }
+    .nav-item.active { color: #03a9f4; }
+
+  </style>
+</head>
+<body onload="loadSurveys()">
+<div class="mobile-screen">
+  <div class="header">
+    <div style="display:flex; align-items:center;">
+      <a href="home.html" class="back-btn">←</a>
+      <div class="page-title">Surveys</div>
+    </div>
+    <div class="wallet-pill">💰 <span id="headerBalance">0.00</span></div>
+  </div>
+
+  <div class="list" id="surveyContainer"></div>
+
+  <div class="modal" id="surveyModal">
+    <div class="modal-box">
+        <div class="q-text">How satisfied are you with this service?</div>
+        <div class="opt" onclick="sel(this)">Very Satisfied</div>
+        <div class="opt" onclick="sel(this)">Satisfied</div>
+        <div class="opt" onclick="sel(this)">Neutral</div>
+        <button class="submit-btn" onclick="submitSurvey()">Submit & Earn</button>
+        <div style="text-align:center; margin-top:10px; font-size:11px; color:#888; cursor:pointer;" onclick="closeModal()">Cancel</div>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+      <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
+      <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
+      <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
+      <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+  </div>
+</div>
+
+<script>
+  let activeAdId = null;
+  let activeAdName = "";
+  const activeMobile = localStorage.getItem("activeUser");
+  let user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
+
+  function loadSurveys() {
+    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
+    const allAds = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+    const container = document.getElementById("surveyContainer");
+    
+    const surveys = allAds.filter(ad => ad.type === "Survey" && ad.status === "Active");
+    const viewedList = user.viewedAds || [];
+
+    if(surveys.length === 0) { container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>No surveys available.</div>"; return; }
+    container.innerHTML = "";
+
+    surveys.forEach((ad) => {
+      const isViewed = viewedList.includes(ad.id);
+      const btnText = isViewed ? "Completed" : "Start (+₹3.00)";
+      const btnClass = isViewed ? "start-btn completed" : "start-btn";
+      
+      const html = `
+        <div class="card">
+          <div class="s-title">${ad.name}</div>
+          <div class="s-desc">Give feedback about ${ad.category}</div>
+          <div style="overflow:hidden;">
+             <button class="${btnClass}" onclick="openSurvey('${ad.id}', '${ad.name}', ${isViewed})">${btnText}</button>
+          </div>
+        </div>`;
+      container.innerHTML += html;
+    });
+  }
+
+  function openSurvey(id, name, isViewed) {
+    if(isViewed) return;
+    activeAdId = id; activeAdName = name;
+    document.getElementById("surveyModal").style.display = "flex";
+  }
+
+  function sel(el) {
+    document.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+    el.classList.add('sel');
+  }
+
+  function submitSurvey() {
+    user.wallet = parseFloat(user.wallet) + 3.00;
+    
+    if(!user.adHistory) user.adHistory = [];
+    user.adHistory.push({
+        id: activeAdId,
+        name: activeAdName,
+        type: 'Survey',
+        amount: 3.00,
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString()
+    });
+
+    if(!user.viewedAds) user.viewedAds = [];
+    user.viewedAds.push(activeAdId);
+    
+    localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
+    closeModal();
+    loadSurveys();
+    alert("Survey Submitted! ₹3.00 Added.");
+  }
+
+  function closeModal() { document.getElementById("surveyModal").style.display = "none"; }
+</script>
+</body>
+</html>

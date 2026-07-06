@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Campaigns</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* 1. APP FRAME STYLES */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #e0f2f1; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f8f9fa; border: 8px solid #fff; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1), 0 0 0 2px #b2dfdb;
+            display: flex; flex-direction: column;
+            box-sizing: border-box; position: relative; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #009688; padding: 25px 20px 20px 20px; color: white;
+            display: flex; align-items: center; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0,150,136,0.2); z-index: 10;
+        }
+        .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
+        .page-title { font-size: 18px; font-weight: 700; }
+
+        /* CONTENT AREA */
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 50px; }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* CAMPAIGN CARD */
+        .campaign-card {
+            background: white; border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            padding: 15px; margin-bottom: 20px;
+            border: 1px solid #eee;
+        }
+
+        .card-header { display: flex; align-items: center; margin-bottom: 15px; }
+        
+        .ad-thumbnail {
+            width: 50px; height: 50px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px; margin-right: 12px;
+        }
+        .thumb-survey { background: #e3f2fd; color: #1976d2; } /* Blue for Survey */
+        .thumb-frame { background: #e0f2f1; color: #009688; } /* Teal for Frame */
+        .thumb-video { background: #ffebee; color: #c62828; } /* Red for Video */
+
+        .header-info { flex-grow: 1; }
+        .campaign-name { font-size: 15px; font-weight: 700; color: #333; margin: 0 0 4px 0; }
+        .campaign-id { font-size: 11px; color: #888; margin: 0; }
+
+        /* Status Badges */
+        .status-badge { font-size: 10px; font-weight: 700; padding: 4px 10px; border-radius: 20px; text-transform: uppercase; }
+        .status-active { background-color: #e0f2f1; color: #009688; }
+        .status-pending { background-color: #fff3e0; color: #ff9800; } /* Pending is Orange */
+        .status-stopped { background-color: #ffebee; color: #c62828; }
+
+        /* Metrics */
+        .metrics-row {
+            display: flex; justify-content: space-between;
+            background-color: #f9f9f9; border-radius: 10px;
+            padding: 10px; margin-bottom: 15px;
+        }
+        .metric-item { text-align: center; }
+        .metric-value { display: block; font-size: 13px; font-weight: 700; color: #2d3436; }
+        .metric-label { font-size: 10px; color: #888; }
+
+        /* Actions */
+        .actions-row { display: flex; gap: 8px; }
+        .btn {
+            flex: 1; padding: 10px; border: none; border-radius: 8px;
+            font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-pause { background-color: #fff3e0; color: #e65100; border: 1px solid #ffe0b2; }
+        .btn-stop { background-color: #ffebee; color: #c62828; border: 1px solid #ffcdd2; }
+        
+        .empty-state {
+            text-align: center; margin-top: 50px; color: #888; font-size: 14px;
+        }
+
+    </style>
+</head>
+<body onload="loadCampaigns()">
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <a href="vendor-dashboard.html" class="back-btn">←</a>
+        <div class="page-title">My Campaigns</div>
+    </div>
+
+    <div class="content-area" id="campaignList">
+        <div class="empty-state">Loading...</div>
+    </div>
+
+</div>
+
+<script>
+    function loadCampaigns() {
+        const container = document.getElementById("campaignList");
+        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+
+        container.innerHTML = ""; // Clear loading message
+
+        if (ads.length === 0) {
+            container.innerHTML = "<div class='empty-state'>No campaigns found.<br>Create a new ad to start!</div>";
+            return;
+        }
+
+        // Loop through saved ads and create cards
+        ads.forEach((ad, index) => {
+            let icon = "📄";
+            let iconClass = "thumb-survey";
+            let statusClass = "status-active";
+            let statusText = "Active";
+
+            // Set Icons based on type
+            if(ad.type === "Survey") { icon = "📝"; iconClass = "thumb-survey"; }
+            else if(ad.type === "Video") { icon = "▶"; iconClass = "thumb-video"; }
+            else { icon = "🖼️"; iconClass = "thumb-frame"; }
+
+            // Set Status Style
+            if(ad.status === "Pending") {
+                statusClass = "status-pending";
+                statusText = "⏳ Pending";
+            } else if(ad.status === "Stopped") {
+                statusClass = "status-stopped";
+                statusText = "🛑 Stopped";
+            } else {
+                statusClass = "status-active";
+                statusText = "● Active";
+            }
+
+            const html = `
+            <div class="campaign-card">
+                <div class="card-header">
+                    <div class="ad-thumbnail ${iconClass}">${icon}</div>
+                    <div class="header-info">
+                        <h3 class="campaign-name">${ad.name}</h3>
+                        <p class="campaign-id">#${ad.id} • ${ad.type}</p>
+                    </div>
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                </div>
+
+                <div class="metrics-row">
+                    <div class="metric-item">
+                        <span class="metric-value">${ad.target || 0}</span> <span class="metric-label">Target</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">${ad.stats.views || 0}</span> <span class="metric-label">Views</span>
+                    </div>
+                    <div class="metric-item">
+                        <span class="metric-value">${ad.budget}</span> <span class="metric-label">Budget</span>
+                    </div>
+                </div>
+
+                <div class="actions-row">
+                    <button class="btn btn-pause" onclick="alert('This feature requires Admin approval first.')">⏸ Pause</button>
+                    <button class="btn btn-stop" onclick="deleteAd(${index})">🗑 Delete</button>
+                </div>
+            </div>`;
+
+            container.innerHTML += html;
+        });
+    }
+
+    function deleteAd(index) {
+        if(confirm("Are you sure you want to delete this campaign?")) {
+            let ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+            ads.splice(index, 1); // Remove item
+            localStorage.setItem("vendorCampaigns", JSON.stringify(ads)); // Save back
+            loadCampaigns(); // Refresh screen
+        }
+    }
+</script>
+
+</body>
+</html>

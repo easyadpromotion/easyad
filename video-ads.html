@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Video Ads</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+    .mobile-screen { background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden; }
+    
+    /* HEADER (Red for Video) */
+    .header { background: #e53935; padding: 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(229, 57, 53, 0.3); z-index: 10; }
+    .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 10px; }
+    .page-title { font-size: 16px; font-weight: 700; }
+    .wallet-pill { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+
+    /* LIST */
+    .ad-list { padding: 20px; overflow-y: auto; padding-bottom: 80px; flex: 1; }
+    .ad-card { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
+    
+    .video-thumb { height: 160px; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
+    .thumb-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
+    .play-icon { position: absolute; font-size: 40px; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
+    
+    .ad-content { padding: 12px; }
+    .ad-title { font-weight: 700; font-size: 14px; color: #333; margin-bottom: 5px; }
+    .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+    .view-btn { background: #e53935; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; }
+    .view-btn.completed { background: #eee; color: #888; cursor: default; }
+
+    /* PLAYER OVERLAY */
+    .vid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
+    .loader { border: 4px solid #333; border-top: 4px solid #e53935; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 20px; }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    
+    .claim-btn { background: #4caf50; color: white; padding: 12px 40px; border-radius: 30px; border: none; font-weight: 700; cursor: pointer; margin-top: 20px; display: none; }
+    .close-vid-btn { margin-top: 15px; background: transparent; border: 1px solid #555; color: #aaa; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+
+    /* BOTTOM NAV */
+    .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; z-index: 50; }
+    .nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; color: #999; flex: 1; }
+    .nav-icon { font-size: 20px; margin-bottom: 2px; }
+    .nav-text { font-size: 9px; font-weight: 600; }
+    .nav-item.active { color: #e53935; } /* Red active state */
+
+  </style>
+</head>
+<body onload="loadAds()">
+<div class="mobile-screen">
+  <div class="header">
+    <div style="display:flex; align-items:center;">
+      <a href="home.html" class="back-btn">←</a>
+      <div class="page-title">Video Ads</div>
+    </div>
+    <div class="wallet-pill">💰 <span id="headerBalance">0.00</span></div>
+  </div>
+
+  <div class="ad-list" id="adContainer"></div>
+
+  <div class="vid-overlay" id="vidOverlay">
+    <div id="loadingState" style="text-align:center;">
+        <div class="loader"></div>
+        <div>Playing Video Ad...</div>
+        <div style="font-size:12px; color:#aaa; margin-top:5px;">Please watch for 10 seconds</div>
+    </div>
+    <div id="finishState" style="display:none; text-align:center;">
+        <div style="font-size:40px;">✅</div>
+        <h3>Ad Completed</h3>
+        <button class="claim-btn" style="display:block;" onclick="claimReward()">Collect Reward</button>
+        <button class="close-vid-btn" onclick="closeVideo()">Close</button>
+    </div>
+  </div>
+
+  <div class="bottom-nav">
+      <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
+      <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
+      <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
+      <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+  </div>
+</div>
+
+<script>
+  let activeAdId = null;
+  let activeAdName = "";
+  const activeMobile = localStorage.getItem("activeUser");
+  let user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
+
+  function loadAds() {
+    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
+    const allAds = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+    const container = document.getElementById("adContainer");
+    
+    const videoAds = allAds.filter(ad => ad.type === "Video" && ad.status === "Active");
+    const viewedList = user.viewedAds || [];
+
+    if(videoAds.length === 0) { container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>No video ads available.</div>"; return; }
+    container.innerHTML = "";
+
+    videoAds.forEach((ad) => {
+      const isViewed = viewedList.includes(ad.id);
+      const btnText = isViewed ? "Watched" : "Watch & Earn ₹1.50";
+      const btnClass = isViewed ? "view-btn completed" : "view-btn";
+      
+      const html = `
+        <div class="ad-card">
+          <div class="video-thumb">
+             <img src="https://images.unsplash.com/photo-1492633423870-43d1cd2775eb?w=600" class="thumb-img">
+             <div class="play-icon">▶</div>
+          </div>
+          <div class="ad-content">
+            <div class="ad-title">${ad.name}</div>
+            <div class="action-row">
+              <span style="font-size:11px; color:#888;">${ad.category}</span>
+              <button class="${btnClass}" onclick="playVideo('${ad.id}', '${ad.name}', ${isViewed})">${btnText}</button>
+            </div>
+          </div>
+        </div>`;
+      container.innerHTML += html;
+    });
+  }
+
+  function playVideo(id, name, isViewed) {
+    if(isViewed) return;
+    activeAdId = id; activeAdName = name;
+    
+    document.getElementById("vidOverlay").style.display = "flex";
+    document.getElementById("loadingState").style.display = "block";
+    document.getElementById("finishState").style.display = "none";
+
+    setTimeout(() => {
+        document.getElementById("loadingState").style.display = "none";
+        document.getElementById("finishState").style.display = "block";
+    }, 5000); // 5 Seconds Simulated Video
+  }
+
+  function claimReward() {
+    user.wallet = parseFloat(user.wallet) + 1.50;
+    
+    if(!user.adHistory) user.adHistory = [];
+    user.adHistory.push({
+        id: activeAdId,
+        name: activeAdName,
+        type: 'Video',
+        amount: 1.50,
+        date: new Date().toLocaleDateString(),
+        time: new Date().toLocaleTimeString()
+    });
+
+    if(!user.viewedAds) user.viewedAds = [];
+    user.viewedAds.push(activeAdId);
+    
+    localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
+    document.getElementById("vidOverlay").style.display = "none";
+    loadAds();
+    alert("₹1.50 Added to Wallet!");
+  }
+
+  function closeVideo() {
+    document.getElementById("vidOverlay").style.display = "none";
+  }
+</script>
+</body>
+</html>

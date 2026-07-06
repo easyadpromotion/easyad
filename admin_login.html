@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EAP Admin Login</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #2d3436; /* Dark Background for Admin Security */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .login-card {
+            background: white;
+            width: 85%;
+            max-width: 380px;
+            padding: 40px 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            text-align: center;
+        }
+
+        /* LOGO STYLE */
+        .logo-img {
+            width: 150px; /* Adjusted size for your logo */
+            height: auto;
+            margin-bottom: 15px;
+            border-radius: 10px; /* Slight curve on corners */
+        }
+
+        /* BRAND NAME EAP */
+        .brand-title {
+            margin: 0;
+            font-size: 42px; /* Very big font */
+            font-weight: 900; /* Extra Bold */
+            color: #2d3436;
+            letter-spacing: 2px;
+            line-height: 1;
+        }
+
+        .brand-subtitle {
+            margin: 10px 0 35px;
+            color: #888;
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        /* INPUT FIELDS */
+        .input-group { text-align: left; margin-bottom: 20px; }
+        label { display: block; font-weight: bold; font-size: 12px; color: #555; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        
+        input {
+            width: 100%;
+            padding: 14px;
+            border: 2px solid #eee;
+            border-radius: 10px;
+            font-size: 15px;
+            box-sizing: border-box;
+            background: #f9f9f9;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+        input:focus { border-color: #2d3436; background: white; outline: none; }
+
+        /* BUTTON */
+        .btn-login {
+            width: 100%;
+            padding: 16px;
+            background: #2d3436;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+            letter-spacing: 1px;
+        }
+        .btn-login:hover { background: #000; transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+
+        .error-msg { color: #d63031; font-weight: bold; font-size: 14px; margin-top: 20px; display: none; }
+        .footer-link { display: block; margin-top: 25px; color: #aaa; font-size: 13px; text-decoration: none; font-weight: 600; }
+
+    </style>
+</head>
+<body>
+
+    <div class="login-card">
+        <img src="EAP-LOGO.jpg" alt="EAP Logo" class="logo-img" onerror="this.src='https://placehold.co/150x150?text=EAP+LOGO'">
+        
+        <h1 class="brand-title">EAP</h1>
+        <p class="brand-subtitle">Admin Control Panel</p>
+
+        <div class="input-group">
+            <label>Admin ID</label>
+            <input type="text" id="adminId" placeholder="Enter Admin ID">
+        </div>
+
+        <div class="input-group">
+            <label>Password</label>
+            <input type="password" id="adminPass" placeholder="Enter Password">
+        </div>
+
+        <button class="btn-login" onclick="checkLogin()">SECURE LOGIN</button>
+
+        <p class="error-msg" id="errorText">❌ Access Denied. Invalid Credentials.</p>
+
+        <a href="#" class="footer-link">Lost access key? Contact Developers.</a>
+    </div>
+
+    <script>
+        function checkLogin() {
+            var id = document.getElementById('adminId').value;
+            var pass = document.getElementById('adminPass').value;
+            var error = document.getElementById('errorText');
+
+            // 1. GET STORED PASSWORD (or use default 'admin123' if none exists)
+            var storedPass = localStorage.getItem('admin_password') || "admin123";
+
+            // 2. CHECK CREDENTIALS
+            // ID is fixed as 'admin', Password checks against storedPass
+            if(id === "admin" && pass === storedPass) {
+                window.location.href = "admin_dashboard.html";
+            } else {
+                error.style.display = "block";
+                var card = document.querySelector('.login-card');
+                card.style.transform = "translateX(10px)";
+                setTimeout(() => card.style.transform = "translateX(0)", 100);
+            }
+        }
+    </script>
+
+</body>
+</html>

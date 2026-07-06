@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Withdrawals</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 1. APP FRAME */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #2d3436; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f0f2f5; border: 8px solid #444; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 2px #2d3436;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #2d3436; padding: 25px 20px 20px 20px; color: white;
+            display: flex; align-items: center; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10;
+        }
+        .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
+        .page-title { font-size: 18px; font-weight: 700; }
+
+        /* LIST */
+        .content-area { flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 50px; }
+        .content-area::-webkit-scrollbar { display: none; }
+
+        /* REQUEST CARD */
+        .req-card {
+            background: white; border-radius: 15px; padding: 15px; margin-bottom: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-left: 5px solid #0984e3;
+        }
+        
+        .req-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+        .req-user { font-size: 14px; font-weight: 700; color: #333; }
+        .req-amt { font-size: 14px; font-weight: 700; color: #00b894; }
+
+        .req-details { background: #f8f9fa; padding: 10px; border-radius: 8px; margin-bottom: 15px; }
+        .detail-row { display: flex; justify-content: space-between; font-size: 11px; margin-bottom: 4px; color: #666; }
+        .detail-val { font-weight: 600; color: #333; }
+
+        /* ACTIONS */
+        .action-row { display: flex; gap: 10px; }
+        .btn { 
+            flex: 1; padding: 10px; border: none; border-radius: 8px; 
+            font-size: 12px; font-weight: 700; cursor: pointer; color: white;
+            transition: 0.2s;
+        }
+        .btn-pay { background: #00b894; box-shadow: 0 4px 10px rgba(0,184,148,0.3); }
+        .btn-reject { background: #d63031; box-shadow: 0 4px 10px rgba(214,48,49,0.3); }
+        
+        .btn:active { transform: scale(0.98); }
+
+        .empty-state { text-align: center; margin-top: 60px; color: #aaa; font-size: 14px; }
+
+    </style>
+</head>
+<body onload="loadRequests()">
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <a href="admin_dashboard.html" class="back-btn">&larr;</a>
+        <div class="page-title">Withdrawal Requests</div>
+    </div>
+
+    <div class="content-area" id="reqList">
+        </div>
+
+</div>
+
+<script>
+    function loadRequests() {
+        const container = document.getElementById("reqList");
+        const requests = JSON.parse(localStorage.getItem("withdrawalRequests")) || [];
+        
+        // Filter Pending Requests
+        const pending = requests.map((req, index) => ({ ...req, originalIndex: index }))
+                                .filter(req => req.status === "Pending");
+
+        container.innerHTML = "";
+
+        if (pending.length === 0) {
+            container.innerHTML = "<div class='empty-state'>No pending withdrawal requests.</div>";
+            return;
+        }
+
+        pending.forEach(req => {
+            const html = `
+            <div class="req-card" id="card-${req.originalIndex}">
+                <div class="req-header">
+                    <span class="req-user">${req.user}</span>
+                    <span class="req-amt">₹ ${parseFloat(req.amount).toFixed(2)}</span>
+                </div>
+                
+                <div class="req-details">
+                    <div class="detail-row">
+                        <span>UPI ID:</span> <span class="detail-val">${req.upi}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Phone:</span> <span class="detail-val">${req.mobile}</span>
+                    </div>
+                    <div class="detail-row">
+                        <span>Date:</span> <span class="detail-val">${req.date}</span>
+                    </div>
+                </div>
+
+                <div class="action-row">
+                    <button class="btn btn-reject" onclick="processRequest(${req.originalIndex}, 'Rejected')">Reject & Refund</button>
+                    <button class="btn btn-pay" onclick="processRequest(${req.originalIndex}, 'Paid')">Mark Paid</button>
+                </div>
+            </div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    function processRequest(index, status) {
+        // 1. Get Data
+        let requests = JSON.parse(localStorage.getItem("withdrawalRequests")) || [];
+        let req = requests[index];
+        
+        // 2. Update Status
+        req.status = status;
+        requests[index] = req;
+        localStorage.setItem("withdrawalRequests", JSON.stringify(requests));
+
+        // 3. IF REJECTED: Refund Money to User
+        if(status === 'Rejected') {
+            let userProfile = JSON.parse(localStorage.getItem("userProfile_" + req.mobile));
+            if(userProfile) {
+                userProfile.wallet = (parseFloat(userProfile.wallet) + parseFloat(req.amount)).toFixed(2);
+                localStorage.setItem("userProfile_" + req.mobile, JSON.stringify(userProfile));
+                alert("Request Rejected. Money refunded to User Wallet.");
+            }
+        } else {
+            alert("Marked as PAID via UPI.");
+        }
+
+        // 4. Remove from UI
+        loadRequests();
+    }
+</script>
+
+</body>
+</html>

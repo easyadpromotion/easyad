@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Vendor Registration</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { 
+      font-family: 'Poppins', sans-serif; background: #e0f2f1; 
+      margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; 
+      min-height: 100vh; box-sizing: border-box;
+    }
+    
+    .mobile-screen { 
+      width: 100%; max-width: 380px; min-height: 800px;
+      background: #ffffff; border: 8px solid #fff; border-radius: 40px; 
+      box-shadow: 0 30px 60px rgba(0,0,0,0.1), 0 0 0 2px #b2dfdb;
+      padding: 30px 25px; text-align: center; 
+      display: flex; flex-direction: column;
+      box-sizing: border-box; position: relative; overflow: hidden;
+    }
+
+    /* BACK BUTTON */
+    .back-btn-circle { 
+      position: absolute; top: 25px; left: 25px; 
+      width: 45px; height: 45px; background: white; border-radius: 50%; 
+      box-shadow: 0 5px 15px rgba(0,0,0,0.08); 
+      display: flex; justify-content: center; align-items: center;
+      cursor: pointer; transition: transform 0.2s; z-index: 10;
+      color: #00695c; border: 1px solid #e0f2f1;
+    }
+    .back-btn-circle svg { width: 22px; height: 22px; stroke-width: 2.5; }
+    .back-btn-circle:active { transform: scale(0.9); }
+
+    .logo-container { margin-top: 50px; margin-bottom: 5px; }
+    .logo-img { width: 150px; height: auto; object-fit: contain; display: block; margin: 0 auto; }
+    .brand-big { font-size: 28px; font-weight: 900; color: #009688; margin-top: 10px; letter-spacing: 1px; text-transform: uppercase; }
+
+    .reg-header { text-align: left; margin-bottom: 10px; margin-top: 10px; }
+    .step-count { font-size: 11px; color: #009688; font-weight: 700; text-transform: uppercase; }
+    .step-title { font-size: 24px; font-weight: 800; color: #333; margin: 2px 0; }
+    .step-sub { font-size: 13px; color: #777; }
+
+    /* INPUTS */
+    .inp { 
+      width: 100%; padding: 16px; border: 2px solid #e0f2f1; border-radius: 15px; 
+      font-size: 16px; font-family: 'Poppins', sans-serif; box-sizing: border-box; 
+      outline: none; background: #fff; font-weight: 600; margin-top: 5px; margin-bottom: 15px;
+    }
+    .inp:focus { border-color: #009688; }
+
+    /* LIST ITEMS (Gender) */
+    .list-item {
+      padding: 14px; border: 1px solid #e0f2f1; border-radius: 12px; margin-bottom: 8px;
+      text-align: left; font-size: 14px; font-weight: 600; color: #444; cursor: pointer;
+      transition: 0.2s; background: #f9f9f9;
+    }
+    .list-item:hover { border-color: #009688; background: #e0f2f1; }
+
+    /* AD BOX */
+    .ad-middle-box {
+      width: 100%; background: #e0f2f1; border: 1px dashed #009688; 
+      border-radius: 16px; padding: 12px; margin-top: auto; margin-bottom: 15px;
+      box-sizing: border-box; display: flex; align-items: center; gap: 12px; text-align: left;
+    }
+    .ad-icon { font-size: 24px; }
+    .ad-content h4 { margin: 0; font-size: 11px; font-weight: 800; color: #00695c; text-transform: uppercase; }
+    .ad-content p { margin: 2px 0 0 0; font-size: 10px; color: #333; line-height: 1.3; }
+
+    .btn-next { 
+      width: 100%; padding: 16px; background: linear-gradient(90deg, #009688, #4db6ac); 
+      color: white; border: none; border-radius: 15px; font-size: 16px; font-weight: 700; 
+      cursor: pointer; box-shadow: 0 10px 20px rgba(0, 150, 136, 0.25);
+    }
+
+    /* SUCCESS ICON */
+    .success-icon { font-size: 60px; color: #009688; margin-bottom: 10px; display: block; }
+
+    .step-screen { display: none; flex-direction: column; flex: 1; animation: fadeIn 0.4s; }
+    .step-screen.active { display: flex; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+  
+  <div class="back-btn-circle" onclick="goBack()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+  </div>
+
+  <div class="logo-container">
+    <img src="EAP-LOGO.jpg" class="logo-img" alt="Logo">
+    <div class="brand-big">EAP VENDOR</div>
+  </div>
+
+  <div class="reg-header" id="headerSection">
+    <div class="step-count" id="sCount">Step 1 of 4</div>
+    <div class="step-title" id="sTitle">First Name</div>
+    <div class="step-sub" id="sSub">Enter your first name to continue</div>
+  </div>
+
+  <div style="display:flex; flex-direction:column; flex:1; overflow:hidden;">
+
+    <div id="step1" class="step-screen active">
+      <input type="text" id="fname" class="inp" placeholder="e.g. Rahul">
+      <div class="ad-middle-box">
+        <div class="ad-icon">📢</div>
+        <div class="ad-content"><h4>Target Audience</h4><p>Target ads by city, district, or pin code.</p></div>
+      </div>
+      <button class="btn-next" onclick="nextStep(2)">Next ➔</button>
+    </div>
+
+    <div id="step2" class="step-screen">
+      <input type="text" id="lname" class="inp" placeholder="e.g. Varma">
+      <div class="ad-middle-box">
+        <div class="ad-icon">📊</div>
+        <div class="ad-content"><h4>Analytics</h4><p>Track your ad views in real-time.</p></div>
+      </div>
+      <button class="btn-next" onclick="nextStep(3)">Next ➔</button>
+    </div>
+
+    <div id="step3" class="step-screen">
+      <input type="date" id="dob" class="inp">
+      <div class="ad-middle-box">
+        <div class="ad-icon">🎁</div>
+        <div class="ad-content"><h4>Vendor Bonus</h4><p>Get ₹500 ad credits on registration!</p></div>
+      </div>
+      <button class="btn-next" onclick="nextStep(4)">Next ➔</button>
+    </div>
+
+    <div id="step4" class="step-screen">
+      <div class="list-item" onclick="submitFinal('Male')">Male</div>
+      <div class="list-item" onclick="submitFinal('Female')">Female</div>
+      <div class="list-item" onclick="submitFinal('Other')">Other</div>
+      <div class="ad-middle-box">
+        <div class="ad-icon">🤝</div>
+        <div class="ad-content"><h4>Support</h4><p>24/7 Priority support for vendors.</p></div>
+      </div>
+    </div>
+
+    <div id="step5" class="step-screen" style="justify-content:center; text-align:center;">
+      <span class="success-icon">✓</span>
+      <h2 style="color:#009688;">All Set!</h2>
+      <p style="color:#555; font-size:14px; margin-bottom:30px; font-weight:600;">
+        Thanks for Joined as Vendor with Easy Ad Promotion.
+      </p>
+      <button class="btn-next" onclick="goToDashboard()">Go to Vendor Dashboard</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  let curStep = 1;
+
+  function nextStep(n) {
+    // Validations
+    if(n===2 && !document.getElementById("fname").value) return alert("Enter Name");
+    if(n===3 && !document.getElementById("lname").value) return alert("Enter Last Name");
+    if(n===4 && !document.getElementById("dob").value) return alert("Enter DOB");
+
+    document.querySelectorAll(".step-screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("step"+n).classList.add("active");
+    curStep = n;
+
+    const h = {
+      2: ["Last Name", "Enter your last name"],
+      3: ["Date of Birth", "Select your birth date"],
+      4: ["Gender", "Select your gender"]
+    };
+    if(h[n]) {
+      document.getElementById("sCount").innerText = `Step ${n} of 4`;
+      document.getElementById("sTitle").innerText = h[n][0];
+      document.getElementById("sSub").innerText = h[n][1];
+    }
+  }
+
+  function goBack() {
+    if(curStep === 1) window.location.href = "vendor-login.html";
+    else nextStep(curStep - 1);
+  }
+
+  function submitFinal(gender) {
+    const mobile = localStorage.getItem("activeVendor");
+    if(!mobile) { window.location.href="vendor-login.html"; return; }
+
+    // Hide Header
+    document.getElementById("headerSection").style.display = "none";
+
+    // Show Success Screen
+    document.querySelectorAll(".step-screen").forEach(s => s.classList.remove("active"));
+    document.getElementById("step5").classList.add("active");
+
+    const vendor = {
+      name: document.getElementById("fname").value + " " + document.getElementById("lname").value,
+      dob: document.getElementById("dob").value,
+      gender: gender,
+      joined: new Date().toLocaleDateString()
+    };
+    localStorage.setItem("vendorProfile_" + mobile, JSON.stringify(vendor));
+  }
+
+  function goToDashboard() {
+    window.location.href = "vendor-dashboard.html";
+  }
+</script>
+
+</body>
+</html>

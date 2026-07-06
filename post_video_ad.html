@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Video Ad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* APP FRAME STYLES */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #e0f2f1; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f8f9fa; border: 8px solid #fff; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1), 0 0 0 2px #b2dfdb;
+            display: flex; flex-direction: column;
+            box-sizing: border-box; position: relative; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #009688; padding: 25px 20px 20px 20px; color: white;
+            display: flex; align-items: center; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0,150,136,0.2); z-index: 10;
+        }
+        .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
+        .page-title { font-size: 18px; font-weight: 700; }
+
+        /* CONTENT */
+        .container { 
+            padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 50px; 
+        }
+        .container::-webkit-scrollbar { display: none; }
+
+        /* FORM CARD */
+        .form-card { 
+            background: white; padding: 20px; border-radius: 15px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 20px; 
+        }
+
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; font-size: 13px; }
+        input, select, textarea { 
+            width: 100%; padding: 12px; margin-bottom: 15px; 
+            border: 2px solid #eee; border-radius: 10px; font-size: 13px; 
+            box-sizing: border-box; font-family: 'Poppins', sans-serif;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #009688; outline: none; }
+
+        /* TABS */
+        .tab-container { 
+            display: flex; margin-bottom: 15px; border: 1px solid #b2dfdb; 
+            border-radius: 10px; overflow: hidden; 
+        }
+        .tab { 
+            flex: 1; padding: 12px; text-align: center; cursor: pointer; 
+            background: #e0f2f1; font-weight: 600; font-size: 12px; color: #00796b; 
+        }
+        .tab.active { background: #009688; color: white; }
+
+        /* COST BOX */
+        .cost-box { 
+            background: #e0f2f1; padding: 15px; border-radius: 10px; 
+            border: 1px dashed #009688; margin-top: 10px; 
+        }
+        .cost-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #555; }
+        .cost-total { 
+            border-top: 1px solid #b2dfdb; padding-top: 10px; margin-top: 10px; 
+            font-weight: 700; color: #00796b; font-size: 16px; 
+            display: flex; justify-content: space-between; 
+        }
+
+        /* BUTTON */
+        .btn-submit {
+            background-color: #009688; color: white; width: 100%; padding: 15px; 
+            border: none; border-radius: 12px; font-size: 15px; font-weight: 700; 
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,150,136,0.3);
+            transition: 0.2s;
+        }
+        .btn-submit:active { transform: scale(0.98); }
+
+    </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <a href="select_ad_type.html" class="back-btn">&larr;</a>
+        <div class="page-title">Post Video Ad</div>
+    </div>
+
+    <div class="container">
+        
+        <div class="form-card">
+            <label>Campaign Name</label>
+            <input type="text" id="campName" placeholder="e.g., Summer Sale Promo">
+
+            <label>Target Category</label>
+            <select id="campCat">
+                <option>Banking & Financial Services</option>
+        <option>Information Technology (IT & ITES)</option>
+        <option>FMCG</option>
+        <option>Pharmaceuticals & Healthcare</option>
+        <option>Automobile</option>
+        <option>Oil&Gas / Energy</option>
+        <option>Retail & E-Commerce</option> 
+        <option>Metals & Mining</option>
+        <option>Power & Utilities</option>
+        <option>Infrastructure</option>
+        <option>Chemicals & Fertilizers</option>
+        <option>Capital Goods & Engineering</option>
+        <option>Textiles & Apparel</option>
+        <option>Consumer Durables</option>
+        <option>Retail & E-Commerce</option>
+        <option>Logistics & Transportation</option>
+        <option>Agriculture & Allied</option>
+        <option>Family & Relatives </option>
+        <option>Food & Dining</option>
+        <option>Education</option>
+        <option>Real Estate & Construction</option>
+        <option>Media & Entertainment</option>
+        <option>Fashion & Lifestyle</option>
+        <option>Political</option>
+        <option>Cinema / Celebrities</option>
+        <option>Other</option>
+            </select>
+
+            <label>Video Source</label>
+            <div class="tab-container">
+                <div class="tab active" onclick="switchTab('link')" id="tab-link">Paste Link</div>
+                <div class="tab" onclick="switchTab('upload')" id="tab-upload">Upload Video</div>
+            </div>
+
+            <div id="input-link">
+                <input type="text" placeholder="Paste YouTube Link" style="margin-bottom: 20px;">
+            </div>
+            <div id="input-upload" style="display: none;">
+                <input type="file" style="background: #fafafa;">
+            </div>
+        </div>
+
+        <div class="form-card">
+            <h3 style="margin-top: 0; font-size: 15px; color:#333;">Budget & Costing</h3>
+
+            <label>Video Duration (Seconds)</label>
+            <input type="number" id="duration" value="20" oninput="calculateCost()">
+            <p style="font-size: 11px; color: #888; margin-top: -10px; margin-bottom: 15px;">Rate: ₹0.10 per second</p>
+
+            <label>Target Views</label>
+            <input type="number" id="views" value="200" min="100" oninput="calculateCost()">
+
+            <div class="cost-box">
+                <div class="cost-row">
+                    <span>Cost Per View</span>
+                    <span id="cpvDisplay">₹ 2.00</span>
+                </div>
+                <div class="cost-row">
+                    <span>Subtotal</span>
+                    <span id="subtotalDisplay">₹ 400.00</span>
+                </div>
+                <div class="cost-total">
+                    <span>Total Payable</span>
+                    <span id="totalDisplay">₹ 472.00</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-submit" onclick="publishVideo()">PAY & PUBLISH AD</button>
+
+    </div>
+
+</div>
+
+<script>
+    function switchTab(type) {
+        document.getElementById('tab-link').className = 'tab';
+        document.getElementById('tab-upload').className = 'tab';
+        document.getElementById('input-link').style.display = 'none';
+        document.getElementById('input-upload').style.display = 'none';
+
+        document.getElementById('tab-' + type).className = 'tab active';
+        document.getElementById('input-' + type).style.display = 'block';
+    }
+
+    function calculateCost() {
+        var duration = parseInt(document.getElementById('duration').value) || 0;
+        var views = parseInt(document.getElementById('views').value) || 0;
+        var costPerSec = 0.10;
+
+        var cpv = duration * costPerSec;
+        var subtotal = cpv * views;
+        var total = subtotal * 1.18; // GST
+
+        document.getElementById('cpvDisplay').innerText = "₹ " + cpv.toFixed(2);
+        document.getElementById('subtotalDisplay').innerText = "₹ " + subtotal.toFixed(2);
+        document.getElementById('totalDisplay').innerText = "₹ " + total.toFixed(2);
+    }
+
+    // --- FUNCTION TO SAVE VIDEO AD ---
+    function publishVideo() {
+        const name = document.getElementById('campName').value;
+        const category = document.getElementById('campCat').value;
+        const totalCost = document.getElementById('totalDisplay').innerText;
+        const views = document.getElementById('views').value;
+
+        if(!name) { alert("Please enter Campaign Name"); return; }
+
+        // 1. Create Ad Object
+        const newAd = {
+            id: "VID" + Math.floor(Math.random() * 9999),
+            type: "Video",
+            name: name,
+            category: category,
+            stats: { views: 0, clicks: 0, spent: 0 },
+            budget: totalCost,
+            target: views,
+            status: "Pending", // Sent to Admin
+            date: new Date().toLocaleDateString()
+        };
+
+        // 2. Save to Memory
+        let ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+        ads.push(newAd);
+        localStorage.setItem("vendorCampaigns", JSON.stringify(ads));
+
+        // 3. Redirect
+        alert("Video Ad Submitted! Waiting for Approval.");
+        window.location.href = "manage_campaigns.html";
+    }
+</script>
+
+</body>
+</html>

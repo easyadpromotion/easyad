@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Management</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 1. APP FRAME */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #2d3436; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f0f2f5; border: 8px solid #444; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 2px #2d3436;
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #2d3436; padding: 25px 20px 20px 20px; color: white;
+            display: flex; align-items: center; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1); z-index: 10;
+        }
+        .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
+        .page-title { font-size: 18px; font-weight: 700; }
+
+        /* SEARCH */
+        .search-box { padding: 15px; background: white; border-bottom: 1px solid #eee; }
+        .search-input { 
+            width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: 10px; 
+            font-family: 'Poppins', sans-serif; font-size: 13px; box-sizing: border-box; background: #f9f9f9; 
+        }
+
+        /* USER LIST */
+        .container { padding: 15px; flex: 1; overflow-y: auto; padding-bottom: 50px; }
+        .container::-webkit-scrollbar { display: none; }
+
+        /* USER CARD */
+        .user-card { 
+            background: white; border-radius: 12px; margin-bottom: 12px; padding: 15px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); display: flex; align-items: center; justify-content: space-between; 
+        }
+        
+        .user-info { display: flex; align-items: center; }
+        .avatar { 
+            width: 45px; height: 45px; background: #e0f2f1; border-radius: 50%; 
+            display: flex; align-items: center; justify-content: center; font-size: 20px; 
+            color: #009688; margin-right: 15px; 
+        }
+        
+        .info-text h4 { margin: 0; font-size: 14px; color: #333; font-weight: 700; }
+        .info-text p { margin: 2px 0 0; font-size: 11px; color: #888; }
+        
+        /* STATUS BADGES */
+        .badge { font-size: 10px; padding: 2px 6px; border-radius: 4px; margin-left: 5px; font-weight: 700; }
+        .badge-active { background: #e0f2f1; color: #009688; }
+        .badge-blocked { background: #ffebee; color: #d63031; }
+
+        /* ACTION BTN */
+        .action-btn { 
+            background: none; border: 1px solid #ddd; border-radius: 8px; 
+            font-size: 16px; color: #555; cursor: pointer; padding: 5px 10px; 
+        }
+
+        .empty-state { text-align: center; margin-top: 50px; color: #aaa; font-size: 13px; }
+
+    </style>
+</head>
+<body onload="loadUsers()">
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <a href="admin_dashboard.html" class="back-btn">←</a>
+        <div class="page-title">User Management</div>
+    </div>
+
+    <div class="search-box">
+        <input type="text" class="search-input" id="searchInput" placeholder="🔍 Search Users..." onkeyup="filterUsers()">
+    </div>
+
+    <div class="container" id="userList">
+        </div>
+
+</div>
+
+<script>
+    function loadUsers() {
+        const container = document.getElementById("userList");
+        container.innerHTML = "";
+        
+        let hasUsers = false;
+
+        // Loop through localStorage to find keys starting with "userProfile_"
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i);
+            if (key.startsWith("userProfile_")) {
+                hasUsers = true;
+                const user = JSON.parse(localStorage.getItem(key));
+                const mobile = key.split("_")[1]; // Extract phone number from key
+                const status = user.status || "Active"; // Default to Active
+                
+                const badgeClass = status === "Active" ? "badge-active" : "badge-blocked";
+                const icon = status === "Active" ? "👤" : "🚫";
+                const bg = status === "Active" ? "#e0f2f1" : "#ffebee";
+                const btnText = status === "Active" ? "Block" : "Unblock";
+
+                const html = `
+                <div class="user-card">
+                    <div class="user-info">
+                        <div class="avatar" style="background:${bg}">${icon}</div>
+                        <div class="info-text">
+                            <h4>${user.name} <span class="badge ${badgeClass}" id="badge-${mobile}">${status}</span></h4>
+                            <p>${mobile}</p>
+                            <p>Wallet: ₹${parseFloat(user.wallet).toFixed(2)}</p>
+                        </div>
+                    </div>
+                    <button class="action-btn" onclick="toggleStatus('${mobile}')">${btnText}</button>
+                </div>`;
+                
+                container.innerHTML += html;
+            }
+        }
+
+        if (!hasUsers) {
+            container.innerHTML = "<div class='empty-state'>No registered users found.</div>";
+        }
+    }
+
+    function toggleStatus(mobile) {
+        let user = JSON.parse(localStorage.getItem("userProfile_" + mobile));
+        
+        if (user.status === "Blocked") {
+            if(confirm("Unblock this user?")) {
+                user.status = "Active";
+                alert("User Unblocked!");
+            }
+        } else {
+            if(confirm("Block this user? They will not be able to withdraw money.")) {
+                user.status = "Blocked";
+                alert("User Blocked!");
+            }
+        }
+        
+        localStorage.setItem("userProfile_" + mobile, JSON.stringify(user));
+        loadUsers(); // Refresh list
+    }
+
+    function filterUsers() {
+        const filter = document.getElementById("searchInput").value.toUpperCase();
+        const cards = document.getElementsByClassName("user-card");
+
+        for (let i = 0; i < cards.length; i++) {
+            const txt = cards[i].innerText || cards[i].textContent;
+            if (txt.toUpperCase().indexOf(filter) > -1) {
+                cards[i].style.display = "";
+            } else {
+                cards[i].style.display = "none";
+            }
+        }
+    }
+</script>
+
+</body>
+</html>

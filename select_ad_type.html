@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Select Ad Type</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* 1. APP FRAME STYLES */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #e0f2f1; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f8f9fa; border: 8px solid #fff; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1), 0 0 0 2px #b2dfdb;
+            display: flex; flex-direction: column;
+            box-sizing: border-box; position: relative; overflow: hidden;
+        }
+
+        /* HEADER */
+        .header {
+            background: #009688; padding: 25px 20px 20px 20px; color: white;
+            display: flex; align-items: center; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0,150,136,0.2); z-index: 10;
+        }
+        .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
+        .page-title { font-size: 18px; font-weight: 700; }
+
+        /* CONTENT */
+        .container { 
+            padding: 20px; flex: 1; overflow-y: auto; 
+            display: flex; flex-direction: column; gap: 15px;
+        }
+
+        /* SELECTION CARDS */
+        .option-card {
+            background: white; border-radius: 15px; padding: 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); border: 1px solid #eee;
+            display: flex; align-items: center; transition: transform 0.2s;
+            cursor: pointer; text-decoration: none; color: inherit;
+        }
+        .option-card:active { transform: scale(0.98); background: #f0fdfc; }
+
+        .icon-box {
+            width: 60px; height: 60px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 30px; margin-right: 15px;
+        }
+        
+        /* Colors for Icons */
+        .icon-frame { background: #e0f2f1; color: #009688; }
+        .icon-video { background: #ffebee; color: #c62828; }
+        .icon-survey { background: #e3f2fd; color: #1976d2; }
+
+        .info h3 { margin: 0; font-size: 16px; font-weight: 700; color: #333; }
+        .info p { margin: 2px 0 0; font-size: 12px; color: #777; }
+        
+        .arrow { margin-left: auto; color: #ccc; font-weight: bold; }
+
+    </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <a href="vendor-dashboard.html" class="back-btn">←</a>
+        <div class="page-title">Create Campaign</div>
+    </div>
+
+    <div class="container">
+        
+        <a href="post_frame_ad.html" class="option-card">
+            <div class="icon-box icon-frame">🖼️</div>
+            <div class="info">
+                <h3>Frame Ad</h3>
+                <p>Posters, Banners & Images</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+        <a href="post_video_ad.html" class="option-card">
+            <div class="icon-box icon-video">▶</div>
+            <div class="info">
+                <h3>Video Ad</h3>
+                <p>YouTube Links or Uploads</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+        <a href="post_survey_ad.html" class="option-card">
+            <div class="icon-box icon-survey">📝</div>
+            <div class="info">
+                <h3>Survey Ad</h3>
+                <p>Get User Feedback & Data</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+</html>

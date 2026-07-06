@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Easy Ad Promotion</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            font-family: 'Poppins', sans-serif; 
+            background: #e0e0e0; 
+            margin: 0; padding: 0; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh;
+        }
+
+        .mobile-screen {
+            background: #29b6f6;
+            width: 100%; 
+            max-width: 340px; 
+            min-height: 100vh;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.25); 
+            overflow: hidden;
+        }
+
+        @media (min-width: 450px) {
+            .mobile-screen {
+                height: 90vh; 
+                min-height: 800px; 
+                border-radius: 40px; 
+                border: 10px solid #111;
+            }
+        }
+
+        /* LOGO */
+        .logo-container {
+            margin-top: 60px;
+            background: white;
+            padding: 20px;
+            border-radius: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+            display: flex; 
+            flex-direction: column; 
+            align-items: center;
+            width: 80%;
+        }
+        .logo-img { 
+            width: 80px; height: 80px; 
+            object-fit: contain; 
+            margin-bottom: 10px; 
+        }
+        .brand-main { 
+            font-weight: 900; 
+            color: #01579b; 
+            font-size: 18px; 
+            letter-spacing: 1px; 
+            text-align: center; 
+        }
+
+        /* WELCOME TEXT */
+        .welcome-title { 
+            color: white; 
+            font-size: 28px; 
+            font-weight: 800; 
+            margin-top: 30px;
+            margin-bottom: 4px;
+        }
+        .welcome-sub { 
+            color: rgba(255,255,255,0.9); 
+            font-size: 14px; 
+            margin-bottom: 20px; 
+        }
+
+        /* ROLE BUTTONS */
+        .btn-container { 
+            width: 85%; 
+            display: flex; 
+            flex-direction: column; 
+            gap: 15px;
+        }
+        .role-btn {
+            display: flex; 
+            align-items: center; 
+            justify-content: space-between;
+            background: white; 
+            text-decoration: none;
+            padding: 15px 20px; 
+            border-radius: 18px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        .role-btn:active { transform: scale(0.98); }
+        .btn-text { 
+            display: flex; 
+            flex-direction: column; 
+            text-align: left; 
+        }
+        .btn-title { font-size: 18px; font-weight: 800; }
+        .btn-desc  { font-size: 11px; color: #777; font-weight: 600; }
+        .btn-icon  { font-size: 28px; }
+
+        .btn-user .btn-title { color: #d84315; }
+        .btn-user .btn-icon  { color: #d84315; }
+        .btn-vendor .btn-title { color: #00897b; }
+        .btn-vendor .btn-icon  { color: #00897b; }
+
+        /* ── SPACER between buttons and ad panel ── */
+        .gap-spacer {
+            height: 35px;
+            flex-shrink: 0;
+            width: 100%;
+        }
+
+        /* ── AD FOOTER PANEL ── */
+        .ad-footer {
+            background: white;
+            width: 100%;
+            border-radius: 30px 30px 0 0;
+            box-sizing: border-box;
+            overflow: hidden;
+            flex-shrink: 0;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.12);
+            /* margin-top: auto pushes it to the bottom naturally */
+            margin-top: auto;
+        }
+
+        /* Progress bar */
+        .ad-progress { height: 4px; background: #f0f0f0; }
+        .ad-progress-fill {
+            height: 100%; 
+            background: #ff9800;
+            width: 0%;
+        }
+
+        /* Tabs */
+        .ad-tabs {
+            display: flex; 
+            border-bottom: 1px solid #f0f0f0;
+            padding-top: 6px;
+        }
+        .ad-tab {
+            flex: 1; 
+            padding: 10px 4px; 
+            text-align: center;
+            font-size: 9px; 
+            font-weight: 700; 
+            color: #bbb;
+            cursor: pointer; 
+            border-bottom: 2px solid transparent;
+            transition: 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ad-tab.active { color: #ff9800; border-bottom-color: #ff9800; }
+
+        /* Slides */
+        .ad-slide {
+            display: none;
+            padding: 20px 22px 10px;
+            text-align: center;
+            animation: fadeSlide 0.4s ease;
+        }
+        .ad-slide.active { display: block; }
+
+        @keyframes fadeSlide { 
+            from { opacity: 0; transform: translateY(6px); } 
+            to   { opacity: 1; transform: translateY(0); } 
+        }
+
+        .slide-emoji { font-size: 38px; display: block; margin-bottom: 8px; }
+
+        .slide-badge { 
+            display: inline-block;
+            font-size: 9px; 
+            font-weight: 800; 
+            padding: 4px 14px; 
+            border-radius: 12px; 
+            border: 1px solid; 
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .slide-title { 
+            font-size: 18px; 
+            font-weight: 800; 
+            color: #333; 
+            margin-bottom: 7px; 
+        }
+        .slide-desc { 
+            font-size: 11px; 
+            color: #777; 
+            line-height: 1.6; 
+        }
+        .slide-cta {
+            display: inline-block; 
+            margin-top: 14px;
+            background: #ff9800; 
+            color: white;
+            padding: 10px 26px; 
+            border-radius: 25px;
+            font-size: 12px; 
+            font-weight: 700;
+            text-decoration: none; 
+            cursor: pointer; 
+            border: none;
+            box-shadow: 0 4px 12px rgba(255,152,0,0.35);
+        }
+
+        /* Dots */
+        .ad-dots { 
+            display: flex; 
+            justify-content: center; 
+            gap: 6px; 
+            padding: 12px 0 18px; 
+        }
+        .dot { 
+            width: 6px; height: 6px; 
+            border-radius: 50%; 
+            background: #ddd; 
+            transition: 0.3s; 
+            cursor: pointer; 
+        }
+        .dot.active { 
+            background: #ff9800; 
+            width: 20px; 
+            border-radius: 3px; 
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="mobile-screen">
+
+    <!-- LOGO -->
+    <div class="logo-container">
+        <img src="EAP-LOGO.jpg" class="logo-img" alt="EAP Logo" 
+             onerror="this.src='https://via.placeholder.com/80/01579b/fff?text=LOGO'">
+        <div class="brand-main">EASY AD PROMOTION</div>
+    </div>
+
+    <!-- WELCOME TEXT -->
+    <div class="welcome-title">Welcome to EAP</div>
+    <div class="welcome-sub">Choose your role to start:</div>
+
+    <!-- ROLE BUTTONS -->
+    <div class="btn-container">
+        <a href="user_login.html" class="role-btn btn-user">
+            <div class="btn-text">
+                <span class="btn-title">I am a User</span>
+                <span class="btn-desc">View ads &amp; earn money</span>
+            </div>
+            <div class="btn-icon">👤</div>
+        </a>
+
+        <a href="vendor-login.html" class="role-btn btn-vendor">
+            <div class="btn-text">
+                <span class="btn-title">I am a Vendor</span>
+                <span class="btn-desc">Post ads &amp; promote business</span>
+            </div>
+            <div class="btn-icon">🏢</div>
+        </a>
+    </div>
+
+    <!-- ✅ SPACER — gap between buttons and ad panel -->
+    <div class="gap-spacer"></div>
+
+    <!-- SCROLLING AD BANNER -->
+    <div class="ad-footer">
+        <div class="ad-progress">
+            <div class="ad-progress-fill" id="adProgress"></div>
+        </div>
+        <div class="ad-tabs"   id="adTabs"></div>
+        <div id="adSlides"></div>
+        <div class="ad-dots"   id="adDots"></div>
+    </div>
+
+</div>
+
+<script>
+// ── DEFAULT ADS ────────────────────────────────────────────────────────
+var DEFAULT_ADS = [
+    {
+        id: "def1",
+        emoji: "✈️🌴",
+        badge: "EAP MEGA GIVEAWAY",
+        badgeColor: "#ff8f00",
+        badgeBg: "#fff3e0",
+        title: "Win a Trip to Dubai!",
+        desc: "Top earners this month win an all-expenses paid trip. Login now to check the leaderboard!",
+        cta: "View Leaderboard",
+        ctaLink: "user_login.html",
+        duration: 5,
+        active: true
+    },
+    {
+        id: "def2",
+        emoji: "💰🎁",
+        badge: "REFER & EARN",
+        badgeColor: "#2e7d32",
+        badgeBg: "#e8f5e9",
+        title: "Invite Friends, Earn ₹50!",
+        desc: "Share your referral code and earn ₹50 for every friend who joins EAP.",
+        cta: "Refer Now",
+        ctaLink: "user_login.html",
+        duration: 5,
+        active: true
+    },
+    {
+        id: "def3",
+        emoji: "📱💸",
+        badge: "NEW FEATURE",
+        badgeColor: "#1565c0",
+        badgeBg: "#e3f2fd",
+        title: "Video Ads Now Pay ₹10!",
+        desc: "Watch short video ads and earn up to ₹10 per video. New videos added daily!",
+        cta: "Watch & Earn",
+        ctaLink: "user_login.html",
+        duration: 5,
+        active: true
+    }
+];
+
+// ── STATE ──────────────────────────────────────────────────────────────
+var ads = [];
+var current = 0;
+var autoTimer = null;
+var rafId = null;
+var progressStart = null;
+var currentDuration = 5000;
+
+// ── INIT ───────────────────────────────────────────────────────────────
+function initAds() {
+    var saved = localStorage.getItem("indexBannerAds");
+    var all   = saved ? JSON.parse(saved) : DEFAULT_ADS;
+    ads = all.filter(function(a){ return a.active !== false; });
+    if (ads.length === 0) ads = DEFAULT_ADS;
+    buildUI();
+    goTo(0);
+}
+
+// ── BUILD DOM ──────────────────────────────────────────────────────────
+function buildUI() {
+    var tabsEl   = document.getElementById("adTabs");
+    var slidesEl = document.getElementById("adSlides");
+    var dotsEl   = document.getElementById("adDots");
+    tabsEl.innerHTML   = "";
+    slidesEl.innerHTML = "";
+    dotsEl.innerHTML   = "";
+
+    ads.forEach(function(ad, i) {
+
+        // Tab
+        var tab = document.createElement("div");
+        tab.className = "ad-tab";
+        tab.innerText  = ad.badge || ("Ad " + (i + 1));
+        tab.onclick    = (function(idx){ return function(){ goTo(idx); }; })(i);
+        tabsEl.appendChild(tab);
+
+        // Slide
+        var slide = document.createElement("div");
+        slide.className = "ad-slide";
+        slide.id = "slide_" + i;
+        slide.innerHTML =
+            '<span class="slide-emoji">' + (ad.emoji || "📢") + '</span>' +
+            '<span class="slide-badge" style="color:' + (ad.badgeColor || "#ff8f00") + ';background:' + (ad.badgeBg || "#fff3e0") + ';border-color:' + (ad.badgeColor || "#ff8f00") + '">' + (ad.badge || "PROMO") + '</span>' +
+            '<div class="slide-title">' + (ad.title || "") + '</div>' +
+            '<div class="slide-desc">'  + (ad.desc  || "") + '</div>' +
+            (ad.cta ? '<br><a class="slide-cta" href="' + (ad.ctaLink || "#") + '">' + ad.cta + '</a>' : '');
+        slidesEl.appendChild(slide);
+
+        // Dot
+        var dot = document.createElement("div");
+        dot.className = "dot";
+        dot.id = "dot_" + i;
+        dot.onclick = (function(idx){ return function(){ goTo(idx); }; })(i);
+        dotsEl.appendChild(dot);
+    });
+}
+
+// ── NAVIGATE ───────────────────────────────────────────────────────────
+function goTo(idx) {
+    if (ads.length === 0) return;
+
+    clearTimeout(autoTimer);
+    cancelAnimationFrame(rafId);
+
+    // Deactivate all
+    ads.forEach(function(_, i) {
+        var s = document.getElementById("slide_" + i);
+        var d = document.getElementById("dot_"   + i);
+        var t = document.querySelectorAll(".ad-tab")[i];
+        if (s) s.classList.remove("active");
+        if (d) d.classList.remove("active");
+        if (t) t.classList.remove("active");
+    });
+
+    current = (idx + ads.length) % ads.length;
+
+    var slide = document.getElementById("slide_" + current);
+    var dot   = document.getElementById("dot_"   + current);
+    var tab   = document.querySelectorAll(".ad-tab")[current];
+
+    if (slide) slide.classList.add("active");
+    if (dot)   dot.classList.add("active");
+    if (tab)   tab.classList.add("active");
+
+    // Start progress bar
+    currentDuration = ((ads[current].duration) || 5) * 1000;
+    startProgress(currentDuration);
+
+    // Auto advance
+    autoTimer = setTimeout(function(){ goTo(current + 1); }, currentDuration);
+}
+
+// ── PROGRESS BAR ───────────────────────────────────────────────────────
+function startProgress(duration) {
+    var fill = document.getElementById("adProgress");
+    fill.style.transition = "none";
+    fill.style.width = "0%";
+    progressStart = performance.now();
+
+    function step(now) {
+        var elapsed = now - progressStart;
+        var pct = Math.min(100, (elapsed / duration) * 100);
+        fill.style.width = pct + "%";
+        if (pct < 100) rafId = requestAnimationFrame(step);
+    }
+    rafId = requestAnimationFrame(step);
+}
+
+// ── START ──────────────────────────────────────────────────────────────
+initAds();
+</script>
+
+</body>
+</html>
