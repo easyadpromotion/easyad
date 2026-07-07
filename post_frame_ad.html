@@ -1,630 +1,881 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Frame Ads</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; }
-    body {
-      font-family: 'Poppins', sans-serif;
-      background: #f0f2f5;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      min-height: 100vh;
-      overflow: hidden;
-    }
-    .mobile-screen {
-      background: #fff;
-      width: 100%;
-      max-width: 380px;
-      height: 100vh;
-      max-height: 850px;
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 0 30px rgba(0,0,0,0.1);
-      border-radius: 30px;
-      overflow: hidden;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post Frame Ad</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
-    /* HEADER */
-    .header { background: #ff9800; padding: 18px 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(255,152,0,0.2); z-index: 10; flex-shrink: 0; }
-    .back-btn { font-size: 22px; text-decoration: none; color: white; margin-right: 10px; }
-    .page-title { font-size: 15px; font-weight: 700; }
-    .wallet-pill { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
+    <!-- Google Maps auth failure handler - MUST be defined BEFORE the bootstrap loader script -->
+    <script>
+        window.gm_authFailure = function () {
+            var ml = document.getElementById("mapLoad");
+            if (ml) ml.style.display = "none";
+            var ph = document.getElementById("mapPH");
+            if (ph) {
+                ph.innerHTML =
+                    '<span class="pi" style="color:#d32f2f;opacity:1;">⚠️</span>' +
+                    '<span class="pt" style="color:#d32f2f;">Google Maps blocked this page</span>' +
+                    '<span class="ps" style="color:#e57373;">Check API key referrer restrictions &amp; enabled APIs</span>';
+            }
+            console.error("❌ gm_authFailure: Google Maps blocked this request. Common causes: " +
+                "(1) page opened via file:// instead of http/https, " +
+                "(2) API key referrer restrictions don't allow this domain, " +
+                "(3) required APIs (Maps JavaScript, Places, Geocoding) not enabled, " +
+                "(4) billing not enabled on the Google Cloud project.");
+        };
+    </script>
 
-    /* AD LIST */
-    .ad-list { padding: 15px; overflow-y: auto; padding-bottom: 90px; flex: 1; }
+    <!-- Google Maps bootstrap loader -->
+    <script>
+        (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await(a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
+        ({key:"AIzaSyBIYCrCcEG-A-tDPVrM2I8bcEQ6k3VeNxc", v:"weekly"});
+    </script>
 
-    /* AD CARD */
-    .ad-card { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; }
-    .ad-img-box { width: 100%; height: 190px; position: relative; background: #f5f5f5; }
-    .ad-img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    .img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:13px; flex-direction:column; gap:6px; }
-    .black-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.88), transparent); padding: 35px 12px 10px; color: white; }
-    .overlay-desc { font-size: 12px; font-weight: 600; margin-bottom: 2px; line-height: 1.3; }
-    .overlay-cat  { font-size: 9px; opacity: 0.8; text-transform: uppercase; letter-spacing: 1px; }
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Poppins', sans-serif; background: #e0f2f1;
+            padding: 20px; display: flex; justify-content: center; min-height: 100vh;
+        }
+        .mobile-screen {
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f8f9fa; border: 8px solid #fff; border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1), 0 0 0 2px #b2dfdb;
+            display: flex; flex-direction: column;
+            position: relative; overflow: hidden;
+        }
+        .header {
+            background: #009688; padding: 25px 20px 20px; color: white;
+            display: flex; align-items: center; border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 10px rgba(0,150,136,0.2); z-index: 10; flex-shrink: 0;
+        }
+        .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
+        .page-title { font-size: 18px; font-weight: 700; }
 
-    .action-row { padding: 10px 12px 6px; display: flex; align-items: center; justify-content: space-between; }
-    .ad-title-txt { font-weight: 700; font-size: 13px; color: #222; margin-bottom: 4px; line-height: 1.3; }
-    .badges-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
-    .reward-tag  { background: #e8f5e9; color: #2e7d32; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; }
-    .claimed-tag { background: #f3f3f3; color: #999; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; border: 1px solid #e0e0e0; }
-    .earn-btn { background: #4caf50; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 3px 10px rgba(76,175,80,0.3); font-family:'Poppins',sans-serif; }
-    .view-again-btn { background: #fff3e0; color: #ff9800; border: 1px solid #ffcc80; padding: 7px 13px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 10px; white-space: nowrap; flex-shrink: 0; font-family:'Poppins',sans-serif; }
+        .container { padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 50px; }
+        .container::-webkit-scrollbar { display: none; }
 
-    /* ENGAGE ROW */
-    .engage-row { display: flex; align-items: center; justify-content: space-around; padding: 8px 10px 12px; border-top: 1px solid #f5f5f5; gap: 2px; }
-    .eng-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; flex: 1; background: none; border: none; font-family: 'Poppins', sans-serif; transition: transform 0.15s; padding: 0; }
-    .eng-btn:active { transform: scale(0.88); }
-    .eng-btn.disabled { opacity: 0.32; pointer-events: none; }
-    .eng-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
-    .eng-label { font-size: 8px; font-weight: 700; color: #666; }
-    .eng-share   .eng-icon { background: #e3f2fd; }
-    .eng-refer   .eng-icon { background: #f3e5f5; }
-    .eng-comment .eng-icon { background: #fff8e1; }
-    .eng-web     .eng-icon { background: #e8f5e9; }
-    .eng-map     .eng-icon { background: #fce4ec; }
+        .form-card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 20px; }
 
-    /* ══ FULL SCREEN OVERLAY ══
-       Layout: [close btn top-right] → [16:9 image] → [title+meta] → [desc] → [earn zone]
-       No text is cut off — everything is in flow below the image */
-    .ad-overlay {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #fff;
-      z-index: 100; display: none;
-      flex-direction: column;
-      overflow: hidden;
-    }
+        label { display: block; font-weight: 600; margin-bottom: 8px; color: #444; font-size: 13px; }
+        input, select, textarea {
+            width: 100%; padding: 12px; margin-bottom: 15px;
+            border: 2px solid #eee; border-radius: 10px; font-size: 13px;
+            font-family: 'Poppins', sans-serif;
+        }
+        input:focus, select:focus, textarea:focus { border-color: #009688; outline: none; }
 
-    /* ✅ TOP BAR — close button always visible at top */
-    .ov-topbar {
-      position: relative;
-      background: #1a1a1a;
-      padding: 10px 14px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      flex-shrink: 0;
-      z-index: 10;
-    }
-    .ov-topbar-title {
-      font-size: 12px; font-weight: 700; color: white;
-      flex: 1; margin-right: 10px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .ov-close-btn {
-      background: rgba(255,255,255,0.15);
-      border: 1px solid rgba(255,255,255,0.3);
-      color: white; width: 28px; height: 28px; border-radius: 50%;
-      font-size: 14px; cursor: pointer; flex-shrink: 0;
-      display: flex; align-items: center; justify-content: center;
-    }
+        .upload-box {
+            border: 2px dashed #b2dfdb; padding: 25px; text-align: center;
+            border-radius: 10px; margin-bottom: 20px; background: #e0f2f1; cursor: pointer;
+        }
+        .upload-icon { font-size: 30px; display: block; margin-bottom: 5px; }
+        #imgPreview { width: 100%; height: 150px; object-fit: cover; display: none; border-radius: 8px; margin-bottom: 10px; }
 
-    /* ✅ IMAGE — 16:9 ratio, below topbar, never overlaps text */
-    .ov-img-section {
-      width: 100%;
-      aspect-ratio: 16 / 9;
-      position: relative;
-      background: #000;
-      flex-shrink: 0;
-      overflow: hidden;
-    }
-    @supports not (aspect-ratio: 16/9) {
-      .ov-img-section {
-        padding-bottom: 56.25%;
-        height: 0;
-        position: relative;
-      }
-    }
-    .ov-img-bg {
-      position: absolute; top: -15%; left: -15%;
-      width: 130%; height: 130%;
-      background-size: cover; background-position: center;
-      filter: blur(20px) brightness(0.4);
-    }
-    .full-img {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      object-fit: cover; object-position: center;
-      z-index: 2; display: block;
-    }
-    /* Category badge over image */
-    .ov-cat-badge {
-      position: absolute; bottom: 10px; left: 12px;
-      background: rgba(255,152,0,0.92); color: white;
-      font-size: 9px; font-weight: 700; padding: 3px 10px;
-      border-radius: 10px; z-index: 10;
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
+        .loc-outer { position: relative; margin-bottom: 6px; }
+        #locationInput {
+            margin-bottom: 0; border: 2px solid #eee; border-radius: 10px;
+            padding: 12px 46px 12px 14px; font-size: 13px; width: 100%; font-family: 'Poppins',sans-serif;
+        }
+        #locationInput:focus { border-color: #009688; outline: none; }
+        #locationInput.confirmed { border-color: #009688; background: #f0faf9; }
+        #locSearchBtn {
+            position: absolute; top: 0; right: 0; height: 100%; width: 42px;
+            border: none; background: transparent; cursor: pointer;
+            font-size: 16px; color: #009688; display: flex; align-items: center; justify-content: center;
+        }
+        #locSearchBtn:hover { color: #00695c; }
 
-    /* ✅ WHITE CONTENT AREA below image — title, desc, earn */
-    .ov-content {
-      flex: 1; background: white;
-      display: flex; flex-direction: column;
-      overflow: hidden; min-height: 0;
-    }
+        #locDrop {
+            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+            background: white; border: 1.5px solid #009688; border-radius: 12px;
+            box-shadow: 0 8px 28px rgba(0,150,136,0.18); z-index: 999; display: none; overflow: hidden;
+        }
+        #locDrop.open { display: block; }
+        .di {
+            padding: 11px 14px; font-size: 12px; color: #333; cursor: pointer;
+            display: flex; align-items: flex-start; gap: 10px;
+            border-bottom: 1px solid #f0f9f8;
+        }
+        .di:last-child { border-bottom: none; }
+        .di:hover { background: #e0f2f1; }
+        .di-ico  { color: #009688; font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+        .di-main { font-weight: 600; color: #222; font-size: 12px; }
+        .di-sub  { font-size: 10px; color: #999; margin-top: 2px; }
 
-    /* ✅ Title — always fully visible, not cut */
-    .ov-title-area {
-      padding: 12px 16px 8px;
-      border-bottom: 1px solid #f0f0f0;
-      flex-shrink: 0;
-    }
-    .ov-title {
-      font-size: 14px; font-weight: 800; color: #1a1a1a;
-      line-height: 1.4; margin-bottom: 5px;
-      /* ✅ Allow wrapping — no clamp that cuts text */
-      display: block;
-      word-break: break-word;
-    }
-    .ov-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
-    .ov-category { font-size: 10px; color: #ff9800; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
-    .ov-dot { color: #ddd; font-size: 10px; }
-    .ov-verified { font-size: 10px; color: #aaa; }
-    .ov-already-tag { background: #fff3e0; color: #ff9800; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #ffcc80; }
+        #locBadge {
+            display: none; margin-top: 8px;
+            background: #e0f2f1; border-radius: 10px; padding: 9px 12px;
+            align-items: center; gap: 8px;
+        }
+        #locBadge.show { display: flex; }
+        .ba-txt { font-size: 11px; color: #00695c; font-weight: 600; flex: 1; line-height: 1.4; }
+        .ba-clr { background: none; border: none; color: #aaa; font-size: 18px; cursor: pointer; padding: 0; line-height: 1; }
 
-    /* ✅ Description — scrollable, never clips title */
-    .ov-desc-area { flex: 1; overflow-y: auto; padding: 10px 16px 6px; min-height: 0; }
-    .ov-desc { font-size: 12px; color: #555; line-height: 1.7; word-break: break-word; }
+        .loc-hint { font-size: 10px; color: #aaa; margin-top: 6px; }
 
-    /* ✅ Earn zone — always at bottom */
-    .ov-earn-zone {
-      background: white; border-top: 1px solid #f0f0f0;
-      padding: 10px 16px 14px;
-      display: flex; flex-direction: column;
-      align-items: center; gap: 8px; flex-shrink: 0;
-    }
-    .timer-ring {
-      width: 50px; height: 50px; border-radius: 50%;
-      border: 4px solid #ff9800; background: #fff8e1;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 800; color: #ff9800; font-size: 18px;
-      box-shadow: 0 0 0 4px rgba(255,152,0,0.12);
-    }
-    .timer-label { font-size: 10px; color: #aaa; font-weight: 600; text-align: center; margin-top: -4px; }
-    .claim-btn {
-      background: linear-gradient(135deg, #4caf50, #388e3c);
-      color: white; padding: 12px 0; border-radius: 14px;
-      border: none; font-weight: 800; cursor: pointer;
-      font-size: 14px; width: 100%;
-      box-shadow: 0 4px 16px rgba(76,175,80,0.35);
-      display: none; font-family:'Poppins',sans-serif;
-    }
-    .close-ov-btn {
-      background: #f5f5f5; color: #666;
-      padding: 11px 0; border-radius: 14px;
-      border: none; font-weight: 700; cursor: pointer;
-      font-size: 13px; width: 100%; display: none;
-      font-family:'Poppins',sans-serif;
-    }
+        .map-section {
+            margin-bottom: 20px; border-radius: 16px; overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,150,136,0.15); border: 2px solid #009688;
+        }
+        .map-hdr {
+            background: #009688; padding: 11px 15px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .map-hdr-l { display: flex; align-items: center; gap: 7px; color: white; font-size: 12px; font-weight: 700; }
+        .map-badge {
+            font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+            background: rgba(255,255,255,0.18); color: white; border: 1px solid rgba(255,255,255,0.3); transition: all .3s;
+        }
+        .map-badge.on { background: white; color: #009688; border-color: white; }
 
-    /* BACKDROP */
-    .modal-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 150; display: none; }
-    .modal-backdrop.open { display: block; }
+        .map-ratio { width: 100%; position: relative; padding-bottom: 61.54%; background: #f0faf9; }
+        .map-inner { position: absolute; inset: 0; }
 
-    /* BOTTOM SHEET */
-    .bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; z-index: 200; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); display: none; flex-direction: column; }
-    .bottom-sheet.open { display: flex; }
-    .sheet-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 14px auto 4px; flex-shrink: 0; }
-    .sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; flex-shrink: 0; }
-    .sheet-title { font-size: 15px; font-weight: 800; color: #333; }
-    .sheet-close { background: #f0f0f0; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+        #mapPH {
+            width: 100%; height: 100%;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            gap: 10px; background: linear-gradient(145deg,#f0faf9,#e0f2f1);
+            text-align: center; padding: 0 20px;
+        }
+        #mapPH .pi { font-size: 42px; opacity: .35; }
+        #mapPH .pt { font-size: 12px; color: #888; font-weight: 600; }
+        #mapPH .ps { font-size: 10px; color: #b2dfdb; }
 
-    .share-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 6px 16px 28px; }
-    .share-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.15s; }
-    .share-item:active { transform: scale(0.88); }
-    .share-ico { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
-    .share-lbl { font-size: 9px; font-weight: 700; color: #555; text-align: center; }
+        #mapLoad {
+            position: absolute; inset: 0;
+            display: none; align-items: center; justify-content: center;
+            background: rgba(224,242,241,.88); z-index: 5;
+        }
 
-    .refer-body { padding: 10px 20px 30px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
-    .refer-code-box { background: #fff8e1; border: 2px dashed #ff9800; border-radius: 14px; padding: 12px 24px; text-align: center; width: 100%; }
-    .refer-code { font-size: 24px; font-weight: 800; color: #ff9800; letter-spacing: 3px; }
-    .full-btn { width: 100%; padding: 12px 0; border-radius: 25px; border: none; font-family:'Poppins',sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
-    .btn-orange { background: #ff9800; color: white; }
-    .btn-wa     { background: #25D366; color: white; }
+        .spin {
+            width: 46px;
+            height: 46px;
+            border: 4px solid rgba(0,150,136,0.18);
+            border-top: 4px solid #009688;
+            border-right: 4px solid #26a69a;
+            border-radius: 50%;
+            animation: spinFast .85s linear infinite;
+            box-shadow: 0 0 0 6px rgba(0,150,136,0.05);
+        }
 
-    .comment-body { display: flex; flex-direction: column; overflow: hidden; padding: 0 16px; }
-    .comment-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 120px; max-height: 260px; padding: 8px 0; }
-    .comment-item { display: flex; gap: 8px; align-items: flex-start; }
-    .c-avatar { width: 30px; height: 30px; border-radius: 50%; background: #ff9800; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; flex-shrink: 0; }
-    .c-body { background: #f8f8f8; border-radius: 12px; padding: 7px 10px; flex: 1; }
-    .c-name { font-size: 10px; font-weight: 700; color: #333; }
-    .c-time { color: #bbb; font-weight: 400; font-size: 9px; margin-left: 4px; }
-    .c-text { font-size: 11px; color: #555; margin-top: 2px; line-height: 1.4; }
-    .comment-input-row { display: flex; gap: 8px; align-items: center; border-top: 1px solid #f0f0f0; padding: 10px 0 20px; flex-shrink: 0; }
-    .comment-input { flex: 1; padding: 9px 14px; border-radius: 20px; border: 1px solid #e0e0e0; font-family:'Poppins',sans-serif; font-size: 12px; outline: none; }
-    .comment-input:focus { border-color: #ff9800; }
-    .send-btn { background: #ff9800; border: none; color: white; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        @keyframes spinFast {
+            100% { transform: rotate(360deg); }
+        }
 
-    .loc-body { padding: 10px 20px 30px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-    .loc-map-frame { width: 100%; height: 200px; border-radius: 16px; border: none; }
-    .loc-address { background: #fce4ec; border-radius: 12px; padding: 12px 16px; width: 100%; display: flex; align-items: center; gap: 10px; }
-    .loc-address-text { font-size: 12px; color: #333; font-weight: 600; line-height: 1.4; }
-    .open-maps-btn { background: #fce4ec; color: #e53935; border: none; padding: 10px 0; border-radius: 20px; width: 100%; font-family:'Poppins',sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .loc-not-provided { text-align: center; padding: 20px 10px; }
-    .loc-not-icon  { font-size: 48px; margin-bottom: 10px; }
-    .loc-not-title { font-size: 15px; font-weight: 800; color: #555; margin-bottom: 6px; }
-    .loc-not-sub   { font-size: 11px; color: #aaa; line-height: 1.5; }
+        #mapEl { width: 100%; height: 100%; display: none; }
 
-    .toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 9px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; z-index: 999; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.25); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
-    .toast.show { opacity: 1; }
+        #mapFtr {
+            background: white; padding: 9px 14px; display: none;
+            align-items: center; gap: 9px; border-top: 1px solid #e8f5e9;
+        }
+        #mapFtr.show { display: flex; }
+        #mapFtrTxt { font-size: 10px; color: #444; font-weight: 600; flex: 1; line-height: 1.4; }
+        .open-btn {
+            background: #009688; color: white; font-size: 9px; font-weight: 700;
+            padding: 5px 12px; border-radius: 20px; border: none; cursor: pointer; font-family: 'Poppins',sans-serif;
+        }
 
-    .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; z-index: 50; }
-    .nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; color: #999; flex: 1; }
-    .nav-icon { font-size: 20px; margin-bottom: 2px; }
-    .nav-text  { font-size: 9px; font-weight: 600; }
-    .nav-item.active { color: #ff9800; }
-    .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
-  </style>
+        .cost-box { background: #e3f2fd; padding: 15px; border-radius: 10px; border: 1px dashed #2196f3; margin-top: 10px; }
+        .cr { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: #555; }
+        .ct {
+            border-top: 1px solid #bbdefb; padding-top: 10px; margin-top: 10px;
+            font-weight: 700; color: #1976d2; font-size: 16px; display: flex; justify-content: space-between;
+        }
+
+        .btn-sub {
+            background: #009688; color: white; width: 100%; padding: 15px; border: none;
+            border-radius: 12px; font-size: 15px; font-weight: 700; cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,150,136,.3); font-family: 'Poppins',sans-serif;
+        }
+        .btn-sub:active { transform: scale(.98); }
+    </style>
 </head>
+<body>
 
-<body onload="loadAds()">
 <div class="mobile-screen">
-
-  <!-- HEADER -->
-  <div class="header">
-    <div style="display:flex;align-items:center;">
-      <a href="home.html" class="back-btn">←</a>
-      <div class="page-title">Frame Ads Queue</div>
-    </div>
-    <div class="wallet-pill">💰 ₹<span id="headerBalance">0.00</span></div>
-  </div>
-
-  <!-- AD LIST -->
-  <div class="ad-list" id="adContainer"></div>
-
-  <!-- ✅ FULL SCREEN AD OVERLAY — fixed layout, no text cutting -->
-  <div class="ad-overlay" id="adOverlay">
-
-    <!-- ✅ TOP BAR: title + close button — always at top, never cut -->
-    <div class="ov-topbar">
-      <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
-      <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
+    <div class="header">
+        <a href="vendor-dashboard.html" class="back-btn">&larr;</a>
+        <div class="page-title">Post Frame Ad</div>
     </div>
 
-    <!-- ✅ IMAGE: 16:9 ratio, below top bar -->
-    <div class="ov-img-section">
-      <div class="ov-img-bg" id="overlayBg"></div>
-      <img src="" class="full-img" id="overlayImg" alt="">
-      <div class="ov-cat-badge" id="ovCat">General</div>
-    </div>
+    <div class="container">
 
-    <!-- ✅ WHITE CONTENT: title + desc + earn — all in flow, nothing cut -->
-    <div class="ov-content">
+        <div class="form-card">
+            <label>Ad Image (Banner)</label>
+            <img id="imgPreview" alt="">
+            <div class="upload-box" onclick="document.getElementById('adImage').click()">
+                <span class="upload-icon">📷</span>
+                <span style="color:#00796b;font-size:12px;font-weight:600;">Click to Upload Image</span>
+                <input type="file" id="adImage" style="display:none;" onchange="previewImage()">
+            </div>
 
-      <div class="ov-title-area">
-        <div class="ov-title" id="ovTitle">Loading…</div>
-        <div class="ov-meta">
-          <span class="ov-category" id="ovCatLabel">General</span>
-          <span class="ov-dot">•</span>
-          <span class="ov-verified" id="ovVerified">Verified Ad</span>
-          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ Already Viewed</span>
+            <label>Campaign Name</label>
+            <input type="text" id="campName" placeholder="e.g., Diwali Sale Offer">
+
+            <label>Ad Description</label>
+            <textarea id="adDesc" rows="3" placeholder="Describe your offer..."></textarea>
+
+            <label>Target Category</label>
+            <select id="campCat">
+                <option>Select Category</option>
+                <option>Banking & Financial Services</option>
+                <option>Information Technology</option>
+                <option>FMCG</option>
+                <option>Pharmaceuticals & Healthcare</option>
+                <option>Automobile</option>
+                <option>Retail & E-Commerce</option>
+                <option>Real Estate & Construction</option>
+                <option>Media & Entertainment</option>
+                <option>Fashion & Lifestyle</option>
+                <option>Education</option>
+                <option>Other</option>
+            </select>
+
+            <label>Target Location / Pincode</label>
+            <div class="loc-outer">
+                <input type="text" id="locationInput"
+                    placeholder="Type city, area or pincode…"
+                    autocomplete="off"
+                    oninput="onType()"
+                    onkeydown="onKey(event)">
+                <button type="button" id="locSearchBtn" onclick="onSearchBtnClick()" title="Search">🔍</button>
+                <div id="locDrop"></div>
+            </div>
+            <div id="locBadge">
+                <span style="font-size:18px;">📍</span>
+                <span class="ba-txt" id="baAddr">–</span>
+                <button class="ba-clr" onclick="clearLoc()" title="Clear">✕</button>
+            </div>
+            <p class="loc-hint">⬆ Type and select from suggestions to highlight map</p>
         </div>
-      </div>
 
-      <div class="ov-desc-area">
-        <div class="ov-desc" id="ovDesc">Loading description…</div>
-      </div>
-
-      <div class="ov-earn-zone">
-        <div id="timerWrap" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
-          <div class="timer-ring" id="timerDisplay">10</div>
-          <div class="timer-label">Watch to earn ₹0.70</div>
+        <div class="map-section">
+            <div class="map-hdr">
+                <div class="map-hdr-l">🗺️ <span id="mapTitle">Target Location Map</span></div>
+                <span class="map-badge" id="mapBadge">No location set</span>
+            </div>
+            <div class="map-ratio">
+                <div class="map-inner">
+                    <div id="mapPH">
+                        <span class="pi">📍</span>
+                        <span class="pt">Search a location above</span>
+                        <span class="ps">Map will highlight the target area</span>
+                    </div>
+                    <div id="mapLoad"><div class="spin"></div></div>
+                    <div id="mapEl"></div>
+                </div>
+            </div>
+            <div id="mapFtr">
+                <span style="font-size:16px;">📍</span>
+                <span id="mapFtrTxt">–</span>
+                <button class="open-btn" onclick="openGM()">Open Maps ↗</button>
+            </div>
         </div>
-        <button class="claim-btn" id="claimBtn" onclick="claimReward()">
-          🎉 Claim ₹0.70 Reward
-        </button>
-        <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()">
-          Close
-        </button>
-      </div>
 
+        <div class="form-card">
+            <h3 style="margin-top:0;font-size:15px;color:#333;">Budget & Costing</h3>
+            <label>Target Views (Min 100)</label>
+            <input type="number" id="views" value="200" min="100" oninput="calcCost()">
+            <p style="font-size:11px;color:#888;margin-top:-10px;margin-bottom:15px;">Rate: ₹1.00 per view</p>
+            <div class="cost-box">
+                <div class="cr"><span>Rate Per View</span><span>₹ 1.00</span></div>
+                <div class="cr"><span>Subtotal</span><span id="sub">₹ 200.00</span></div>
+                <div class="cr"><span>GST (18%)</span><span id="gst">₹ 36.00</span></div>
+                <div class="ct"><span>Total Payable</span><span id="tot">₹ 236.00</span></div>
+            </div>
+        </div>
+
+        <button class="btn-sub" onclick="publishAd()">PAY & PUBLISH AD</button>
     </div>
-  </div>
-
-  <!-- BACKDROP -->
-  <div class="modal-backdrop" id="backdrop" onclick="closeAllModals()"></div>
-
-  <!-- SHARE SHEET -->
-  <div class="bottom-sheet" id="shareSheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title">🔗 Share This Ad</div>
-      <button class="sheet-close" onclick="closeAllModals()">✕</button>
-    </div>
-    <div class="share-grid">
-      <div class="share-item" onclick="doShare('whatsapp')"><div class="share-ico" style="background:#dcf8c6;">💬</div><div class="share-lbl">WhatsApp</div></div>
-      <div class="share-item" onclick="doShare('telegram')"><div class="share-ico" style="background:#d9efff;">✈️</div><div class="share-lbl">Telegram</div></div>
-      <div class="share-item" onclick="doShare('facebook')"><div class="share-ico" style="background:#e7eeff;">👍</div><div class="share-lbl">Facebook</div></div>
-      <div class="share-item" onclick="doShare('twitter')"><div class="share-ico"  style="background:#e0f7fa;">🐦</div><div class="share-lbl">Twitter / X</div></div>
-      <div class="share-item" onclick="doShare('instagram')"><div class="share-ico" style="background:#fce4ec;">📸</div><div class="share-lbl">Instagram</div></div>
-      <div class="share-item" onclick="doShare('copy')"><div class="share-ico" style="background:#f3e5f5;">🔗</div><div class="share-lbl">Copy Link</div></div>
-      <div class="share-item" onclick="doShare('sms')"><div class="share-ico"   style="background:#fff8e1;">📱</div><div class="share-lbl">SMS</div></div>
-      <div class="share-item" onclick="doShare('email')"><div class="share-ico" style="background:#f1f8e9;">📧</div><div class="share-lbl">Email</div></div>
-    </div>
-  </div>
-
-  <!-- REFER SHEET -->
-  <div class="bottom-sheet" id="referSheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title">🎁 Refer & Earn</div>
-      <button class="sheet-close" onclick="closeAllModals()">✕</button>
-    </div>
-    <div class="refer-body">
-      <div style="font-size:42px;">🎁</div>
-      <div style="font-size:12px;color:#888;text-align:center;line-height:1.5;">Share this code with friends.<br>Earn bonus when they join EAP!</div>
-      <div class="refer-code-box">
-        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;">REFERRAL CODE</div>
-        <div class="refer-code" id="referCodeDisplay">EAP0000</div>
-      </div>
-      <button class="full-btn btn-orange" onclick="copyReferCode()">📋 Copy Code</button>
-      <button class="full-btn btn-wa"     onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
-    </div>
-  </div>
-
-  <!-- COMMENT SHEET -->
-  <div class="bottom-sheet" id="commentSheet" style="max-height:70%;">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title">💬 Comments</div>
-      <button class="sheet-close" onclick="closeAllModals()">✕</button>
-    </div>
-    <div class="comment-body">
-      <div class="comment-list" id="commentList"></div>
-      <div class="comment-input-row">
-        <input type="text" class="comment-input" id="commentInput" placeholder="Write a comment…" maxlength="120">
-        <button class="send-btn" onclick="postComment()">➤</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- LOCATION SHEET -->
-  <div class="bottom-sheet" id="locationSheet">
-    <div class="sheet-handle"></div>
-    <div class="sheet-header">
-      <div class="sheet-title">📍 Vendor Location</div>
-      <button class="sheet-close" onclick="closeAllModals()">✕</button>
-    </div>
-    <div class="loc-body" id="locBody"></div>
-  </div>
-
-  <!-- TOAST -->
-  <div class="toast" id="toast"></div>
-
-  <!-- BOTTOM NAV -->
-  <div class="bottom-nav">
-    <a href="home.html"      class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
-    <a href="frame-ads.html" class="nav-item active"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
-    <a href="wallet.html"    class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
-    <a href="settings.html"  class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
-  </div>
-
 </div>
 
 <script>
-  var activeAdId=null, activeAdObj=null, canEarn=false, timerInterval=null;
-  var _shareAdId=null, _referCode=null, _commentAdId=null;
-  var activeMobile = localStorage.getItem("activeUser");
-  var user = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {wallet:0,viewedAds:[],adHistory:[]};
+// ── STATE ────────────────────────────────────────────────
+// ⚠️ REQUIRED: Data-driven boundary styling (FeatureLayer) only works on a
+// VECTOR map that has "Data-driven styling" enabled in Google Cloud Console
+// (Maps Management → Map IDs).
+// "DEMO_MAP_ID" is a public Map ID Google provides for testing/prototyping —
+// it works out of the box with no Cloud Console setup, but shows a small
+// "for development purposes only" watermark and has usage limits.
+// Before going live, create your own vector Map ID with Data-driven styling
+// enabled and replace DEMO_MAP_ID with it.
+const MAP_ID = "DEMO_MAP_ID";
 
-  function loadAds(){
-    document.getElementById("headerBalance").innerText = parseFloat(user.wallet||0).toFixed(2);
-    var allAds = JSON.parse(localStorage.getItem("vendorCampaigns"))
-              || JSON.parse(localStorage.getItem("all_frame_ads")) || [];
-    var frameAds = allAds.filter(function(a){ return a.type==="Frame" && a.status!=="Rejected"; });
-    var container = document.getElementById("adContainer");
-    if(!frameAds.length){
-      container.innerHTML='<div class="empty-msg">📭 No active frame ads found.<br>Check back soon!</div>';
-      return;
+let selLoc = { lat: null, lng: null, address: "", placeId: "", types: [] };
+let gMap = null;
+let gMarker = null;
+let gShapes = [];               // legacy rectangle/border shapes (fallback only)
+let activeFeatureLayer = null;  // the FeatureLayer currently styled (for cleanup)
+let debTimer = null;
+
+let mapsLib = null;
+let placesLib = null;
+let markerLib = null;
+let geocodingLib = null;
+
+// ── INIT LIBRARIES ───────────────────────────────────────
+async function initLibs() {
+    try {
+        const libs = await Promise.all([
+            google.maps.importLibrary("maps"),
+            google.maps.importLibrary("places"),
+            google.maps.importLibrary("marker"),
+            google.maps.importLibrary("geocoding")
+        ]);
+
+        mapsLib = libs[0];
+        placesLib = libs[1];
+        markerLib = libs[2];
+        geocodingLib = libs[3];
+
+        console.log("✅ Google Maps libraries loaded");
+    } catch (e) {
+        console.error("❌ Maps libraries failed to load:", e);
+        alert("Google Maps failed to load. Please check API key, internet, and enabled APIs.\n\nNote: this page must be served over http:// or https:// — it will NOT work if opened directly as a file:// path.");
     }
-    window._frameAds = frameAds;
-    container.innerHTML = "";
-    var viewed = user.viewedAds||[];
+}
+initLibs();
 
-    frameAds.forEach(function(ad){
-      var isClaimed = viewed.indexOf(ad.id) !== -1;
-      var img      = ad.image||"";
-      var title    = ad.title||ad.name||"Untitled Ad";
-      var desc     = ad.desc||ad.description||"No description.";
-      var category = ad.category||"General";
-      var webLink  = ad.webLink||ad.website||"";
-      var mapLink  = ad.mapLink||ad.location||ad.address||"";
-      var refCode  = ad.referCode||("EAP"+String(ad.id).slice(-4).toUpperCase());
+// ── PLACE TEXT SEARCH (new Places API) ───────────────────
+// Replaces the deprecated AutocompleteService. NOTE: business-only filters
+// from the original snippet (isOpenNow, minRating, businessStatus, and an
+// empty includedType with useStrictTypeFiltering) are intentionally removed
+// here — those apply to POIs/businesses and would return ZERO results for a
+// city, district, or pincode search (a city has no "open now" status).
+function onType() {
+    const q = document.getElementById("locationInput").value.trim();
+    clearTimeout(debTimer);
+    closeDrop();
+    if (!q) return;
 
-      var imgHtml = img
-        ? '<img src="'+img+'" class="ad-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'
-          +'<div class="img-placeholder" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;">📷<span style="font-size:11px">No Image</span></div>'
-        : '<div class="img-placeholder">📷<span style="font-size:11px">No Image</span></div>';
+    debTimer = setTimeout(async () => {
+        try {
+            if (!placesLib) placesLib = await google.maps.importLibrary("places");
+            const { Place } = placesLib;
 
-      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">₹0.70 Reward</span>';
-      var btnHtml   = isClaimed
-        ? '<button class="view-again-btn" onclick="openViewAgain(\''+ad.id+'\')">👁 View Again</button>'
-        : '<button class="earn-btn" onclick="openAd(\''+ad.id+'\')">Earn ₹0.70</button>';
+            const request = {
+                textQuery: q,
+                fields: ["id", "displayName", "formattedAddress", "location", "viewport", "addressComponents", "types"],
+                locationBias: gMap ? gMap.getCenter() : undefined,
+                language: "en-IN",
+                region: "in",
+                maxResultCount: 6
+            };
 
-      var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
-      var webClick = webLink ? 'onclick="openWeb(\''+encodeURIComponent(webLink)+'\')"' : "";
+            const { places } = await Place.searchByText(request);
+            if (!places || !places.length) return;
+            buildDrop(places);
+        } catch (e) {
+            console.error("Place text search error:", e);
+        }
+    }, 300);
+}
 
-      container.innerHTML +=
-        '<div class="ad-card" id="card_'+ad.id+'">'
-          +'<div class="ad-img-box">'+imgHtml
-            +(img?'<div class="black-overlay"><div class="overlay-desc">'+desc+'</div><div class="overlay-cat">'+category+' • Verified</div></div>':'')
-          +'</div>'
-          +'<div class="action-row">'
-            +'<div style="flex:1;margin-right:10px;"><div class="ad-title-txt">'+title+'</div><div class="badges-row">'+badgeHtml+'</div></div>'
-            +btnHtml
-          +'</div>'
-          +'<div class="engage-row">'
-            +'<button class="eng-btn eng-share" onclick="openShare(\''+ad.id+'\')"><div class="eng-icon">🔗</div><span class="eng-label">Share</span></button>'
-            +'<button class="eng-btn eng-refer" onclick="openRefer(\''+ad.id+'\',\''+refCode+'\')"><div class="eng-icon">🎁</div><span class="eng-label">Refer</span></button>'
-            +'<button class="eng-btn eng-comment" onclick="openComments(\''+ad.id+'\')"><div class="eng-icon">💬</div><span class="eng-label">Comments</span></button>'
-            +'<button class="'+webClass+'" '+webClick+'><div class="eng-icon">🌐</div><span class="eng-label">Website</span></button>'
-            +'<button class="eng-btn eng-map" onclick="openLocation(\''+encodeURIComponent(mapLink)+'\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
-          +'</div>'
-        +'</div>';
+function buildDrop(places) {
+    const dd = document.getElementById("locDrop");
+    dd.innerHTML = "";
+
+    places.slice(0, 6).forEach((p) => {
+        const main = p.displayName || p.formattedAddress || "";
+        const sub = (p.formattedAddress && p.formattedAddress !== main) ? p.formattedAddress : "";
+
+        const div = document.createElement("div");
+        div.className = "di";
+        div.innerHTML =
+            '<span class="di-ico">📍</span>' +
+            '<div><div class="di-main">' + main + '</div>' +
+            (sub ? '<div class="di-sub">' + sub + '</div>' : '') +
+            '</div>';
+
+        div.onclick = function () {
+            document.getElementById("locationInput").value = p.formattedAddress || main;
+            closeDrop();
+            // Place object already has location/viewport/address — no second lookup needed
+            handlePlaceResult(p);
+        };
+
+        dd.appendChild(div);
     });
-  }
 
-  // ✅ Set both image and blurred bg
-  function setOverlayImage(imgSrc){
-    document.getElementById("overlayImg").src = imgSrc||"";
-    document.getElementById("overlayBg").style.backgroundImage = imgSrc ? "url('"+imgSrc+"')" : "none";
-  }
+    dd.classList.add("open");
+}
 
-  // ✅ Fill ALL overlay fields including top bar title
-  function fillOverlay(ad){
-    var title = ad.title||ad.name||"Ad";
-    var cat   = ad.category||"General";
-    setOverlayImage(ad.image||"");
-    document.getElementById("ovTopTitle").innerText  = title;  // top bar
-    document.getElementById("ovTitle").innerText     = title;  // content area
-    document.getElementById("ovDesc").innerText      = ad.desc||ad.description||"";
-    document.getElementById("ovCat").innerText       = cat;
-    document.getElementById("ovCatLabel").innerText  = cat;
-  }
+function closeDrop() {
+    document.getElementById("locDrop").classList.remove("open");
+}
 
-  function openAd(id){
-    var ad = getAds().find(function(a){ return a.id===id; });
-    if(!ad) return;
-    activeAdId=id; activeAdObj=ad; canEarn=true;
-    fillOverlay(ad);
-    document.getElementById("ovBadge").style.display    = "none";
-    document.getElementById("timerWrap").style.display  = "flex";
-    document.getElementById("claimBtn").style.display   = "none";
-    document.getElementById("closeBtn").style.display   = "none";
-    document.getElementById("timerDisplay").innerText   = "10";
-    document.getElementById("adOverlay").style.display  = "flex";
-    clearInterval(timerInterval);
-    var t = 10;
-    timerInterval = setInterval(function(){
-      t--; document.getElementById("timerDisplay").innerText = t;
-      if(t <= 0){
-        clearInterval(timerInterval);
-        document.getElementById("timerWrap").style.display = "none";
-        document.getElementById("claimBtn").style.display  = "block";
-      }
-    }, 1000);
-  }
-
-  function openViewAgain(id){
-    var ad = getAds().find(function(a){ return a.id===id; });
-    if(!ad) return;
-    activeAdId=id; activeAdObj=ad; canEarn=false;
-    fillOverlay(ad);
-    document.getElementById("ovBadge").style.display    = "inline-block";
-    document.getElementById("timerWrap").style.display  = "none";
-    document.getElementById("claimBtn").style.display   = "none";
-    document.getElementById("closeBtn").style.display   = "block";
-    document.getElementById("adOverlay").style.display  = "flex";
-    clearInterval(timerInterval);
-  }
-
-  function closeOverlay(){
-    clearInterval(timerInterval);
-    document.getElementById("adOverlay").style.display = "none";
-  }
-
-  function claimReward(){
-    if(!canEarn) return; canEarn=false;
-    user.wallet = parseFloat(user.wallet||0)+0.70;
-    user.adHistory = user.adHistory||[];
-    user.adHistory.push({ id:activeAdId, name:activeAdObj?(activeAdObj.title||activeAdObj.name):activeAdId, type:"Frame", amount:0.70, date:new Date().toLocaleDateString(), time:new Date().toLocaleTimeString() });
-    user.viewedAds = user.viewedAds||[];
-    if(user.viewedAds.indexOf(activeAdId)===-1) user.viewedAds.push(activeAdId);
-    localStorage.setItem("userProfile_"+activeMobile, JSON.stringify(user));
-    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
-    closeOverlay(); loadAds(); showToast("₹0.70 Credited! 🎉");
-  }
-
-  function openShare(adId){ _shareAdId=adId; openSheet("shareSheet"); }
-
-  function doShare(platform){
-    var ad=getAds().find(function(a){ return a.id===_shareAdId; })||{};
-    var adTitle=ad.title||ad.name||"EAP Ad";
-    var adDesc=ad.desc||ad.description||"";
-    var webLink=(ad.webLink||ad.website||"").trim();
-    var url=webLink?(webLink.startsWith("http")?webLink:"https://"+webLink):"www.easyadpromotion.com";
-    var shortMsg="🌟 "+adTitle+"\n💰 Earn by watching ads on EAP!\n👉 "+url;
-    var fullMsg="🌟 "+adTitle+"\n\n"+adDesc+"\n\n💰 Earn money watching ads on EAP!\n👉 "+url;
-    closeAllModals();
-
-    function doCopy(text,msg){ var ta=document.createElement("textarea"); ta.value=text; ta.style.cssText="position:fixed;top:0;left:0;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand("copy"); showToast(msg||"Copied ✅"); }catch(e){ showToast("Please copy manually"); } document.body.removeChild(ta); }
-    function openViaLink(href){ var a=document.createElement("a"); a.href=href; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); }
-
-    var urls={ whatsapp:"https://api.whatsapp.com/send?text="+encodeURIComponent(fullMsg), telegram:"https://t.me/share/url?url="+encodeURIComponent(url)+"&text="+encodeURIComponent("🌟 "+adTitle), facebook:"https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(url), twitter:"https://twitter.com/intent/tweet?text="+encodeURIComponent("🌟 "+adTitle+" "+url), instagram:"https://www.instagram.com/", sms:"sms:?body="+encodeURIComponent(shortMsg), email:"mailto:?subject="+encodeURIComponent("Check this ad: "+adTitle)+"&body="+encodeURIComponent(fullMsg) };
-    if(platform==="copy"){ doCopy(shortMsg,"Link Copied! 🔗"); return; }
-    if(platform==="sms"){ openViaLink(urls.sms); showToast("Opening SMS… 📱"); return; }
-    if(platform==="email"){ openViaLink(urls.email); showToast("Opening Email… 📧"); return; }
-    doCopy(fullMsg,""); showSharePopup(platform,urls[platform],adTitle,fullMsg);
-  }
-
-  function showSharePopup(platform,shareUrl,adTitle,message){
-    var old=document.getElementById("_sp"); if(old) old.remove();
-    var meta={ whatsapp:{icon:"💬",name:"WhatsApp",color:"#25D366",bg:"#dcf8c6"}, telegram:{icon:"✈️",name:"Telegram",color:"#0088cc",bg:"#d9efff"}, facebook:{icon:"👍",name:"Facebook",color:"#1877F2",bg:"#e7eeff"}, twitter:{icon:"🐦",name:"Twitter/X",color:"#1DA1F2",bg:"#e0f7fa"}, instagram:{icon:"📸",name:"Instagram",color:"#E1306C",bg:"#fce4ec"} };
-    var m=meta[platform]||{icon:"📤",name:platform,color:"#ff9800",bg:"#fff3e0"};
-    var div=document.createElement("div"); div.id="_sp";
-    div.style.cssText="position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.72);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;";
-    div.innerHTML='<div style="background:white;border-radius:22px;width:100%;max-width:310px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">'
-      +'<div style="background:'+m.bg+';padding:20px;text-align:center;"><div style="font-size:44px;">'+m.icon+'</div><div style="font-size:16px;font-weight:800;color:#333;margin-top:6px;">Share on '+m.name+'</div></div>'
-      +'<div style="padding:14px 18px 0;"><div style="font-size:11px;color:#555;line-height:1.9;background:#f8f8f8;border-radius:12px;padding:10px 14px;">✅ Message copied to clipboard<br>👇 Tap <b>Open '+m.name+'</b> below<br>📋 Paste the message &amp; send</div></div>'
-      +'<div style="padding:10px 18px 0;"><div style="font-size:9px;font-weight:700;color:#aaa;margin-bottom:4px;text-transform:uppercase;">Copied Message Preview</div><div style="background:#f0f0f0;border-radius:10px;padding:8px 12px;font-size:10px;color:#666;line-height:1.5;max-height:60px;overflow:hidden;">'+message.substring(0,130)+'…</div></div>'
-      +'<div style="padding:14px 18px 20px;display:flex;flex-direction:column;gap:8px;"><a href="'+shareUrl+'" target="_blank" rel="noopener" style="display:block;background:'+m.color+';color:white;padding:13px;border-radius:20px;font-weight:800;font-size:14px;text-decoration:none;text-align:center;" onclick="document.getElementById(\'_sp\').remove()">Open '+m.name+' ↗</a><button onclick="document.getElementById(\'_sp\').remove()" style="background:#f5f5f5;color:#888;border:none;padding:10px;border-radius:16px;font-weight:700;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button></div>'
-      +'</div>';
-    document.querySelector(".mobile-screen").appendChild(div);
-  }
-
-  function openRefer(adId,code){ _shareAdId=adId; _referCode=code; document.getElementById("referCodeDisplay").innerText=code; openSheet("referSheet"); }
-  function copyReferCode(){ var msg="Join EAP!\nReferral Code: "+_referCode+"\nSign up & earn now!"; var ta=document.createElement("textarea"); ta.value=msg; ta.style.cssText="position:fixed;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try{ document.execCommand("copy"); showToast("Referral code copied! 🎁"); }catch(e){} document.body.removeChild(ta); closeAllModals(); }
-  function shareReferWhatsApp(){ var msg="🎉 Join EAP!\nEarn money by watching ads.\n\n🔑 Referral Code: *"+_referCode+"*\n\n👉 Sign up & start earning now!"; var a=document.createElement("a"); a.href="https://api.whatsapp.com/send?text="+encodeURIComponent(msg); a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); closeAllModals(); }
-
-  function openComments(adId){ _commentAdId=adId; renderComments(adId); openSheet("commentSheet"); }
-  function renderComments(adId){
-    var comments=JSON.parse(localStorage.getItem("adComments_"+adId))||[];
-    var list=document.getElementById("commentList");
-    if(!comments.length){ list.innerHTML='<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>'; return; }
-    list.innerHTML="";
-    comments.forEach(function(c){ list.innerHTML+='<div class="comment-item"><div class="c-avatar">'+(c.name||"U").charAt(0).toUpperCase()+'</div><div class="c-body"><div class="c-name">'+c.name+'<span class="c-time">'+c.time+'</span></div><div class="c-text">'+c.text+'</div></div></div>'; });
-    list.scrollTop=list.scrollHeight;
-  }
-  function postComment(){
-    var input=document.getElementById("commentInput"); var text=(input.value||"").trim(); if(!text) return;
-    var key="adComments_"+_commentAdId; var comments=JSON.parse(localStorage.getItem(key))||[];
-    var name=user.name||("User "+String(activeMobile||"").slice(-4));
-    var now=new Date().toLocaleTimeString([],{hour:"2-digit",minute:"2-digit"});
-    comments.push({name:name,text:text,time:now}); localStorage.setItem(key,JSON.stringify(comments));
-    var vk="vendorComments_"+_commentAdId; var vc=JSON.parse(localStorage.getItem(vk))||[];
-    vc.push({name:name,text:text,time:now,date:new Date().toLocaleDateString()}); localStorage.setItem(vk,JSON.stringify(vc));
-    input.value=""; renderComments(_commentAdId); showToast("Comment posted ✅");
-  }
-  document.getElementById("commentInput").addEventListener("keydown",function(e){ if(e.key==="Enter") postComment(); });
-
-  function openWeb(enc){ var url=decodeURIComponent(enc); if(!url.startsWith("http")) url="https://"+url; var a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); }
-
-  function openLocation(enc){
-    var loc=decodeURIComponent(enc).trim(); var body=document.getElementById("locBody");
-    if(!loc){ body.innerHTML='<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this ad yet.</div></div>'; }
-    else {
-      var isUrl=loc.startsWith("http");
-      var mapsUrl=isUrl?loc:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(loc);
-      var embedUrl=isUrl?"":"https://maps.google.com/maps?q="+encodeURIComponent(loc)+"&output=embed";
-      body.innerHTML=(embedUrl?'<iframe class="loc-map-frame" src="'+embedUrl+'" allowfullscreen loading="lazy"></iframe>':'')
-        +'<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">'+loc+'</div></div>'
-        +'<button class="open-maps-btn" onclick="openViaA(\''+mapsUrl+'\')">🗺️ Open in Google Maps</button>';
+function onKey(e) {
+    if (e.key === "Enter") {
+        e.preventDefault();
+        closeDrop();
+        const q = document.getElementById("locationInput").value.trim();
+        if (q) searchTextAndResolve(q);
     }
-    openSheet("locationSheet");
-  }
-  function openViaA(url){ var a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); }
+}
 
-  function openSheet(id){ document.getElementById("backdrop").classList.add("open"); document.getElementById(id).classList.add("open"); }
-  function closeAllModals(){ document.getElementById("backdrop").classList.remove("open"); ["shareSheet","referSheet","commentSheet","locationSheet"].forEach(function(id){ document.getElementById(id).classList.remove("open"); }); }
-  function showToast(msg){ var t=document.getElementById("toast"); t.innerText=msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); },2500); }
-  function getAds(){ return window._frameAds||[]; }
+// ── EXPLICIT SEARCH BUTTON ────────────────────────────────
+function onSearchBtnClick() {
+    closeDrop();
+    const q = document.getElementById("locationInput").value.trim();
+    if (!q) return;
+    searchTextAndResolve(q);
+}
+
+// ── SEARCH-BY-TEXT (Enter key / no dropdown selection) ───
+async function searchTextAndResolve(text) {
+    if (!text) return;
+    showLoad(true);
+
+    try {
+        if (!placesLib) placesLib = await google.maps.importLibrary("places");
+        const { Place } = placesLib;
+
+        const request = {
+            textQuery: text,
+            fields: ["id", "displayName", "formattedAddress", "location", "viewport", "addressComponents", "types"],
+            locationBias: gMap ? gMap.getCenter() : undefined,
+            language: "en-IN",
+            region: "in",
+            maxResultCount: 1
+        };
+
+        const { places } = await Place.searchByText(request);
+        showLoad(false);
+
+        if (places && places.length) {
+            handlePlaceResult(places[0]);
+        } else {
+            // Fallback to Geocoder — occasionally more reliable for exact PIN codes
+            geocodeText(text);
+        }
+    } catch (err) {
+        showLoad(false);
+        console.error("Place text search error:", err);
+        geocodeText(text); // fallback
+    }
+}
+
+// ── GEOCODE TEXT (fallback only) ─────────────────────────
+async function geocodeText(text) {
+    if (!text) return;
+    showLoad(true);
+
+    try {
+        if (!geocodingLib) geocodingLib = await google.maps.importLibrary("geocoding");
+        const geocoder = new google.maps.Geocoder();
+
+        geocoder.geocode(
+            {
+                address: text,
+                componentRestrictions: { country: "IN" }
+            },
+            (results, status) => {
+                showLoad(false);
+
+                if (status === "OK" && results && results.length) {
+                    handleResult(results[0]);
+                } else {
+                    console.error("Geocode failed:", status);
+                    alert("📍 Location not found. Try another city, area, or pincode.");
+                }
+            }
+        );
+    } catch (err) {
+        showLoad(false);
+        console.error("Geocoding error:", err);
+        alert("Maps not ready. Please check API key and enabled APIs.");
+    }
+}
+
+// ── HANDLE RESULT ────────────────────────────────────────
+function handleResult(r) {
+    const loc = r.geometry.location;
+    selLoc = {
+        lat: loc.lat(),
+        lng: loc.lng(),
+        address: r.formatted_address,
+        placeId: r.place_id || "",
+        types: r.types || []
+    };
+
+    const comps = r.address_components || [];
+    const city =
+        getComp(comps, "locality") ||
+        getComp(comps, "administrative_area_level_2") ||
+        getComp(comps, "administrative_area_level_1") ||
+        r.formatted_address;
+
+    document.getElementById("baAddr").innerText = r.formatted_address;
+    document.getElementById("locBadge").classList.add("show");
+    document.getElementById("locationInput").classList.add("confirmed");
+
+    document.getElementById("mapTitle").innerText = city + " — Target Area";
+    const badge = document.getElementById("mapBadge");
+    badge.innerText = "✅ Location Set";
+    badge.className = "map-badge on";
+
+    document.getElementById("mapFtrTxt").innerText = r.formatted_address;
+    document.getElementById("mapFtr").classList.add("show");
+
+    renderMap(
+        loc.lat(),
+        loc.lng(),
+        r.formatted_address,
+        r.geometry.viewport,
+        r.types || []
+    );
+}
+
+function getComp(components, type) {
+    const found = components.find(x => x.types.indexOf(type) !== -1);
+    return found ? found.long_name : null;
+}
+
+// ── HANDLE RESULT (new Places API — Place.searchByText) ──
+// p.location and p.viewport from the new Place API behave like
+// google.maps.LatLng / LatLngBounds (same .lat()/.lng() interface),
+// but p.addressComponents uses {longText, shortText, types} instead of
+// the legacy {long_name, short_name, types}.
+function handlePlaceResult(p) {
+    if (!p || !p.location) return;
+    const loc = p.location;
+
+    selLoc = {
+        lat: loc.lat(),
+        lng: loc.lng(),
+        address: p.formattedAddress || p.displayName || "",
+        placeId: p.id || "",
+        types: p.types || []
+    };
+
+    const comps = p.addressComponents || [];
+    const city =
+        getCompNew(comps, "locality") ||
+        getCompNew(comps, "administrative_area_level_2") ||
+        getCompNew(comps, "administrative_area_level_1") ||
+        selLoc.address;
+
+    document.getElementById("baAddr").innerText = selLoc.address;
+    document.getElementById("locBadge").classList.add("show");
+    document.getElementById("locationInput").classList.add("confirmed");
+
+    document.getElementById("mapTitle").innerText = city + " — Target Area";
+    const badge = document.getElementById("mapBadge");
+    badge.innerText = "✅ Location Set";
+    badge.className = "map-badge on";
+
+    document.getElementById("mapFtrTxt").innerText = selLoc.address;
+    document.getElementById("mapFtr").classList.add("show");
+
+    renderMap(loc.lat(), loc.lng(), selLoc.address, p.viewport, selLoc.types);
+}
+
+function getCompNew(components, type) {
+    if (!components) return null;
+    const found = components.find(c => c.types && c.types.indexOf(type) !== -1);
+    return found ? found.longText : null;
+}
+
+// ── MAP PLACE TYPE → FEATURE LAYER TYPE ──────────────────
+// Maps Geocoder result "types" to the matching google.maps.FeatureType
+// so we style the correct boundary layer (city, district, state, pincode…)
+function getFeatureType(types) {
+    if (!types) return null;
+    if (types.indexOf("postal_code") !== -1) return google.maps.FeatureType.POSTAL_CODE;
+    if (types.indexOf("locality") !== -1) return google.maps.FeatureType.LOCALITY;
+    if (types.indexOf("sublocality") !== -1) return google.maps.FeatureType.LOCALITY;
+    if (types.indexOf("administrative_area_level_2") !== -1) return google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_2;
+    if (types.indexOf("administrative_area_level_1") !== -1) return google.maps.FeatureType.ADMINISTRATIVE_AREA_LEVEL_1;
+    if (types.indexOf("country") !== -1) return google.maps.FeatureType.COUNTRY;
+    return null;
+}
+
+function getZoom(types) {
+    if (!types) return 13;
+    if (types.indexOf("postal_code") !== -1) return 14;
+    if (types.indexOf("locality") !== -1) return 12;
+    if (types.indexOf("sublocality") !== -1) return 13;
+    if (types.indexOf("administrative_area_level_2") !== -1) return 10;
+    if (types.indexOf("administrative_area_level_1") !== -1) return 8;
+    return 13;
+}
+
+// ── CLEAR ANY PREVIOUSLY STYLED BOUNDARY ─────────────────
+function clearFeatureStyle() {
+    if (activeFeatureLayer) {
+        activeFeatureLayer.style = null;
+        activeFeatureLayer = null;
+    }
+    // also clear legacy rectangle/border shapes if any remain
+    gShapes.forEach(shape => shape.setMap(null));
+    gShapes = [];
+}
+
+// ── RENDER MAP (exact boundary via FeatureLayer) ─────────
+async function renderMap(lat, lng, addr, viewport, types) {
+    document.getElementById("mapPH").style.display = "none";
+    document.getElementById("mapEl").style.display = "block";
+    showLoad(true);
+
+    try {
+        if (!mapsLib) mapsLib = await google.maps.importLibrary("maps");
+        if (!markerLib) markerLib = await google.maps.importLibrary("marker");
+
+        const pos = new google.maps.LatLng(lat, lng);
+        const zoom = getZoom(types);
+
+        if (!gMap) {
+            gMap = new google.maps.Map(document.getElementById("mapEl"), {
+                center: pos,
+                zoom: zoom,
+                mapId: MAP_ID,              // vector map required for FeatureLayer
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControl: true
+                // Note: classic "styles" array is ignored on vector (mapId) maps.
+                // Use Cloud-based map styling in Google Cloud Console instead.
+            });
+        } else {
+            gMap.setCenter(pos);
+            gMap.setZoom(zoom);
+        }
+
+        // Clear any boundary highlight from a previous search
+        clearFeatureStyle();
+
+        const featureType = getFeatureType(types);
+
+        if (featureType && selLoc.placeId) {
+            try {
+                const featureLayer = gMap.getFeatureLayer(featureType);
+
+                featureLayer.style = ({ feature }) => {
+                    if (feature.placeId === selLoc.placeId) {
+                        return {
+                            fillColor: "#E53935",
+                            fillOpacity: 0.15,
+                            strokeColor: "#E53935",
+                            strokeOpacity: 1,
+                            strokeWeight: 3
+                        };
+                    }
+                    // returning nothing hides styling for all other features
+                };
+
+                activeFeatureLayer = featureLayer;
+            } catch (fe) {
+                // FeatureLayer not available (map not vector / boundaries not
+                // enabled on the Map ID) — fall back to the viewport rectangle
+                console.warn("FeatureLayer unavailable, falling back to viewport box:", fe);
+                drawViewportFallback(viewport);
+            }
+        } else {
+            // No matching feature type (e.g. plain address) — fall back
+            drawViewportFallback(viewport);
+        }
+
+        if (viewport) {
+            let vp = viewport;
+            if (typeof vp.getNorthEast !== "function") {
+                vp = new google.maps.LatLngBounds(
+                    new google.maps.LatLng(vp.south, vp.west),
+                    new google.maps.LatLng(vp.north, vp.east)
+                );
+            }
+            setTimeout(() => gMap.fitBounds(vp), 100);
+        }
+
+        if (gMarker) gMarker.setMap(null);
+
+        gMarker = new google.maps.Marker({
+            position: pos,
+            map: gMap,
+            title: addr,
+            icon: {
+                path: google.maps.SymbolPath.CIRCLE,
+                scale: 10,
+                fillColor: "#009688",
+                fillOpacity: 1,
+                strokeColor: "#ffffff",
+                strokeWeight: 3
+            }
+        });
+
+        setTimeout(() => {
+            google.maps.event.trigger(gMap, "resize");
+            gMap.setCenter(pos);
+        }, 300);
+
+        showLoad(false);
+    } catch (err) {
+        showLoad(false);
+        console.error("Map render error:", err);
+        alert("Map failed to render. Check API key restrictions and enabled APIs.");
+    }
+}
+
+// ── FALLBACK: approximate viewport box (used if FeatureLayer unavailable) ──
+function drawViewportFallback(viewport) {
+    if (!viewport) return;
+    let vp = viewport;
+    if (typeof vp.getNorthEast !== "function") {
+        vp = new google.maps.LatLngBounds(
+            new google.maps.LatLng(vp.south, vp.west),
+            new google.maps.LatLng(vp.north, vp.east)
+        );
+    }
+    const ne = vp.getNorthEast();
+    const sw = vp.getSouthWest();
+    const nw = new google.maps.LatLng(ne.lat(), sw.lng());
+    const se = new google.maps.LatLng(sw.lat(), ne.lng());
+
+    const fill = new google.maps.Rectangle({
+        bounds: vp, map: gMap, clickable: false,
+        strokeOpacity: 0, strokeWeight: 0,
+        fillColor: "#E53935", fillOpacity: 0.09
+    });
+    const border = new google.maps.Polyline({
+        path: [ne, nw, sw, se, ne], map: gMap, clickable: false,
+        strokeOpacity: 0,
+        icons: [{
+            icon: { path: "M 0,-1 0,1", strokeOpacity: 1, strokeColor: "#E53935", strokeWeight: 3, scale: 4 },
+            offset: "0", repeat: "14px"
+        }]
+    });
+    gShapes.push(fill, border);
+}
+
+function showLoad(show) {
+    document.getElementById("mapLoad").style.display = show ? "flex" : "none";
+}
+
+// ── CLEAR LOCATION ───────────────────────────────────────
+function clearLoc() {
+    selLoc = { lat: null, lng: null, address: "", placeId: "" };
+
+    document.getElementById("locationInput").value = "";
+    document.getElementById("locationInput").classList.remove("confirmed");
+    document.getElementById("locBadge").classList.remove("show");
+    document.getElementById("mapPH").style.display = "flex";
+    document.getElementById("mapEl").style.display = "none";
+    document.getElementById("mapFtr").classList.remove("show");
+    document.getElementById("mapTitle").innerText = "Target Location Map";
+
+    const badge = document.getElementById("mapBadge");
+    badge.innerText = "No location set";
+    badge.className = "map-badge";
+
+    if (gMarker) gMarker.setMap(null);
+    clearFeatureStyle();
+}
+
+// ── OPEN IN GOOGLE MAPS ──────────────────────────────────
+function openGM() {
+    const addr = selLoc.address;
+    if (!addr) return;
+
+    window.open(
+        "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(addr),
+        "_blank"
+    );
+}
+
+document.addEventListener("click", function(e) {
+    const box = document.querySelector(".loc-outer");
+    if (box && !box.contains(e.target)) closeDrop();
+});
+
+// ── IMAGE PREVIEW ────────────────────────────────────────
+function previewImage() {
+    const file = document.getElementById("adImage").files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById("imgPreview").src = e.target.result;
+        document.getElementById("imgPreview").style.display = "block";
+        document.querySelector(".upload-box .upload-icon").style.display = "none";
+        document.querySelector(".upload-box span[style]").style.display = "none";
+    };
+    reader.readAsDataURL(file);
+}
+
+// ── CALCULATE COST ───────────────────────────────────────
+function calcCost() {
+    const v = parseInt(document.getElementById("views").value) || 0;
+    const s = v;
+    const g = s * 0.18;
+
+    document.getElementById("sub").innerText = "₹ " + s.toFixed(2);
+    document.getElementById("gst").innerText = "₹ " + g.toFixed(2);
+    document.getElementById("tot").innerText = "₹ " + (s + g).toFixed(2);
+}
+
+// ── PUBLISH AD ───────────────────────────────────────────
+function publishAd() {
+    const name = document.getElementById("campName").value.trim();
+    const cat = document.getElementById("campCat").value;
+    const desc = document.getElementById("adDesc").value.trim();
+    const views = document.getElementById("views").value;
+    const total = document.getElementById("tot").innerText;
+    const loc = selLoc.address;
+    const fi = document.getElementById("adImage");
+
+    if (!name) { alert("Please enter Campaign Name"); return; }
+    if (!desc) { alert("Please enter Ad Description"); return; }
+    if (cat === "Select Category") { alert("Please select a Category"); return; }
+    if (!fi.files.length) { alert("Please select an ad image!"); return; }
+    if (!loc) { alert("Please search and select a Target Location"); return; }
+
+    const img = new Image();
+    img.src = URL.createObjectURL(fi.files[0]);
+
+    img.onload = function() {
+        const c = document.createElement("canvas");
+        c.width = 800;
+        c.height = img.height * (800 / img.width);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
+        saveAd(name, cat, desc, views, total, c.toDataURL("image/jpeg", 0.7), loc);
+    };
+}
+
+function saveAd(name, cat, desc, views, total, image, loc) {
+    try {
+        const ad = {
+            id: "FRA" + Math.floor(Math.random() * 9999),
+            type: "Frame",
+            title: name,
+            desc: desc,
+            category: cat,
+            image: image,
+            budget: total,
+            target: views,
+            status: "Pending",
+            date: new Date().toLocaleDateString(),
+            location: loc,
+            mapLink: loc,
+            lat: selLoc.lat,
+            lng: selLoc.lng
+        };
+
+        const all = JSON.parse(localStorage.getItem("all_frame_ads") || "[]");
+        all.push(ad);
+        localStorage.setItem("all_frame_ads", JSON.stringify(all));
+
+        const vc = JSON.parse(localStorage.getItem("vendorCampaigns") || "[]");
+        vc.push(ad);
+        localStorage.setItem("vendorCampaigns", JSON.stringify(vc));
+
+        alert("✅ Ad Submitted Successfully!");
+        window.location.href = "vendor-dashboard.html";
+    } catch(e) {
+        alert(e.name === "QuotaExceededError" ? "❌ Storage Full." : "❌ Error: " + e.message);
+    }
+}
 </script>
+
 </body>
 </html>
