@@ -6,6 +6,50 @@
     <title>Post Frame Ad</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
+    <!-- ══════════════════════════════════════════════════════════════════
+         🔑 GOOGLE MAPS API KEY — CONFIGURE BEFORE DEPLOY
+         ══════════════════════════════════════════════════════════════════
+         1. Go to https://console.cloud.google.com/google/maps-apis/credentials
+         2. Create a NEW API key (do not reuse the old exposed one below it
+            must be revoked/deleted — see notes at the bottom of this block).
+         3. Click the key → "Application restrictions" → "Websites" →
+            add your live domain(s) exactly as they'll be requested from,
+            e.g.:
+                https://easyadpromotion.com/*
+                https://*.easyadpromotion.com/*
+                http://localhost:*/*   (only while testing locally)
+         4. Click "API restrictions" → "Restrict key" → enable ONLY:
+                • Maps JavaScript API
+                • Places API (New)
+                • Geocoding API
+            (Do not leave "Don't restrict key" selected — that's what
+             caused the exposure risk in the first place.)
+         5. Set a daily quota / billing alert in Cloud Console so an
+            unexpected spike in usage can't run up a large bill even if
+            the key is ever scraped from page source.
+         6. Paste the new key into API_KEY below.
+
+         IMPORTANT REALITY CHECK: this is a client-side, static HTML page
+         with no backend, so the key will ALWAYS be visible in the browser's
+         page source / network tab — that is normal and expected for Maps
+         JavaScript API keys used in frontend apps. The actual security
+         control is step 3+4 above (HTTP referrer + API restrictions), not
+         hiding the key. A key without those restrictions is the real
+         vulnerability, not the key being readable.
+
+         ⚠️ ACTION REQUIRED: the previous key
+         (AIzaSyB_RipP0Lg8bgfYkOmZTMMKJQP__azFMm0) was hardcoded with no
+         referrer restriction shown in this file and should be treated as
+         compromised — regenerate/delete it in Cloud Console and replace
+         it below with a freshly restricted key.
+         ══════════════════════════════════════════════════════════════════ -->
+    <script>
+        window.MAPS_CONFIG = {
+            API_KEY: "AIzaSyBBanS7ZEjSiuialuuznPuWFizmEBRYHf0",
+            MAP_ID: "140d85cf5d478eaecd44014d" // vector Map ID with "Data-driven styling" enabled
+        };
+    </script>
+
     <!-- Google Maps auth failure handler - MUST be defined BEFORE the bootstrap loader script -->
     <script>
         window.gm_authFailure = function () {
@@ -29,7 +73,7 @@
     <!-- Google Maps bootstrap loader -->
     <script>
         (g=>{var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await(a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src=`https://maps.${c}apis.com/maps/api/js?`+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})
-        ({key:"AIzaSyBIYCrCcEG-A-tDPVrM2I8bcEQ6k3VeNxc", v:"weekly"});
+        ({key: window.MAPS_CONFIG.API_KEY, v:"weekly"});
     </script>
 
     <style>
@@ -295,13 +339,9 @@
 // ── STATE ────────────────────────────────────────────────
 // ⚠️ REQUIRED: Data-driven boundary styling (FeatureLayer) only works on a
 // VECTOR map that has "Data-driven styling" enabled in Google Cloud Console
-// (Maps Management → Map IDs).
-// "DEMO_MAP_ID" is a public Map ID Google provides for testing/prototyping —
-// it works out of the box with no Cloud Console setup, but shows a small
-// "for development purposes only" watermark and has usage limits.
-// Before going live, create your own vector Map ID with Data-driven styling
-// enabled and replace DEMO_MAP_ID with it.
-const MAP_ID = "DEMO_MAP_ID";
+// (Maps Management → Map IDs). Create a vector Map ID with Data-driven
+// styling enabled for full boundary highlighting to work.
+const MAP_ID = window.MAPS_CONFIG.MAP_ID;
 
 let selLoc = { lat: null, lng: null, address: "", placeId: "", types: [] };
 let gMap = null;
@@ -317,6 +357,17 @@ let geocodingLib = null;
 
 // ── INIT LIBRARIES ───────────────────────────────────────
 async function initLibs() {
+    if (!window.MAPS_CONFIG.API_KEY || window.MAPS_CONFIG.API_KEY.indexOf("PASTE_YOUR") === 0) {
+        console.error("❌ No Google Maps API key configured. Edit window.MAPS_CONFIG.API_KEY at the top of this file.");
+        var ph = document.getElementById("mapPH");
+        if (ph) {
+            ph.innerHTML =
+                '<span class="pi" style="color:#d32f2f;opacity:1;">⚠️</span>' +
+                '<span class="pt" style="color:#d32f2f;">Maps API key not configured</span>' +
+                '<span class="ps" style="color:#e57373;">Set window.MAPS_CONFIG.API_KEY in the &lt;head&gt;</span>';
+        }
+        return;
+    }
     try {
         const libs = await Promise.all([
             google.maps.importLibrary("maps"),
@@ -339,11 +390,6 @@ async function initLibs() {
 initLibs();
 
 // ── PLACE TEXT SEARCH (new Places API) ───────────────────
-// Replaces the deprecated AutocompleteService. NOTE: business-only filters
-// from the original snippet (isOpenNow, minRating, businessStatus, and an
-// empty includedType with useStrictTypeFiltering) are intentionally removed
-// here — those apply to POIs/businesses and would return ZERO results for a
-// city, district, or pincode search (a city has no "open now" status).
 function onType() {
     const q = document.getElementById("locationInput").value.trim();
     clearTimeout(debTimer);
@@ -392,7 +438,6 @@ function buildDrop(places) {
         div.onclick = function () {
             document.getElementById("locationInput").value = p.formattedAddress || main;
             closeDrop();
-            // Place object already has location/viewport/address — no second lookup needed
             handlePlaceResult(p);
         };
 
@@ -447,13 +492,12 @@ async function searchTextAndResolve(text) {
         if (places && places.length) {
             handlePlaceResult(places[0]);
         } else {
-            // Fallback to Geocoder — occasionally more reliable for exact PIN codes
             geocodeText(text);
         }
     } catch (err) {
         showLoad(false);
         console.error("Place text search error:", err);
-        geocodeText(text); // fallback
+        geocodeText(text);
     }
 }
 
@@ -534,10 +578,6 @@ function getComp(components, type) {
 }
 
 // ── HANDLE RESULT (new Places API — Place.searchByText) ──
-// p.location and p.viewport from the new Place API behave like
-// google.maps.LatLng / LatLngBounds (same .lat()/.lng() interface),
-// but p.addressComponents uses {longText, shortText, types} instead of
-// the legacy {long_name, short_name, types}.
 function handlePlaceResult(p) {
     if (!p || !p.location) return;
     const loc = p.location;
@@ -579,8 +619,6 @@ function getCompNew(components, type) {
 }
 
 // ── MAP PLACE TYPE → FEATURE LAYER TYPE ──────────────────
-// Maps Geocoder result "types" to the matching google.maps.FeatureType
-// so we style the correct boundary layer (city, district, state, pincode…)
 function getFeatureType(types) {
     if (!types) return null;
     if (types.indexOf("postal_code") !== -1) return google.maps.FeatureType.POSTAL_CODE;
@@ -608,7 +646,6 @@ function clearFeatureStyle() {
         activeFeatureLayer.style = null;
         activeFeatureLayer = null;
     }
-    // also clear legacy rectangle/border shapes if any remain
     gShapes.forEach(shape => shape.setMap(null));
     gShapes = [];
 }
@@ -635,15 +672,12 @@ async function renderMap(lat, lng, addr, viewport, types) {
                 streetViewControl: false,
                 fullscreenControl: false,
                 zoomControl: true
-                // Note: classic "styles" array is ignored on vector (mapId) maps.
-                // Use Cloud-based map styling in Google Cloud Console instead.
             });
         } else {
             gMap.setCenter(pos);
             gMap.setZoom(zoom);
         }
 
-        // Clear any boundary highlight from a previous search
         clearFeatureStyle();
 
         const featureType = getFeatureType(types);
@@ -662,18 +696,14 @@ async function renderMap(lat, lng, addr, viewport, types) {
                             strokeWeight: 3
                         };
                     }
-                    // returning nothing hides styling for all other features
                 };
 
                 activeFeatureLayer = featureLayer;
             } catch (fe) {
-                // FeatureLayer not available (map not vector / boundaries not
-                // enabled on the Map ID) — fall back to the viewport rectangle
                 console.warn("FeatureLayer unavailable, falling back to viewport box:", fe);
                 drawViewportFallback(viewport);
             }
         } else {
-            // No matching feature type (e.g. plain address) — fall back
             drawViewportFallback(viewport);
         }
 
