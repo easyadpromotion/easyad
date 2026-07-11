@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Live Ads</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
 /* ============================================================
@@ -247,77 +247,50 @@ body{
 
 </style>
 </head>
-<body onload="loadStats()">
+<body>
 
 <div class="mobile-screen">
 
     <div class="header">
         <div class="header-top">
             <div class="header-left">
-                <div class="logo" id="logoSlot"></div>
+                <button class="back-btn" onclick="window.location.href='admin_dashboard.html'">‹</button>
                 <div>
-                    <div class="admin-title">Master Control 🛡️</div>
+                    <div class="admin-title">Live Ads</div>
+                    <div class="page-subtitle">85 campaigns running</div>
                 </div>
             </div>
-            <a href="admin_login.html" class="logout-btn">Log Out</a>
+            <div class="logo" id="logoSlot"></div>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <a href="revenue_dashboard.html" class="stat-card">
-            <span class="stat-num">₹ 45.2k</span>
-            <span class="stat-label">Revenue</span>
-        </a>
-        <a href="user_dashboard.html" class="stat-card">
-            <span class="stat-num">1,250</span>
-            <span class="stat-label">Users</span>
-        </a>
-        <a href="live_ads.html" class="stat-card">
-            <span class="stat-num">85</span>
-            <span class="stat-label">Live Ads</span>
-        </a>
-        <div class="stat-card">
-            <span class="stat-num" style="color:#d63031;" id="totalPending">0</span>
-            <span class="stat-label">Pending</span>
-        </div>
-    </div>
-
-    <div class="section-title">Management Tools</div>
+    <div class="section-title">Ad Categories</div>
 
     <div class="action-list">
 
-        <a href="admin_approve_ads.html" class="action-card">
-            <div class="icon-box bg-orange">⏳</div>
+        <a href="ad_category.html?type=frame" class="action-card">
+            <div class="icon-box bg-teal">🖼️</div>
             <div class="ac-text">
-                <h4>Ad Approvals <span class="badge" id="badgePending">0</span></h4>
-                <p>Verify & Publish campaigns</p>
+                <h4>Frame Ads</h4>
+                <p>Static banner campaigns</p>
             </div>
             <div class="arrow">ᐳ</div>
         </a>
 
-        <a href="admin_withdrawals.html" class="action-card">
-            <div class="icon-box bg-blue">💸</div>
+        <a href="ad_category.html?type=video" class="action-card">
+            <div class="icon-box bg-pink">🎬</div>
             <div class="ac-text">
-                <h4>Withdrawals <span class="badge">7</span></h4>
-                <p>Approve bank transfers</p>
+                <h4>Video Ads</h4>
+                <p>Video campaign performance</p>
             </div>
             <div class="arrow">ᐳ</div>
         </a>
 
-        <a href="admin_users.html" class="action-card">
-            <div class="icon-box bg-green">👥</div>
+        <a href="ad_category.html?type=survey" class="action-card">
+            <div class="icon-box bg-purple">📋</div>
             <div class="ac-text">
-                <h4>User Management</h4>
-                <p>View & Block users</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_settings.html" class="action-card">
-            <div class="icon-box bg-purple">⚙️</div>
-            <div class="ac-text">
-                <h4>App Settings</h4>
-                <p>Set rates & commissions</p>
+                <h4>Survey Ads</h4>
+                <p>Survey response campaigns</p>
             </div>
             <div class="arrow">ᐳ</div>
         </a>
@@ -657,27 +630,6 @@ function logoSVG(size){
 }
 
 </script>
-<script>
-    document.getElementById("logoSlot").innerHTML = logoSVG(34);
-
-    function loadStats() {
-        // Count Pending Ads from Memory
-        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-        const pendingCount = ads.filter(ad => ad.status === "Pending").length;
-
-        // Update UI
-        document.getElementById("totalPending").innerText = pendingCount;
-
-        // Update Badge
-        const badge = document.getElementById("badgePending");
-        if(pendingCount > 0) {
-            badge.innerText = pendingCount;
-            badge.style.display = "inline-block";
-        } else {
-            badge.style.display = "none";
-        }
-    }
-</script>
-
+<script> document.getElementById("logoSlot").innerHTML = logoSVG(28); </script>
 </body>
 </html>

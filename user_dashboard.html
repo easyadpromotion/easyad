@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>User Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
 /* ============================================================
@@ -247,80 +247,43 @@ body{
 
 </style>
 </head>
-<body onload="loadStats()">
+<body>
 
 <div class="mobile-screen">
 
     <div class="header">
         <div class="header-top">
             <div class="header-left">
-                <div class="logo" id="logoSlot"></div>
+                <button class="back-btn" onclick="window.location.href='admin_dashboard.html'">‹</button>
                 <div>
-                    <div class="admin-title">Master Control 🛡️</div>
+                    <div class="admin-title">User Dashboard</div>
+                    <div class="page-subtitle">1,250 total users</div>
                 </div>
             </div>
-            <a href="admin_login.html" class="logout-btn">Log Out</a>
+            <div class="logo" id="logoSlot"></div>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <a href="revenue_dashboard.html" class="stat-card">
-            <span class="stat-num">₹ 45.2k</span>
-            <span class="stat-label">Revenue</span>
-        </a>
-        <a href="user_dashboard.html" class="stat-card">
-            <span class="stat-num">1,250</span>
-            <span class="stat-label">Users</span>
-        </a>
-        <a href="live_ads.html" class="stat-card">
-            <span class="stat-num">85</span>
-            <span class="stat-label">Live Ads</span>
-        </a>
-        <div class="stat-card">
-            <span class="stat-num" style="color:#d63031;" id="totalPending">0</span>
-            <span class="stat-label">Pending</span>
+    <div class="content">
+
+        <p style="font-size:11px; color:var(--muted); margin:14px 2px 0; line-height:1.5;">Pan-India figures below. Tap any state to see its district-wise breakdown.</p>
+
+        <div class="section-title" style="margin:14px 0 4px;">Filter Period</div>
+        <div class="period-row" id="periodRow"></div>
+        <div class="date-range-row" id="dateRangeRow">
+            <input type="date" id="dateFrom">
+            <input type="date" id="dateTo">
         </div>
-    </div>
 
-    <div class="section-title">Management Tools</div>
+        <div class="box-grid" id="boxGrid"></div>
 
-    <div class="action-list">
+        <div class="chart-card">
+            <h5>Users Trend</h5>
+            <div class="chart-wrap" id="trendChart"></div>
+            <div class="chart-legend" id="trendChart-legend"></div>
+        </div>
 
-        <a href="admin_approve_ads.html" class="action-card">
-            <div class="icon-box bg-orange">⏳</div>
-            <div class="ac-text">
-                <h4>Ad Approvals <span class="badge" id="badgePending">0</span></h4>
-                <p>Verify & Publish campaigns</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_withdrawals.html" class="action-card">
-            <div class="icon-box bg-blue">💸</div>
-            <div class="ac-text">
-                <h4>Withdrawals <span class="badge">7</span></h4>
-                <p>Approve bank transfers</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_users.html" class="action-card">
-            <div class="icon-box bg-green">👥</div>
-            <div class="ac-text">
-                <h4>User Management</h4>
-                <p>View & Block users</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_settings.html" class="action-card">
-            <div class="icon-box bg-purple">⚙️</div>
-            <div class="ac-text">
-                <h4>App Settings</h4>
-                <p>Set rates & commissions</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
+        <button class="btn-primary" id="downloadBtn" style="margin-bottom:20px;">Download Full India Report</button>
 
     </div>
 
@@ -658,26 +621,47 @@ function logoSVG(size){
 
 </script>
 <script>
-    document.getElementById("logoSlot").innerHTML = logoSVG(34);
+document.getElementById("logoSlot").innerHTML = logoSVG(28);
 
-    function loadStats() {
-        // Count Pending Ads from Memory
-        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-        const pendingCount = ads.filter(ad => ad.status === "Pending").length;
+const type = "users";
+const boxes = [
+  { title: "Total Users", key: "totalUsers" },
+  { title: "Active Users", key: "activeUsers" },
+  { title: "New Added Users", key: "newUsers" }
+];
+const seriesLabels = ["Total", "Active", "New"];
 
-        // Update UI
-        document.getElementById("totalPending").innerText = pendingCount;
+let currentPeriod = "Month";
+const periodRow = document.getElementById("periodRow");
+const dateRangeRow = document.getElementById("dateRangeRow");
+const boxGrid = document.getElementById("boxGrid");
 
-        // Update Badge
-        const badge = document.getElementById("badgePending");
-        if(pendingCount > 0) {
-            badge.innerText = pendingCount;
-            badge.style.display = "inline-block";
-        } else {
-            badge.style.display = "none";
-        }
-    }
+boxGrid.innerHTML = boxes.map(b => `<div class="data-box" id="box-${b.key}"></div>`).join("");
+
+function stateLink(box, state){
+  const back = encodeURIComponent(location.pathname + location.search);
+  return `state_detail.html?type=${type}&metric=${encodeURIComponent(box.key)}&metricTitle=${encodeURIComponent(box.title)}&state=${encodeURIComponent(state)}&back=${back}`;
+}
+
+function refresh(period){
+  currentPeriod = period;
+  boxes.forEach(b=>{
+    renderStateList(document.getElementById(`box-${b.key}`), b.key, b.title, period, (state)=>stateLink(b, state));
+  });
+  renderTrendChart("trendChart", boxes.map(b=>b.key), seriesLabels, period);
+}
+
+initPeriodSelector(periodRow, refresh, dateRangeRow);
+refresh(currentPeriod);
+
+document.getElementById("downloadBtn").onclick = ()=>{
+  const headers = ["Metric","State","District","Level","Place","Value"];
+  let rows = [];
+  boxes.forEach(b=>{
+    rows = rows.concat(flattenIndiaForCSV(b.title, b.key, currentPeriod));
+  });
+  downloadCSV("users_pan_india_" + currentPeriod.replace(/\s+/g,"_") + "_report.csv", headers, rows);
+};
 </script>
-
 </body>
 </html>

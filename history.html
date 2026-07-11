@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>Transaction History</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
 /* ============================================================
@@ -247,81 +247,26 @@ body{
 
 </style>
 </head>
-<body onload="loadStats()">
+<body>
 
 <div class="mobile-screen">
 
     <div class="header">
         <div class="header-top">
             <div class="header-left">
-                <div class="logo" id="logoSlot"></div>
+                <button class="back-btn" onclick="history.back()">‹</button>
                 <div>
-                    <div class="admin-title">Master Control 🛡️</div>
+                    <div class="admin-title" id="pageTitle">History</div>
+                    <div class="page-subtitle">All transactions</div>
                 </div>
             </div>
-            <a href="admin_login.html" class="logout-btn">Log Out</a>
+            <div class="logo" id="logoSlot"></div>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <a href="revenue_dashboard.html" class="stat-card">
-            <span class="stat-num">₹ 45.2k</span>
-            <span class="stat-label">Revenue</span>
-        </a>
-        <a href="user_dashboard.html" class="stat-card">
-            <span class="stat-num">1,250</span>
-            <span class="stat-label">Users</span>
-        </a>
-        <a href="live_ads.html" class="stat-card">
-            <span class="stat-num">85</span>
-            <span class="stat-label">Live Ads</span>
-        </a>
-        <div class="stat-card">
-            <span class="stat-num" style="color:#d63031;" id="totalPending">0</span>
-            <span class="stat-label">Pending</span>
-        </div>
-    </div>
-
-    <div class="section-title">Management Tools</div>
-
-    <div class="action-list">
-
-        <a href="admin_approve_ads.html" class="action-card">
-            <div class="icon-box bg-orange">⏳</div>
-            <div class="ac-text">
-                <h4>Ad Approvals <span class="badge" id="badgePending">0</span></h4>
-                <p>Verify & Publish campaigns</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_withdrawals.html" class="action-card">
-            <div class="icon-box bg-blue">💸</div>
-            <div class="ac-text">
-                <h4>Withdrawals <span class="badge">7</span></h4>
-                <p>Approve bank transfers</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_users.html" class="action-card">
-            <div class="icon-box bg-green">👥</div>
-            <div class="ac-text">
-                <h4>User Management</h4>
-                <p>View & Block users</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_settings.html" class="action-card">
-            <div class="icon-box bg-purple">⚙️</div>
-            <div class="ac-text">
-                <h4>App Settings</h4>
-                <p>Set rates & commissions</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
+    <div class="content">
+        <div class="section-title" style="margin:16px 0 0;">Recent Transactions</div>
+        <div class="tx-list" id="txList"></div>
     </div>
 
 </div>
@@ -658,26 +603,31 @@ function logoSVG(size){
 
 </script>
 <script>
-    document.getElementById("logoSlot").innerHTML = logoSVG(34);
+document.getElementById("logoSlot").innerHTML = logoSVG(28);
 
-    function loadStats() {
-        // Count Pending Ads from Memory
-        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-        const pendingCount = ads.filter(ad => ad.status === "Pending").length;
+const TITLES = { vendor:"Vendor History", user:"User Earning History", company:"Company History",
+                 frame:"Frame Ads History", video:"Video Ads History", survey:"Survey Ads History" };
+const type = qParam("type", "vendor");
+document.getElementById("pageTitle").textContent = TITLES[type] || "History";
+document.title = (TITLES[type] || "History");
 
-        // Update UI
-        document.getElementById("totalPending").innerText = pendingCount;
-
-        // Update Badge
-        const badge = document.getElementById("badgePending");
-        if(pendingCount > 0) {
-            badge.innerText = pendingCount;
-            badge.style.display = "inline-block";
-        } else {
-            badge.style.display = "none";
-        }
-    }
+const statusClass = { success:"st-success", pending:"st-pending", failed:"st-failed" };
+const rows = generateHistory(type, 20);
+const list = document.getElementById("txList");
+rows.forEach(r=>{
+  const el = document.createElement("div");
+  el.className = "tx-row";
+  el.innerHTML = `
+    <div class="tx-left">
+      <h6>${r.type}</h6>
+      <span>${r.id} • ${r.date}</span>
+    </div>
+    <div class="tx-right">
+      <div class="tx-amt">₹ ${r.amt.toLocaleString()}</div>
+      <div class="tx-status ${statusClass[r.status]}">${r.status}</div>
+    </div>`;
+  list.appendChild(el);
+});
 </script>
-
 </body>
 </html>

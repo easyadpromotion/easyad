@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Dashboard</title>
+    <title>My Statement</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
 /* ============================================================
@@ -246,82 +246,46 @@ body{
 }
 
 </style>
+    <style>
+        .statement-body{ padding:0 20px; }
+    </style>
 </head>
-<body onload="loadStats()">
+<body>
 
 <div class="mobile-screen">
 
-    <div class="header">
+    <div class="header" style="border-radius:0; background:#fff; color:var(--dark); box-shadow:none; padding:18px 20px;">
         <div class="header-top">
             <div class="header-left">
-                <div class="logo" id="logoSlot"></div>
-                <div>
-                    <div class="admin-title">Master Control 🛡️</div>
-                </div>
+                <button class="back-btn" style="background:transparent; color:var(--dark); font-size:22px;" onclick="history.back()">‹</button>
+                <div class="admin-title" style="color:var(--dark);" id="pageTitle">My Statement</div>
             </div>
-            <a href="admin_login.html" class="logout-btn">Log Out</a>
+            <button class="help-btn" style="border-color:#ccc; color:var(--dark);" onclick="alert('Choose a statement period, then tap Download Statement to export a CSV report.')">?</button>
         </div>
     </div>
 
-    <div class="stats-grid">
-        <a href="revenue_dashboard.html" class="stat-card">
-            <span class="stat-num">₹ 45.2k</span>
-            <span class="stat-label">Revenue</span>
-        </a>
-        <a href="user_dashboard.html" class="stat-card">
-            <span class="stat-num">1,250</span>
-            <span class="stat-label">Users</span>
-        </a>
-        <a href="live_ads.html" class="stat-card">
-            <span class="stat-num">85</span>
-            <span class="stat-label">Live Ads</span>
-        </a>
-        <div class="stat-card">
-            <span class="stat-num" style="color:#d63031;" id="totalPending">0</span>
-            <span class="stat-label">Pending</span>
+    <div class="statement-body">
+
+        <p style="font-size:11px; color:var(--muted); margin:16px 0 0; line-height:1.5;">Your download will include the full Pan-India breakdown — every state, district, and urban/rural area.</p>
+
+        <div class="section-title" style="margin:14px 0 10px; padding:0; font-size:15px; color:var(--dark);">Statement Period</div>
+
+        <div class="tabbar">
+            <button class="active" id="tabRange">Range</button>
+            <button id="tabFY">Financial year</button>
         </div>
+
+        <div class="radio-list" id="radioList"></div>
+
+        <div class="date-range-row" id="customRangeRow" style="margin:6px 0 0;">
+            <input type="date" id="dateFrom">
+            <input type="date" id="dateTo">
+        </div>
+
     </div>
 
-    <div class="section-title">Management Tools</div>
-
-    <div class="action-list">
-
-        <a href="admin_approve_ads.html" class="action-card">
-            <div class="icon-box bg-orange">⏳</div>
-            <div class="ac-text">
-                <h4>Ad Approvals <span class="badge" id="badgePending">0</span></h4>
-                <p>Verify & Publish campaigns</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_withdrawals.html" class="action-card">
-            <div class="icon-box bg-blue">💸</div>
-            <div class="ac-text">
-                <h4>Withdrawals <span class="badge">7</span></h4>
-                <p>Approve bank transfers</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_users.html" class="action-card">
-            <div class="icon-box bg-green">👥</div>
-            <div class="ac-text">
-                <h4>User Management</h4>
-                <p>View & Block users</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
-        <a href="admin_settings.html" class="action-card">
-            <div class="icon-box bg-purple">⚙️</div>
-            <div class="ac-text">
-                <h4>App Settings</h4>
-                <p>Set rates & commissions</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
+    <div class="fixed-bottom">
+        <button class="btn-primary" id="downloadBtn">Download Statement</button>
     </div>
 
 </div>
@@ -658,26 +622,76 @@ function logoSVG(size){
 
 </script>
 <script>
-    document.getElementById("logoSlot").innerHTML = logoSVG(34);
+const TITLES = { vendor:"Vendor Statement", user:"User Earning Statement", company:"Company Statement",
+                 frame:"Frame Ads Statement", video:"Video Ads Statement", survey:"Survey Ads Statement" };
+const type = qParam("type", "vendor");
+document.getElementById("pageTitle").textContent = TITLES[type] ? TITLES[type].replace(/ Statement$/, "") + " • My Statement" : "My Statement";
+document.title = TITLES[type] || "My Statement";
 
-    function loadStats() {
-        // Count Pending Ads from Memory
-        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-        const pendingCount = ads.filter(ad => ad.status === "Pending").length;
+const RANGE_OPTIONS = ["Last 30 days","Last 90 days","Last 180 days","Last 365 days","Select date range"];
+const FY_OPTIONS = ["FY 2026-27 (Current)","FY 2025-26","FY 2024-25","FY 2023-24"];
 
-        // Update UI
-        document.getElementById("totalPending").innerText = pendingCount;
+let selected = "Last 30 days";
+let mode = "range";
 
-        // Update Badge
-        const badge = document.getElementById("badgePending");
-        if(pendingCount > 0) {
-            badge.innerText = pendingCount;
-            badge.style.display = "inline-block";
-        } else {
-            badge.style.display = "none";
-        }
-    }
+const radioList = document.getElementById("radioList");
+const customRow = document.getElementById("customRangeRow");
+
+function renderRadios(options, checkedValue){
+  radioList.innerHTML = "";
+  options.forEach(opt=>{
+    const isChecked = opt === checkedValue;
+    const row = document.createElement("div");
+    row.className = "radio-item" + (isChecked ? " checked" : "");
+    row.innerHTML = `<span>${opt}</span><div class="radio-circle">${isChecked ? "✓" : ""}</div>`;
+    row.onclick = ()=>{
+      selected = opt;
+      renderRadios(options, opt);
+      customRow.classList.toggle("show", opt === "Select date range");
+    };
+    radioList.appendChild(row);
+  });
+}
+
+document.getElementById("tabRange").onclick = ()=>{
+  mode = "range";
+  document.getElementById("tabRange").classList.add("active");
+  document.getElementById("tabFY").classList.remove("active");
+  selected = RANGE_OPTIONS[0];
+  renderRadios(RANGE_OPTIONS, selected);
+  customRow.classList.remove("show");
+};
+document.getElementById("tabFY").onclick = ()=>{
+  mode = "fy";
+  document.getElementById("tabFY").classList.add("active");
+  document.getElementById("tabRange").classList.remove("active");
+  selected = FY_OPTIONS[0];
+  renderRadios(FY_OPTIONS, selected);
+  customRow.classList.remove("show");
+};
+
+renderRadios(RANGE_OPTIONS, selected);
+
+const STATEMENT_KEYS = {
+  vendor: [{title:"Total Vendors",key:"totalVendors"},{title:"Active Vendors",key:"activeVendors"},{title:"New Added Vendors",key:"newVendors"}],
+  user: [{title:"Total Earning Users",key:"totalEarningUsers"},{title:"Highest Earning Users",key:"highestEarningUsers"},{title:"Newly Added Earning Users",key:"newEarningUsers"}],
+  company: [{title:"Total Company Revenue",key:"totalCompanyRevenue"},{title:"Active Revenue Streams",key:"activeCompanyRevenue"},{title:"New Revenue Sources",key:"newCompanyRevenue"}],
+  frame: [{title:"Frame Ads",key:"frameAds"}],
+  video: [{title:"Video Ads",key:"videoAds"}],
+  survey: [{title:"Survey Ads",key:"surveyAds"}]
+};
+
+document.getElementById("downloadBtn").onclick = ()=>{
+  const periodKey = selected === "Select date range" ? "Custom Range" : (mode === "fy" ? "Financial Year" : selected);
+  const metrics = STATEMENT_KEYS[type] || STATEMENT_KEYS.vendor;
+  const headers = ["Metric","State","District","Level","Place","Value"];
+  let rows = [];
+  metrics.forEach(m=>{
+    rows = rows.concat(flattenIndiaForCSV(m.title, m.key, periodKey));
+  });
+  const fname = type + "_statement_pan_india_" + selected.replace(/\s+/g,"_") + ".csv";
+  downloadCSV(fname, headers, rows);
+};
 </script>
-
 </body>
 </html>
