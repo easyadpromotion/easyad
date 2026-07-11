@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Help & Support</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#f8f9fa; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  .header { background:#009688; padding:25px 20px 20px; color:white; display:flex; align-items:center; border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(0,150,136,0.2); z-index:10; flex-shrink:0; }
+  .back-btn { text-decoration:none; color:white; font-size:24px; margin-right:15px; font-weight:bold; }
+  .page-title { font-size:18px; font-weight:700; }
+  .container { padding:20px; flex:1; overflow-y:auto; }
+  .container::-webkit-scrollbar { display:none; }
+
+  .notice { background:#fff8e1; border:1px dashed #ffb74d; border-radius:10px; padding:10px 12px; font-size:11px; color:#7a5a00; margin-bottom:18px; }
+
+  .contact-row { display:flex; align-items:center; gap:14px; background:white; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow:0 4px 10px rgba(0,0,0,0.03); text-decoration:none; color:inherit; }
+  .cr-icon { width:40px; height:40px; border-radius:12px; background:#e0f2f1; display:flex; align-items:center; justify-content:center; font-size:18px; flex-shrink:0; }
+  .cr-text b { display:block; font-size:13px; color:#222; }
+  .cr-text span { font-size:11px; color:#888; }
+
+  .form-card { background:white; border-radius:15px; padding:18px; margin-top:20px; box-shadow:0 4px 10px rgba(0,0,0,0.03); }
+  .form-card h4 { margin:0 0 12px; font-size:14px; color:#333; }
+  label { display:block; font-weight:600; margin-bottom:6px; color:#444; font-size:12px; }
+  input, textarea { width:100%; padding:11px; margin-bottom:12px; border:2px solid #eee; border-radius:10px; font-size:12px; font-family:'Poppins',sans-serif; }
+  input:focus, textarea:focus { border-color:#009688; outline:none; }
+  .btn-send { background:#009688; color:white; width:100%; padding:13px; border:none; border-radius:10px; font-size:13px; font-weight:700; cursor:pointer; font-family:'Poppins',sans-serif; }
+  .btn-send:active { transform:scale(.98); }
+
+  .ticket-note { font-size:10px; color:#999; margin-top:10px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="mobile-screen">
+  <div class="header">
+    <a href="vendor-settings.html" class="back-btn">&larr;</a>
+    <div class="page-title">Help & Support</div>
+  </div>
+  <div class="container">
+
+    <div class="notice">⚠️ Placeholder contact details below — swap in your real support number/email/WhatsApp.</div>
+
+    <a href="tel:+911234567890" class="contact-row">
+      <div class="cr-icon">📞</div>
+      <div class="cr-text"><b>Call Support</b><span>+91 12345 67890 · 10am–7pm IST</span></div>
+    </a>
+
+    <a href="mailto:support@easyadpromotion.com" class="contact-row">
+      <div class="cr-icon">✉️</div>
+      <div class="cr-text"><b>Email Support</b><span>support@easyadpromotion.com</span></div>
+    </a>
+
+    <a href="https://wa.me/911234567890" target="_blank" class="contact-row">
+      <div class="cr-icon">💬</div>
+      <div class="cr-text"><b>WhatsApp Support</b><span>Chat with our team</span></div>
+    </a>
+
+    <div class="form-card">
+      <h4>Or send us a message</h4>
+      <label>Subject</label>
+      <input type="text" id="ticketSubject" placeholder="e.g., Payment not reflecting">
+      <label>Message</label>
+      <textarea id="ticketMessage" rows="4" placeholder="Describe the issue..."></textarea>
+      <button class="btn-send" onclick="submitTicket()">Send Message</button>
+      <div class="ticket-note">Saved locally for now — wire this up to your support inbox/CRM when ready.</div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  function submitTicket() {
+    const subject = document.getElementById("ticketSubject").value.trim();
+    const message = document.getElementById("ticketMessage").value.trim();
+    if (!subject || !message) { alert("Please fill in both Subject and Message."); return; }
+
+    const mobile = localStorage.getItem("activeVendor") || "unknown";
+    const ticket = {
+      id: "TCK" + Math.floor(Math.random() * 99999),
+      vendor: mobile,
+      subject: subject,
+      message: message,
+      date: new Date().toLocaleString(),
+      status: "Open"
+    };
+
+    let tickets = [];
+    try { tickets = JSON.parse(localStorage.getItem("supportTickets")) || []; } catch (e) {}
+    tickets.push(ticket);
+    localStorage.setItem("supportTickets", JSON.stringify(tickets));
+
+    alert("Message sent! Our team will get back to you shortly.");
+    document.getElementById("ticketSubject").value = "";
+    document.getElementById("ticketMessage").value = "";
+  }
+</script>
+</body>
+</html>

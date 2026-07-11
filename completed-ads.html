@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Completed Ads</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#f8f9fa; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  .header { background:#4caf50; padding:25px 20px 20px; color:white; display:flex; align-items:center; border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(76,175,80,0.25); z-index:10; flex-shrink:0; }
+  .back-btn { text-decoration:none; color:white; font-size:24px; margin-right:15px; font-weight:bold; }
+  .page-title { font-size:18px; font-weight:700; }
+  .container { padding:20px; flex:1; overflow-y:auto; padding-bottom:90px; }
+  .container::-webkit-scrollbar { display:none; }
+
+  .summary-bar { background:white; border-radius:14px; padding:16px; margin-bottom:18px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.03); border-bottom:4px solid #4caf50; }
+  .summary-num { font-size:26px; font-weight:800; color:#4caf50; }
+  .summary-lbl { font-size:11px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+
+  .ad-card { background:white; border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 4px 10px rgba(0,0,0,0.03); border-left:4px solid #4caf50; }
+  .ad-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+  .ad-name { font-size:14px; font-weight:700; color:#222; }
+  .ad-type { font-size:9px; font-weight:700; color:#4caf50; background:#e8f5e9; padding:3px 8px; border-radius:20px; text-transform:uppercase; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .cell { background:#f5fdf6; border-radius:8px; padding:8px 10px; }
+  .cell span { font-size:9px; color:#888; text-transform:uppercase; display:block; margin-bottom:2px; }
+  .cell b { font-size:13px; color:#222; }
+
+  .empty-state { text-align:center; padding:60px 20px; color:#999; }
+  .empty-state .ic { font-size:40px; opacity:.4; margin-bottom:10px; }
+  .empty-state p { font-size:12px; }
+
+  .bottom-nav { position:absolute; bottom:0; width:100%; background:white; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; box-sizing:border-box; box-shadow:0 -5px 20px rgba(0,0,0,0.05); }
+  .nav-item { text-align:center; color:#aaa; font-size:10px; cursor:pointer; flex:1; }
+  .nav-item.active { color:#009688; font-weight:700; }
+  .nav-icon { font-size:22px; display:block; margin-bottom:3px; }
+</style>
+</head>
+<body>
+<div class="mobile-screen">
+  <div class="header">
+    <a href="vendor-dashboard.html" class="back-btn">&larr;</a>
+    <div class="page-title">Completed Ads</div>
+  </div>
+
+  <div class="container">
+    <div class="summary-bar">
+      <div class="summary-num" id="summaryCount">0</div>
+      <div class="summary-lbl">Campaigns Completed</div>
+    </div>
+    <div id="listArea"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='vendor-dashboard.html'"><span class="nav-icon">🏠</span> Home</div>
+    <div class="nav-item active" onclick="window.location.href='my-ads.html'"><span class="nav-icon">📢</span> My Ads</div>
+    <div class="nav-item" onclick="window.location.href='wallet.html'"><span class="nav-icon">👛</span> Wallet</div>
+    <div class="nav-item" onclick="window.location.href='vendor-settings.html'"><span class="nav-icon">⚙️</span> Settings</div>
+  </div>
+</div>
+
+<script>
+  function getAds() {
+    try { return JSON.parse(localStorage.getItem("vendorCampaigns")) || []; }
+    catch (e) { return []; }
+  }
+  function getAdName(ad) { return ad.title || ad.name || ad.id || "Untitled Ad"; }
+  function typeIcon(t) { return t === "Frame" ? "🖼️" : t === "Video" ? "🎬" : t === "Survey" ? "📋" : "📢"; }
+
+  function render() {
+    const ads = getAds().filter(a => (a.status || "").toLowerCase() === "completed");
+    document.getElementById("summaryCount").innerText = ads.length;
+    const listArea = document.getElementById("listArea");
+
+    if (!ads.length) {
+      listArea.innerHTML = `
+        <div class="empty-state">
+          <div class="ic">✅</div>
+          <p>No completed ads yet.</p>
+        </div>`;
+      return;
+    }
+
+    listArea.innerHTML = ads.map(ad => {
+      const views = (ad.stats && typeof ad.stats.views === "number") ? ad.stats.views : "Not tracked";
+      const completedDate = ad.completedDate || ad.date || "—";
+      return `
+        <div class="ad-card">
+          <div class="ad-top">
+            <div class="ad-name">${typeIcon(ad.type)} ${getAdName(ad)}</div>
+            <div class="ad-type">${ad.type || "Ad"}</div>
+          </div>
+          <div class="grid2">
+            <div class="cell"><span>Posted On</span><b>${ad.date || "—"}</b></div>
+            <div class="cell"><span>Completed On</span><b>${completedDate}</b></div>
+            <div class="cell"><span>Amount</span><b>${ad.budget || "—"}</b></div>
+            <div class="cell"><span>Views Delivered</span><b>${views}</b></div>
+          </div>
+        </div>`;
+    }).join("");
+  }
+  render();
+</script>
+
+<!--
+  ⚠️ NOTE FOR ADMIN-SIDE INTEGRATION:
+  To populate "Completed On", when an ad finishes delivering, set on
+  the ad object before saving back to localStorage("vendorCampaigns"):
+    ad.status        = "Completed"
+    ad.completedDate = new Date().toLocaleDateString()
+-->
+</body>
+</html>

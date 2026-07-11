@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Settings</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#f8f9fa; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+
+  .header {
+    background: linear-gradient(135deg,#ffa726,#fb8c00); padding:34px 20px 26px; color:white;
+    text-align:center; border-radius:0 0 26px 26px; box-shadow:0 8px 20px rgba(251,140,0,0.25);
+    flex-shrink:0;
+  }
+  .header .phone { font-size:15px; font-weight:700; letter-spacing:.5px; }
+
+  .container { padding:20px; flex:1; overflow-y:auto; padding-bottom:90px; }
+  .container::-webkit-scrollbar { display:none; }
+
+  .settings-item {
+    background:white; border-radius:16px; padding:16px 18px; margin-bottom:14px;
+    display:flex; align-items:center; gap:14px; box-shadow:0 4px 10px rgba(0,0,0,0.03);
+    text-decoration:none; color:inherit; cursor:pointer; border:1px solid #f5f5f5;
+  }
+  .settings-item:active { background:#fafafa; }
+  .si-icon { width:42px; height:42px; border-radius:12px; background:#fff3e0; display:flex; align-items:center; justify-content:center; font-size:19px; flex-shrink:0; }
+  .si-text { font-size:14px; font-weight:700; color:#222; flex:1; }
+  .si-arrow { color:#ccc; font-weight:900; font-size:14px; }
+
+  .logout-btn {
+    width:100%; background:#ffebee; color:#e53935; border:none; padding:16px;
+    border-radius:14px; font-size:15px; font-weight:700; cursor:pointer; margin-top:6px;
+    font-family:'Poppins',sans-serif;
+  }
+  .logout-btn:active { background:#ffcdd2; }
+
+  .bottom-nav { position:absolute; bottom:0; width:100%; background:white; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; box-sizing:border-box; box-shadow:0 -5px 20px rgba(0,0,0,0.05); }
+  .nav-item { text-align:center; color:#aaa; font-size:10px; cursor:pointer; flex:1; }
+  .nav-item.active { color:#fb8c00; font-weight:700; }
+  .nav-icon { font-size:22px; display:block; margin-bottom:3px; }
+</style>
+</head>
+<body>
+<div class="mobile-screen">
+
+  <div class="header">
+    <div class="phone" id="vendorPhone">Loading…</div>
+  </div>
+
+  <div class="container">
+
+    <a href="vendor-profile.html" class="settings-item">
+      <div class="si-icon">✏️</div>
+      <div class="si-text">Edit Profile</div>
+      <div class="si-arrow">›</div>
+    </a>
+
+    <a href="activity-history.html" class="settings-item">
+      <div class="si-icon">📊</div>
+      <div class="si-text">Activity History</div>
+      <div class="si-arrow">›</div>
+    </a>
+
+    <a href="notifications.html" class="settings-item">
+      <div class="si-icon">🔔</div>
+      <div class="si-text">Notifications</div>
+      <div class="si-arrow">›</div>
+    </a>
+
+    <a href="privacy-policy.html" class="settings-item">
+      <div class="si-icon">🛡️</div>
+      <div class="si-text">Privacy Policy</div>
+      <div class="si-arrow">›</div>
+    </a>
+
+    <a href="help-support.html" class="settings-item">
+      <div class="si-icon">📞</div>
+      <div class="si-text">Help &amp; Support</div>
+      <div class="si-arrow">›</div>
+    </a>
+
+    <button class="logout-btn" onclick="doLogout()">Log Out</button>
+
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='vendor-dashboard.html'"><span class="nav-icon">🏠</span> Home</div>
+    <div class="nav-item" onclick="window.location.href='my-ads.html'"><span class="nav-icon">📢</span> My Ads</div>
+    <div class="nav-item" onclick="window.location.href='wallet.html'"><span class="nav-icon">👛</span> Wallet</div>
+    <div class="nav-item active" onclick="window.location.href='vendor-settings.html'"><span class="nav-icon">⚙️</span> Settings</div>
+  </div>
+
+</div>
+
+<script>
+  window.onload = function () {
+    const mobile = localStorage.getItem("activeVendor");
+    const phoneEl = document.getElementById("vendorPhone");
+    if (mobile) {
+      phoneEl.innerText = mobile;
+    } else {
+      phoneEl.innerText = "Not signed in";
+    }
+  };
+
+  function doLogout() {
+    if (!confirm("Log out of your vendor account?")) return;
+    localStorage.removeItem("activeVendor");
+    // ⚠️ ASSUMPTION: guessed login page filename as "vendor-login.html"
+    // to match your naming convention. Tell me the real filename if
+    // it's different and I'll fix this redirect.
+    window.location.href = "vendor-login.html";
+  }
+</script>
+</body>
+</html>

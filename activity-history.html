@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Activity History</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#f8f9fa; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  .header { background:#009688; padding:25px 20px 20px; color:white; display:flex; align-items:center; border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(0,150,136,0.2); z-index:10; flex-shrink:0; }
+  .back-btn { text-decoration:none; color:white; font-size:24px; margin-right:15px; font-weight:bold; }
+  .page-title { font-size:18px; font-weight:700; }
+  .container { padding:20px; flex:1; overflow-y:auto; }
+  .container::-webkit-scrollbar { display:none; }
+
+  .timeline-item { display:flex; gap:12px; margin-bottom:18px; }
+  .tl-dot { width:10px; height:10px; border-radius:50%; background:#009688; margin-top:5px; flex-shrink:0; position:relative; }
+  .tl-dot::after { content:''; position:absolute; top:14px; left:4px; width:2px; height:34px; background:#dcefee; }
+  .timeline-item:last-child .tl-dot::after { display:none; }
+  .tl-text { font-size:13px; font-weight:600; color:#333; }
+  .tl-date { font-size:10px; color:#999; margin-top:3px; }
+
+  .empty-state { text-align:center; padding:60px 20px; color:#999; }
+  .empty-state .ic { font-size:40px; opacity:.4; margin-bottom:10px; }
+  .empty-state p { font-size:12px; }
+</style>
+</head>
+<body>
+<div class="mobile-screen">
+  <div class="header">
+    <a href="vendor-settings.html" class="back-btn">&larr;</a>
+    <div class="page-title">Activity History</div>
+  </div>
+  <div class="container" id="listArea"></div>
+</div>
+
+<script>
+  function getAds() {
+    try { return JSON.parse(localStorage.getItem("vendorCampaigns")) || []; }
+    catch (e) { return []; }
+  }
+  function getAdName(ad) { return ad.title || ad.name || ad.id || "Untitled Ad"; }
+  function typeLabel(t) { return t === "Frame" ? "Frame Ad" : t === "Video" ? "Video Ad" : t === "Survey" ? "Survey Ad" : "Ad"; }
+
+  function render() {
+    const ads = getAds();
+    // Optional extra events, for future use — e.g. profile updates,
+    // logins, etc. Push objects like {text:"...", date:"..."} into
+    // localStorage("activityLog") as a JSON array to have them show here.
+    let extra = [];
+    try { extra = JSON.parse(localStorage.getItem("activityLog")) || []; } catch (e) {}
+
+    const events = ads.map(ad => ({
+      text: `Posted new ${typeLabel(ad.type)} — "${getAdName(ad)}"`,
+      date: ad.date || ""
+    })).concat(extra.map(e => ({ text: e.text, date: e.date || "" })));
+
+    const listArea = document.getElementById("listArea");
+    if (!events.length) {
+      listArea.innerHTML = `
+        <div class="empty-state">
+          <div class="ic">🕓</div>
+          <p>No activity yet.<br>Once you post an ad, it'll show up here.</p>
+        </div>`;
+      return;
+    }
+
+    listArea.innerHTML = events.slice().reverse().map(e => `
+      <div class="timeline-item">
+        <div class="tl-dot"></div>
+        <div>
+          <div class="tl-text">${e.text}</div>
+          <div class="tl-date">${e.date}</div>
+        </div>
+      </div>
+    `).join("");
+  }
+  render();
+</script>
+</body>
+</html>

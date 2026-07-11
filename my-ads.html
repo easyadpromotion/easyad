@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Ads</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#f8f9fa; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  .header { background:#009688; padding:25px 20px 16px; color:white; display:flex; align-items:center; border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(0,150,136,0.2); z-index:10; flex-shrink:0; }
+  .back-btn { text-decoration:none; color:white; font-size:24px; margin-right:15px; font-weight:bold; }
+  .page-title { font-size:18px; font-weight:700; }
+
+  .tabs { display:flex; gap:8px; padding:14px 20px 0; overflow-x:auto; flex-shrink:0; }
+  .tabs::-webkit-scrollbar { display:none; }
+  .tab-chip { flex-shrink:0; padding:8px 14px; border-radius:20px; background:white; color:#666; font-size:11px; font-weight:600; cursor:pointer; border:1.5px solid #eee; white-space:nowrap; }
+  .tab-chip.active { background:#009688; color:white; border-color:#009688; }
+
+  .container { padding:16px 20px 20px; flex:1; overflow-y:auto; padding-bottom:90px; }
+  .container::-webkit-scrollbar { display:none; }
+
+  .ad-card { background:white; border-radius:14px; padding:16px; margin-bottom:14px; box-shadow:0 4px 10px rgba(0,0,0,0.03); border-left:4px solid #ccc; }
+  .ad-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:8px; }
+  .ad-name { font-size:14px; font-weight:700; color:#222; }
+  .ad-type { font-size:9px; font-weight:700; color:#555; background:#f0f0f0; padding:3px 8px; border-radius:20px; text-transform:uppercase; margin-left:6px; }
+  .status-pill { font-size:9px; font-weight:700; padding:3px 9px; border-radius:20px; text-transform:uppercase; }
+  .st-active { background:#e0f2f1; color:#009688; }
+  .st-paused { background:#fff3e0; color:#ff9800; }
+  .st-completed { background:#e8f5e9; color:#4caf50; }
+  .st-pending { background:#e3f2fd; color:#2196f3; }
+  .st-other { background:#f0f0f0; color:#777; }
+
+  .ad-meta { display:flex; justify-content:space-between; font-size:11px; color:#888; margin-top:10px; }
+  .ad-meta b { color:#333; font-size:12px; display:block; }
+
+  .empty-state { text-align:center; padding:60px 20px; color:#999; }
+  .empty-state .ic { font-size:40px; opacity:.4; margin-bottom:10px; }
+  .empty-state p { font-size:12px; }
+
+  .bottom-nav { position:absolute; bottom:0; width:100%; background:white; padding:12px 20px; display:flex; justify-content:space-between; align-items:center; border-top:1px solid #eee; box-sizing:border-box; box-shadow:0 -5px 20px rgba(0,0,0,0.05); }
+  .nav-item { text-align:center; color:#aaa; font-size:10px; cursor:pointer; flex:1; }
+  .nav-item.active { color:#009688; font-weight:700; }
+  .nav-icon { font-size:22px; display:block; margin-bottom:3px; }
+</style>
+</head>
+<body>
+<div class="mobile-screen">
+  <div class="header">
+    <a href="vendor-dashboard.html" class="back-btn">&larr;</a>
+    <div class="page-title">My Ads</div>
+  </div>
+
+  <div class="tabs" id="tabsArea"></div>
+
+  <div class="container">
+    <div id="listArea"></div>
+  </div>
+
+  <div class="bottom-nav">
+    <div class="nav-item" onclick="window.location.href='vendor-dashboard.html'"><span class="nav-icon">🏠</span> Home</div>
+    <div class="nav-item active" onclick="window.location.href='my-ads.html'"><span class="nav-icon">📢</span> My Ads</div>
+    <div class="nav-item" onclick="window.location.href='wallet.html'"><span class="nav-icon">👛</span> Wallet</div>
+    <div class="nav-item" onclick="window.location.href='vendor-settings.html'"><span class="nav-icon">⚙️</span> Settings</div>
+  </div>
+</div>
+
+<script>
+  const TABS = ["All", "Active", "Paused", "Completed", "Pending"];
+  let currentTab = "All";
+
+  function getAds() {
+    try { return JSON.parse(localStorage.getItem("vendorCampaigns")) || []; }
+    catch (e) { return []; }
+  }
+  function getAdName(ad) { return ad.title || ad.name || ad.id || "Untitled Ad"; }
+  function typeIcon(t) { return t === "Frame" ? "🖼️" : t === "Video" ? "🎬" : t === "Survey" ? "📋" : "📢"; }
+  function statusClass(status) {
+    switch ((status || "").toLowerCase()) {
+      case "active": return "st-active";
+      case "paused": return "st-paused";
+      case "completed": return "st-completed";
+      case "pending": return "st-pending";
+      default: return "st-other";
+    }
+  }
+
+  function renderTabs() {
+    const tabsArea = document.getElementById("tabsArea");
+    tabsArea.innerHTML = TABS.map(t =>
+      `<div class="tab-chip ${t === currentTab ? "active" : ""}" onclick="selectTab('${t}')">${t}</div>`
+    ).join("");
+  }
+
+  function selectTab(tab) {
+    currentTab = tab;
+    renderTabs();
+    renderList();
+  }
+
+  function renderList() {
+    let ads = getAds();
+    if (currentTab !== "All") {
+      ads = ads.filter(a => (a.status || "").toLowerCase() === currentTab.toLowerCase());
+    }
+    // newest first (best-effort; falls back to array order if dates aren't parseable)
+    ads = ads.slice().reverse();
+
+    const listArea = document.getElementById("listArea");
+    if (!ads.length) {
+      listArea.innerHTML = `
+        <div class="empty-state">
+          <div class="ic">📭</div>
+          <p>No ${currentTab === "All" ? "" : currentTab.toLowerCase() + " "}ads found.</p>
+        </div>`;
+      return;
+    }
+
+    listArea.innerHTML = ads.map(ad => {
+      const views = (ad.stats && typeof ad.stats.views === "number") ? ad.stats.views : "—";
+      return `
+        <div class="ad-card">
+          <div class="ad-top">
+            <div class="ad-name">${typeIcon(ad.type)} ${getAdName(ad)}<span class="ad-type">${ad.type || "Ad"}</span></div>
+            <div class="status-pill ${statusClass(ad.status)}">${ad.status || "Unknown"}</div>
+          </div>
+          <div class="ad-meta">
+            <div><b>${ad.date || "—"}</b>Posted</div>
+            <div><b>${ad.target || "—"}</b>Target</div>
+            <div><b>${views}</b>Views</div>
+            <div><b>${ad.budget || "—"}</b>Budget</div>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  renderTabs();
+  renderList();
+</script>
+</body>
+</html>
