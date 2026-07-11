@@ -96,6 +96,24 @@
             border-radius: 50%; text-align: center; line-height: 24px; 
             font-weight: bold; font-size: 11px; border: 2px solid white;
         }
+
+        /* OPTIONS (per-question, expandable) */
+        .options-list { margin-bottom: 4px; }
+        .option-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .option-row .opt-input { margin-bottom: 0; flex: 1; }
+        .btn-remove-opt {
+            background: #ffebee; color: #e53935; border: none;
+            width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: bold; line-height: 1;
+        }
+        .btn-remove-opt:hover { background: #ffcdd2; }
+        .btn-add-opt {
+            background: #e0f2f1; color: #00796b; border: 1.5px dashed #009688;
+            padding: 8px; width: 100%; border-radius: 8px; cursor: pointer;
+            font-size: 11px; font-weight: 700; font-family: 'Poppins', sans-serif;
+            margin-top: 2px; margin-bottom: 0;
+        }
+        .btn-add-opt:hover { background: #ccebe9; }
         
         /* COST SECTION */
         .cost-box { 
@@ -358,8 +376,15 @@
                 <div class="q-number">${i}</div>
                 <label>Question ${i}</label>
                 <input type="text" placeholder="Type question here...">
-                <input type="text" placeholder="Option 1" style="margin-bottom:5px;">
-                <input type="text" placeholder="Option 2">
+                <div class="options-list" id="optionsList-${i}">
+                    <div class="option-row">
+                        <input type="text" placeholder="Option 1" class="opt-input">
+                    </div>
+                    <div class="option-row">
+                        <input type="text" placeholder="Option 2" class="opt-input">
+                    </div>
+                </div>
+                <button type="button" class="btn-add-opt" onclick="addOption(${i})">+ Add Option</button>
             </div>`;
             container.innerHTML += html;
         }
@@ -370,6 +395,36 @@
         var input = document.getElementById('numQuestions');
         input.value = parseInt(input.value) + 1;
         generateQuestions();
+    }
+
+    // ── ADD/REMOVE OPTIONS (per question) ────────────────
+    var MAX_OPTIONS = 8;
+
+    function addOption(qIndex) {
+        var list = document.getElementById('optionsList-' + qIndex);
+        if (!list) return;
+        var rows = list.querySelectorAll('.option-row');
+        if (rows.length >= MAX_OPTIONS) {
+            alert("Maximum " + MAX_OPTIONS + " options allowed per question.");
+            return;
+        }
+        var nextNum = rows.length + 1;
+        var row = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML =
+            '<input type="text" placeholder="Option ' + nextNum + '" class="opt-input">' +
+            '<button type="button" class="btn-remove-opt" onclick="removeOption(this)" title="Remove option">✕</button>';
+        list.appendChild(row);
+    }
+
+    function removeOption(btn) {
+        var list = btn.closest('.options-list');
+        var rows = list.querySelectorAll('.option-row');
+        if (rows.length <= 2) {
+            alert("Each question needs at least 2 options.");
+            return;
+        }
+        btn.closest('.option-row').remove();
     }
 
     function calculateCost() {
@@ -696,7 +751,7 @@
                     } else {
                         featureLayer.style = ({ feature }) => {
                             if (feature.placeId === selLoc.placeId) {
-                                return { fillColor: "#E53935", fillOpacity: 0.15, strokeColor: "#34A853", strokeOpacity: 1, strokeWeight: 3 };
+                                return { fillColor: "#E53935", fillOpacity: 0.15, strokeColor: "#E53935", strokeOpacity: 1, strokeWeight: 3 };
                             }
                         };
                         activeFeatureLayer = featureLayer;
@@ -756,7 +811,7 @@
             clickable: false,
             fillColor: "#E53935",
             fillOpacity: 0.15,
-            strokeColor: "#34A853",
+            strokeColor: "#E53935",
             strokeOpacity: 1,
             strokeWeight: 3
         });
