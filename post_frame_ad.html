@@ -46,7 +46,7 @@
     <script>
         window.MAPS_CONFIG = {
             API_KEY: "AIzaSyBBanS7ZEjSiuialuuznPuWFizmEBRYHf0",
-            MAP_ID: "140d85cf5d478eaecd44014d" // vector Map ID with "Data-driven styling" enabled
+            MAP_ID: "a23a3d8e91f232e1523073ef" // vector Map ID with "Data-driven styling" enabled
         };
     </script>
 
@@ -354,6 +354,7 @@ let mapsLib = null;
 let placesLib = null;
 let markerLib = null;
 let geocodingLib = null;
+let geometryLib = null;
 
 // ── INIT LIBRARIES ───────────────────────────────────────
 async function initLibs() {
@@ -373,13 +374,15 @@ async function initLibs() {
             google.maps.importLibrary("maps"),
             google.maps.importLibrary("places"),
             google.maps.importLibrary("marker"),
-            google.maps.importLibrary("geocoding")
+            google.maps.importLibrary("geocoding"),
+            google.maps.importLibrary("geometry")
         ]);
 
         mapsLib = libs[0];
         placesLib = libs[1];
         markerLib = libs[2];
         geocodingLib = libs[3];
+        geometryLib = libs[4];
 
         console.log("✅ Google Maps libraries loaded");
     } catch (e) {
@@ -682,28 +685,35 @@ async function renderMap(lat, lng, addr, viewport, types) {
 
         const featureType = getFeatureType(types);
 
+        let boundaryDrawn = false;
         if (featureType && selLoc.placeId) {
             try {
                 const featureLayer = gMap.getFeatureLayer(featureType);
 
-                featureLayer.style = ({ feature }) => {
-                    if (feature.placeId === selLoc.placeId) {
-                        return {
-                            fillColor: "#E53935",
-                            fillOpacity: 0.15,
-                            strokeColor: "#E53935",
-                            strokeOpacity: 1,
-                            strokeWeight: 3
-                        };
-                    }
-                };
+                if (featureLayer.isAvailable === false) {
+                    console.warn("⚠️ FeatureLayer.isAvailable = false — this Map ID does not have Data-driven styling enabled (or belongs to a different project than the API key). Exact boundary cannot render until that's fixed in Cloud Console. Falling back to approximate area.");
+                } else {
+                    featureLayer.style = ({ feature }) => {
+                        if (feature.placeId === selLoc.placeId) {
+                            return {
+                                fillColor: "#E53935",
+                                fillOpacity: 0.15,
+                                strokeColor: "#34A853",
+                                strokeOpacity: 1,
+                                strokeWeight: 3
+                            };
+                        }
+                    };
 
-                activeFeatureLayer = featureLayer;
+                    activeFeatureLayer = featureLayer;
+                    boundaryDrawn = true;
+                    console.log("✅ Exact boundary styled via FeatureLayer for", selLoc.address);
+                }
             } catch (fe) {
-                console.warn("FeatureLayer unavailable, falling back to viewport box:", fe);
-                drawViewportFallback(viewport);
+                console.warn("⚠️ FeatureLayer threw an error — Map ID likely missing Data-driven styling:", fe);
             }
-        } else {
+        }
+        if (!boundaryDrawn) {
             drawViewportFallback(viewport);
         }
 
@@ -747,7 +757,8 @@ async function renderMap(lat, lng, addr, viewport, types) {
     }
 }
 
-// ── FALLBACK: approximate viewport box (used if FeatureLayer unavailable) ──
+// ── FALLBACK: approximate "target area" circle (used only if the exact
+// administrative boundary via FeatureLayer is unavailable for this Map ID) ──
 function drawViewportFallback(viewport) {
     if (!viewport) return;
     let vp = viewport;
@@ -759,23 +770,23 @@ function drawViewportFallback(viewport) {
     }
     const ne = vp.getNorthEast();
     const sw = vp.getSouthWest();
-    const nw = new google.maps.LatLng(ne.lat(), sw.lng());
-    const se = new google.maps.LatLng(sw.lat(), ne.lng());
+    const center = vp.getCenter();
+    const radiusMeters = google.maps.geometry && google.maps.geometry.spherical
+        ? google.maps.geometry.spherical.computeDistanceBetween(ne, sw) / 2
+        : 3000;
 
-    const fill = new google.maps.Rectangle({
-        bounds: vp, map: gMap, clickable: false,
-        strokeOpacity: 0, strokeWeight: 0,
-        fillColor: "#E53935", fillOpacity: 0.09
+    const circle = new google.maps.Circle({
+        center: center,
+        radius: radiusMeters,
+        map: gMap,
+        clickable: false,
+        fillColor: "#E53935",
+        fillOpacity: 0.15,
+        strokeColor: "#34A853",
+        strokeOpacity: 1,
+        strokeWeight: 3
     });
-    const border = new google.maps.Polyline({
-        path: [ne, nw, sw, se, ne], map: gMap, clickable: false,
-        strokeOpacity: 0,
-        icons: [{
-            icon: { path: "M 0,-1 0,1", strokeOpacity: 1, strokeColor: "#E53935", strokeWeight: 3, scale: 4 },
-            offset: "0", repeat: "14px"
-        }]
-    });
-    gShapes.push(fill, border);
+    gShapes.push(circle);
 }
 
 function showLoad(show) {
