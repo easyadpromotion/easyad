@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Update Profile</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#fff; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+
+  .header {
+    background: linear-gradient(135deg,#ffa726,#fb8c00); padding:22px 20px; color:white;
+    display:flex; align-items:center; gap:14px; box-shadow:0 4px 10px rgba(251,140,0,0.25);
+    flex-shrink:0;
+  }
+  .back-btn { text-decoration:none; color:white; font-size:22px; font-weight:bold; }
+  .page-title { font-size:17px; font-weight:700; }
+
+  .container { padding:24px 20px 30px; flex:1; overflow-y:auto; }
+  .container::-webkit-scrollbar { display:none; }
+
+  .avatar-wrap { display:flex; flex-direction:column; align-items:center; margin-bottom:20px; }
+  .avatar-ring {
+    width:110px; height:110px; border-radius:50%; border:3px solid #ff9800;
+    display:flex; align-items:center; justify-content:center; position:relative;
+    background:#eee; overflow:hidden; cursor:pointer;
+  }
+  .avatar-ring img { width:100%; height:100%; object-fit:cover; display:none; }
+  .avatar-placeholder { color:#bbb; font-size:36px; }
+  .avatar-badge {
+    position:absolute; top:2px; right:6px; width:18px; height:18px; border-radius:50%;
+    background:#ff9800; color:white; font-size:10px; display:flex; align-items:center; justify-content:center;
+  }
+  .upload-btn {
+    margin-top:12px; background:#fff3e0; color:#fb8c00; border:1.5px solid #ffcc80;
+    padding:9px 20px; border-radius:24px; font-size:12px; font-weight:700; cursor:pointer;
+    font-family:'Poppins',sans-serif; display:flex; align-items:center; gap:6px;
+  }
+  .upload-btn:active { background:#ffe0b2; }
+
+  .field-row { display:flex; gap:12px; }
+  .field-row .field-col { flex:1; }
+
+  label { display:block; font-weight:600; margin-bottom:7px; color:#333; font-size:12px; }
+  input, select {
+    width:100%; padding:12px; margin-bottom:16px; border:none; background:#f5f6f8;
+    border-radius:10px; font-size:13px; font-family:'Poppins',sans-serif; color:#333;
+  }
+  input::placeholder { color:#aaa; }
+  input:focus, select:focus { outline:2px solid #ffcc80; }
+  select { appearance:auto; color:#555; }
+
+  .btn-update {
+    background:#ff9800; color:white; width:100%; padding:16px; border:none;
+    border-radius:14px; font-size:15px; font-weight:700; cursor:pointer;
+    box-shadow:0 8px 20px rgba(255,152,0,0.35); font-family:'Poppins',sans-serif; margin-top:6px;
+  }
+  .btn-update:active { transform:scale(0.98); }
+
+  .upi-mismatch { font-size:10px; color:#e53935; margin-top:-12px; margin-bottom:12px; display:none; }
+  .upi-mismatch.show { display:block; }
+
+  .not-signed-in { text-align:center; padding:60px 20px; color:#999; }
+  .not-signed-in .ic { font-size:40px; opacity:.4; margin-bottom:10px; }
+  .not-signed-in p { font-size:12px; }
+</style>
+</head>
+<body>
+<div class="mobile-screen">
+  <div class="header">
+    <a href="vendor-settings.html" class="back-btn">&larr;</a>
+    <div class="page-title">Update Profile</div>
+  </div>
+
+  <div class="container" id="pageContent"></div>
+</div>
+
+<script>
+  const mobile = localStorage.getItem("activeVendor");
+  const PROFILE_KEY = mobile ? "vendorProfile_" + mobile : null;
+
+  function getProfile() {
+    if (!PROFILE_KEY) return null;
+    try { return JSON.parse(localStorage.getItem(PROFILE_KEY)) || {}; }
+    catch (e) { return {}; }
+  }
+
+  function render() {
+    const content = document.getElementById("pageContent");
+
+    if (!mobile) {
+      content.innerHTML = `
+        <div class="not-signed-in">
+          <div class="ic">👤</div>
+          <p>You're not signed in.<br>Please log in to update your profile.</p>
+        </div>`;
+      return;
+    }
+
+    const p = getProfile();
+
+    content.innerHTML = `
+      <div class="avatar-wrap">
+        <div class="avatar-ring" id="avatarRing" onclick="document.getElementById('photoInput').click()">
+          <span class="avatar-placeholder" id="avatarPlaceholder">👤</span>
+          <img id="avatarImg" src="${p.photo || ''}" style="${p.photo ? 'display:block;' : ''}">
+          <div class="avatar-badge">📷</div>
+        </div>
+        <input type="file" id="photoInput" accept="image/*" style="display:none;" onchange="handlePhoto()">
+        <button type="button" class="upload-btn" onclick="document.getElementById('photoInput').click()">📷 Upload Photo</button>
+      </div>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label>First Name</label>
+          <input type="text" id="fFirst" placeholder="First Name" value="${p.firstName || ''}">
+        </div>
+        <div class="field-col">
+          <label>Last Name</label>
+          <input type="text" id="fLast" placeholder="Last Name" value="${p.lastName || ''}">
+        </div>
+      </div>
+
+      <div class="field-row">
+        <div class="field-col">
+          <label>DOB (DD-MM-YYYY)</label>
+          <input type="date" id="fDob" value="${p.dob || ''}">
+        </div>
+        <div class="field-col">
+          <label>Gender</label>
+          <select id="fGender">
+            <option value="" ${!p.gender ? 'selected' : ''}>Select</option>
+            <option value="Male" ${p.gender === 'Male' ? 'selected' : ''}>Male</option>
+            <option value="Female" ${p.gender === 'Female' ? 'selected' : ''}>Female</option>
+            <option value="Other" ${p.gender === 'Other' ? 'selected' : ''}>Other</option>
+            <option value="Prefer not to say" ${p.gender === 'Prefer not to say' ? 'selected' : ''}>Prefer not to say</option>
+          </select>
+        </div>
+      </div>
+
+      <label>Profession</label>
+      <input type="text" id="fProfession" placeholder="e.g. Engineer, Student" value="${p.profession || ''}">
+
+      <label>Sub-Profession</label>
+      <input type="text" id="fSubProfession" placeholder="e.g. Software Dev, B.Tech" value="${p.subProfession || ''}">
+
+      <label>UPI ID</label>
+      <input type="text" id="fUpi" placeholder="example@upi" value="${p.upiId || ''}" oninput="checkUpiMatch()">
+
+      <label>Confirm UPI ID</label>
+      <input type="text" id="fUpiConfirm" placeholder="Re-enter UPI ID" value="${p.upiId || ''}" oninput="checkUpiMatch()">
+      <div class="upi-mismatch" id="upiMismatchMsg">UPI IDs don't match.</div>
+
+      <button class="btn-update" onclick="saveProfile()">Update Profile</button>
+    `;
+  }
+
+  function handlePhoto() {
+    const file = document.getElementById("photoInput").files[0];
+    if (!file) return;
+
+    const img = new Image();
+    img.onload = function () {
+      // Compress to keep localStorage small — cap at 300px, JPEG q0.75
+      const size = 300;
+      const canvas = document.createElement("canvas");
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+
+      // center-crop square
+      const minSide = Math.min(img.width, img.height);
+      const sx = (img.width - minSide) / 2;
+      const sy = (img.height - minSide) / 2;
+      ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.75);
+      const avatarImg = document.getElementById("avatarImg");
+      avatarImg.src = dataUrl;
+      avatarImg.style.display = "block";
+      document.getElementById("avatarPlaceholder").style.display = "none";
+    };
+    img.src = URL.createObjectURL(file);
+  }
+
+  function checkUpiMatch() {
+    const upi = document.getElementById("fUpi").value.trim();
+    const confirm = document.getElementById("fUpiConfirm").value.trim();
+    const msg = document.getElementById("upiMismatchMsg");
+    if (confirm && upi !== confirm) {
+      msg.classList.add("show");
+    } else {
+      msg.classList.remove("show");
+    }
+  }
+
+  function saveProfile() {
+    const firstName = document.getElementById("fFirst").value.trim();
+    const lastName = document.getElementById("fLast").value.trim();
+    const dob = document.getElementById("fDob").value;
+    const gender = document.getElementById("fGender").value;
+    const profession = document.getElementById("fProfession").value.trim();
+    const subProfession = document.getElementById("fSubProfession").value.trim();
+    const upiId = document.getElementById("fUpi").value.trim();
+    const upiConfirm = document.getElementById("fUpiConfirm").value.trim();
+    const avatarImg = document.getElementById("avatarImg");
+    const photo = avatarImg && avatarImg.style.display === "block" ? avatarImg.src : (getProfile().photo || "");
+
+    if (!firstName) { alert("Please enter your First Name."); return; }
+    if (upiId && upiId !== upiConfirm) { alert("UPI ID and Confirm UPI ID don't match."); return; }
+
+    const profile = {
+      firstName, lastName,
+      name: (firstName + " " + lastName).trim(), // kept for dashboard greeting compatibility
+      mobile, dob, gender, profession, subProfession, upiId, photo
+    };
+
+    localStorage.setItem(PROFILE_KEY, JSON.stringify(profile));
+    alert("Profile updated successfully!");
+    window.location.href = "vendor-dashboard.html";
+  }
+
+  render();
+</script>
+</body>
+</html>
