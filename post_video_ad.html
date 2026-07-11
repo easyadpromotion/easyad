@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Post Video Ad</title>
+    <title>Post Survey Ad</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
 
     <!-- ══════════════════════════════════════════════════════════════════
-         🔑 GOOGLE MAPS API KEY — same config used in frame-ads.html
-         Keep this in sync across pages: if you rotate/restrict the key
-         there, update it here too.
+         🔑 GOOGLE MAPS API KEY — same config used across all ad pages
+         Keep this in sync: if you rotate/restrict the key or Map ID,
+         update it here, in frame-ads.html, and in post_video_ad.html.
          ══════════════════════════════════════════════════════════════════ -->
     <script>
         window.MAPS_CONFIG = {
@@ -65,13 +65,13 @@
         .back-btn { text-decoration: none; color: white; font-size: 24px; margin-right: 15px; font-weight: bold; }
         .page-title { font-size: 18px; font-weight: 700; }
 
-        /* CONTENT */
+        /* SCROLL AREA */
         .container { 
             padding: 20px; flex: 1; overflow-y: auto; padding-bottom: 50px; 
         }
         .container::-webkit-scrollbar { display: none; }
 
-        /* FORM CARD */
+        /* CARDS */
         .form-card { 
             background: white; padding: 20px; border-radius: 15px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.03); margin-bottom: 20px; 
@@ -83,20 +83,39 @@
             border: 2px solid #eee; border-radius: 10px; font-size: 13px; 
             box-sizing: border-box; font-family: 'Poppins', sans-serif;
         }
-        input:focus, select:focus, textarea:focus { border-color: #009688; outline: none; }
+        input:focus, select:focus { border-color: #009688; outline: none; }
 
-        /* TABS */
-        .tab-container { 
-            display: flex; margin-bottom: 15px; border: 1px solid #b2dfdb; 
-            border-radius: 10px; overflow: hidden; 
+        /* QUESTION BLOCK */
+        .question-block { 
+            background: #f0fdfc; border: 1px solid #b2dfdb; padding: 15px; 
+            border-radius: 10px; margin-bottom: 15px; position: relative; padding-top: 25px;
         }
-        .tab { 
-            flex: 1; padding: 12px; text-align: center; cursor: pointer; 
-            background: #e0f2f1; font-weight: 600; font-size: 12px; color: #00796b; 
+        .q-number { 
+            position: absolute; top: -10px; left: -5px; 
+            background: #009688; color: white; width: 24px; height: 24px; 
+            border-radius: 50%; text-align: center; line-height: 24px; 
+            font-weight: bold; font-size: 11px; border: 2px solid white;
         }
-        .tab.active { background: #009688; color: white; }
 
-        /* COST BOX */
+        /* OPTIONS (per-question, expandable) */
+        .options-list { margin-bottom: 4px; }
+        .option-row { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; }
+        .option-row .opt-input { margin-bottom: 0; flex: 1; }
+        .btn-remove-opt {
+            background: #ffebee; color: #e53935; border: none;
+            width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px;
+            cursor: pointer; font-size: 13px; font-weight: bold; line-height: 1;
+        }
+        .btn-remove-opt:hover { background: #ffcdd2; }
+        .btn-add-opt {
+            background: #e0f2f1; color: #00796b; border: 1.5px dashed #009688;
+            padding: 8px; width: 100%; border-radius: 8px; cursor: pointer;
+            font-size: 11px; font-weight: 700; font-family: 'Poppins', sans-serif;
+            margin-top: 2px; margin-bottom: 0;
+        }
+        .btn-add-opt:hover { background: #ccebe9; }
+        
+        /* COST SECTION */
         .cost-box { 
             background: #e0f2f1; padding: 15px; border-radius: 10px; 
             border: 1px dashed #009688; margin-top: 10px; 
@@ -108,16 +127,15 @@
             display: flex; justify-content: space-between; 
         }
 
-        /* BUTTON */
+        .btn-add { background: #333; color: white; border: none; padding: 10px; width: 100%; border-radius: 8px; cursor: pointer; font-size: 12px; margin-bottom: 10px; }
         .btn-submit {
             background-color: #009688; color: white; width: 100%; padding: 15px; 
             border: none; border-radius: 12px; font-size: 15px; font-weight: 700; 
-            cursor: pointer; box-shadow: 0 5px 15px rgba(0,150,136,0.3);
-            transition: 0.2s;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,150,136,0.3); transition: 0.2s;
         }
         .btn-submit:active { transform: scale(0.98); }
 
-        /* ── LOCATION PICKER + MAP (ported from frame-ads.html) ───────── */
+        /* ── LOCATION PICKER + MAP (ported from frame-ads.html / post_video_ad.html) ── */
         .loc-outer { position: relative; margin-bottom: 6px; }
         #locationInput {
             margin-bottom: 0; border: 2px solid #eee; border-radius: 10px;
@@ -219,20 +237,23 @@
         }
     </style>
 </head>
-<body>
+<body onload="generateQuestions()">
 
 <div class="mobile-screen">
 
     <div class="header">
         <a href="select_ad_type.html" class="back-btn">&larr;</a>
-        <div class="page-title">Post Video Ad</div>
+        <div class="page-title">Post Survey Ad</div>
     </div>
 
     <div class="container">
         
         <div class="form-card">
             <label>Campaign Name</label>
-            <input type="text" id="campName" placeholder="e.g., Summer Sale Promo">
+            <input type="text" id="campName" placeholder="e.g., Market Research 2026">
+
+            <label>Survey Tagline</label>
+            <input type="text" id="campTag" placeholder="e.g., Share your opinion!">
 
             <label>Target Category</label>
             <select id="campCat">
@@ -306,85 +327,123 @@
         </div>
 
         <div class="form-card">
-            <label>Video Source</label>
-            <div class="tab-container">
-                <div class="tab active" onclick="switchTab('link')" id="tab-link">Paste Link</div>
-                <div class="tab" onclick="switchTab('upload')" id="tab-upload">Upload Video</div>
-            </div>
-
-            <div id="input-link">
-                <input type="text" placeholder="Paste YouTube Link" style="margin-bottom: 20px;">
-            </div>
-            <div id="input-upload" style="display: none;">
-                <input type="file" style="background: #fafafa;">
-            </div>
+            <h3 style="margin-top:0; font-size: 15px; color:#333;">Survey Questions</h3>
+            
+            <label>How many questions?</label>
+            <input type="number" id="numQuestions" value="1" min="1" max="10" onchange="generateQuestions()">
+            
+            <div id="questionsContainer"></div>
+            <button class="btn-add" onclick="addOneQuestion()">+ Add Another Question</button>
         </div>
 
         <div class="form-card">
             <h3 style="margin-top: 0; font-size: 15px; color:#333;">Budget & Costing</h3>
 
-            <label>Video Duration (Seconds)</label>
-            <input type="number" id="duration" value="20" oninput="calculateCost()">
-            <p style="font-size: 11px; color: #888; margin-top: -10px; margin-bottom: 15px;">Rate: ₹0.10 per second</p>
-
-            <label>Target Views</label>
-            <input type="number" id="views" value="200" min="100" oninput="calculateCost()">
+            <label>Target Responses</label>
+            <input type="number" id="responses" value="200" min="100" oninput="calculateCost()">
 
             <div class="cost-box">
                 <div class="cost-row">
-                    <span>Cost Per View</span>
-                    <span id="cpvDisplay">₹ 2.00</span>
+                    <span>Questions</span>
+                    <span id="qCountDisplay">1</span>
                 </div>
                 <div class="cost-row">
                     <span>Subtotal</span>
-                    <span id="subtotalDisplay">₹ 400.00</span>
+                    <span id="subtotalDisplay">₹ 200.00</span>
                 </div>
                 <div class="cost-total">
                     <span>Total Payable</span>
-                    <span id="totalDisplay">₹ 472.00</span>
+                    <span id="totalDisplay">₹ 236.00</span>
                 </div>
             </div>
         </div>
 
-        <button class="btn-submit" onclick="publishVideo()">PAY & PUBLISH AD</button>
+        <button class="btn-submit" onclick="publishSurvey()">PAY & PUBLISH SURVEY</button>
 
     </div>
 
 </div>
 
 <script>
-    // ── TABS ──────────────────────────────────────────────
-    function switchTab(type) {
-        document.getElementById('tab-link').className = 'tab';
-        document.getElementById('tab-upload').className = 'tab';
-        document.getElementById('input-link').style.display = 'none';
-        document.getElementById('input-upload').style.display = 'none';
+    function generateQuestions() {
+        var count = document.getElementById('numQuestions').value;
+        var container = document.getElementById('questionsContainer');
+        container.innerHTML = "";
 
-        document.getElementById('tab-' + type).className = 'tab active';
-        document.getElementById('input-' + type).style.display = 'block';
+        for (var i = 1; i <= count; i++) {
+            var html = `
+            <div class="question-block">
+                <div class="q-number">${i}</div>
+                <label>Question ${i}</label>
+                <input type="text" placeholder="Type question here...">
+                <div class="options-list" id="optionsList-${i}">
+                    <div class="option-row">
+                        <input type="text" placeholder="Option 1" class="opt-input">
+                    </div>
+                    <div class="option-row">
+                        <input type="text" placeholder="Option 2" class="opt-input">
+                    </div>
+                </div>
+                <button type="button" class="btn-add-opt" onclick="addOption(${i})">+ Add Option</button>
+            </div>`;
+            container.innerHTML += html;
+        }
+        calculateCost();
     }
 
-    // ── COST CALC ─────────────────────────────────────────
+    function addOneQuestion() {
+        var input = document.getElementById('numQuestions');
+        input.value = parseInt(input.value) + 1;
+        generateQuestions();
+    }
+
+    // ── ADD/REMOVE OPTIONS (per question) ────────────────
+    var MAX_OPTIONS = 8;
+
+    function addOption(qIndex) {
+        var list = document.getElementById('optionsList-' + qIndex);
+        if (!list) return;
+        var rows = list.querySelectorAll('.option-row');
+        if (rows.length >= MAX_OPTIONS) {
+            alert("Maximum " + MAX_OPTIONS + " options allowed per question.");
+            return;
+        }
+        var nextNum = rows.length + 1;
+        var row = document.createElement('div');
+        row.className = 'option-row';
+        row.innerHTML =
+            '<input type="text" placeholder="Option ' + nextNum + '" class="opt-input">' +
+            '<button type="button" class="btn-remove-opt" onclick="removeOption(this)" title="Remove option">✕</button>';
+        list.appendChild(row);
+    }
+
+    function removeOption(btn) {
+        var list = btn.closest('.options-list');
+        var rows = list.querySelectorAll('.option-row');
+        if (rows.length <= 2) {
+            alert("Each question needs at least 2 options.");
+            return;
+        }
+        btn.closest('.option-row').remove();
+    }
+
     function calculateCost() {
-        var duration = parseInt(document.getElementById('duration').value) || 0;
-        var views = parseInt(document.getElementById('views').value) || 0;
-        var costPerSec = 0.10;
+        var qCount = document.getElementById('numQuestions').value;
+        var responses = document.getElementById('responses').value;
+        var subtotal = qCount * 1.00 * responses;
+        var total = subtotal * 1.18; // Adding GST
 
-        var cpv = duration * costPerSec;
-        var subtotal = cpv * views;
-        var total = subtotal * 1.18; // GST
-
-        document.getElementById('cpvDisplay').innerText = "₹ " + cpv.toFixed(2);
+        document.getElementById('qCountDisplay').innerText = qCount;
         document.getElementById('subtotalDisplay').innerText = "₹ " + subtotal.toFixed(2);
         document.getElementById('totalDisplay').innerText = "₹ " + total.toFixed(2);
     }
 
-    // ── PUBLISH VIDEO AD ──────────────────────────────────
-    function publishVideo() {
+    // --- FUNCTION TO SAVE AD ---
+    function publishSurvey() {
         const name = document.getElementById('campName').value;
         const category = document.getElementById('campCat').value;
         const totalCost = document.getElementById('totalDisplay').innerText;
-        const views = document.getElementById('views').value;
+        const responses = document.getElementById('responses').value;
         const loc = selLoc.address;
 
         if (!name) { alert("Please enter Campaign Name"); return; }
@@ -392,14 +451,14 @@
 
         // 1. Create Ad Object
         const newAd = {
-            id: "VID" + Math.floor(Math.random() * 9999),
-            type: "Video",
+            id: "SUR" + Math.floor(Math.random() * 9999),
+            type: "Survey",
             name: name,
             category: category,
             stats: { views: 0, clicks: 0, spent: 0 },
             budget: totalCost,
-            target: views,
-            status: "Pending", // Sent to Admin
+            target: responses,
+            status: "Pending", // Important: Starts as Pending
             date: new Date().toLocaleDateString(),
             location: loc,
             mapLink: loc,
@@ -407,14 +466,14 @@
             lng: selLoc.lng
         };
 
-        // 2. Save to Memory
+        // 2. Get Existing Ads & Save
         let ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
         ads.push(newAd);
         localStorage.setItem("vendorCampaigns", JSON.stringify(ads));
 
         // 3. Redirect
-        alert("Video Ad Submitted! Waiting for Approval.");
-        window.location.href = "manage_campaigns.html";
+        alert("Survey Submitted! Sent to Admin for Approval.");
+        window.location.href = "manage_campaigns.html"; // Go to list
     }
 
     // ══════════════════════════════════════════════════════
@@ -692,7 +751,7 @@
                     } else {
                         featureLayer.style = ({ feature }) => {
                             if (feature.placeId === selLoc.placeId) {
-                                return { fillColor: "#E53935", fillOpacity: 0.15, strokeColor: "#34A853", strokeOpacity: 1, strokeWeight: 3 };
+                                return { fillColor: "#E53935", fillOpacity: 0.15, strokeColor: "#E53935", strokeOpacity: 1, strokeWeight: 3 };
                             }
                         };
                         activeFeatureLayer = featureLayer;
@@ -752,7 +811,7 @@
             clickable: false,
             fillColor: "#E53935",
             fillOpacity: 0.15,
-            strokeColor: "#34A853",
+            strokeColor: "#E53935",
             strokeOpacity: 1,
             strokeWeight: 3
         });
