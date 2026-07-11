@@ -14,7 +14,7 @@
     <script>
         window.MAPS_CONFIG = {
             API_KEY: "AIzaSyBBanS7ZEjSiuialuuznPuWFizmEBRYHf0",
-            MAP_ID: "140d85cf5d478eaecd44014d" // vector Map ID (enable Data-driven styling for boundary highlight)
+            MAP_ID: "a23a3d8e91f232e1523073ef" // vector Map ID (enable Data-driven styling for boundary highlight)
         };
     </script>
 
@@ -692,7 +692,7 @@
                     } else {
                         featureLayer.style = ({ feature }) => {
                             if (feature.placeId === selLoc.placeId) {
-                                return { fillColor: "#E53935", fillOpacity: 0.15, strokeColor: "#E53935", strokeOpacity: 1, strokeWeight: 3 };
+                                return { fillColor: "#E53935", fillOpacity: 0.15, strokeColor: "#34A853", strokeOpacity: 1, strokeWeight: 3 };
                             }
                         };
                         activeFeatureLayer = featureLayer;
@@ -752,7 +752,7 @@
             clickable: false,
             fillColor: "#E53935",
             fillOpacity: 0.15,
-            strokeColor: "#E53935",
+            strokeColor: "#34A853",
             strokeOpacity: 1,
             strokeWeight: 3
         });
