@@ -1,87 +1,284 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Notifications</title>
-<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
-<style>
-  * { box-sizing: border-box; }
-  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
-  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#f8f9fa; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
-  .header { background:#009688; padding:25px 20px 20px; color:white; display:flex; align-items:center; border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(0,150,136,0.2); z-index:10; flex-shrink:0; }
-  .back-btn { text-decoration:none; color:white; font-size:24px; margin-right:15px; font-weight:bold; }
-  .page-title { font-size:18px; font-weight:700; }
-  .container { padding:20px; flex:1; overflow-y:auto; }
-  .container::-webkit-scrollbar { display:none; }
+    <meta charset="UTF-8">
+    <title>Notifications</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
+        .mobile-screen { background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden; }
+        .header { background: #ff9800; padding: 20px; color: white; display: flex; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 15px; }
+        .page-title { font-size: 18px; font-weight: 700; flex: 1; }
+        .unread-badge { background: rgba(255,255,255,0.25); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; min-width: 18px; text-align: center; }
+        .loc-strip { font-size: 10.5px; color: #a15c00; background: #fff3e0; padding: 8px 20px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        .loc-strip button { border: none; background: none; color: #ff9800; font-weight: 700; font-size: 10.5px; cursor: pointer; padding: 0; }
+        .list { padding: 15px 20px 20px; flex: 1; overflow-y: auto; }
+        .notif-card { background: #fff3e0; padding: 15px; border-radius: 12px; margin-bottom: 10px; border-left: 5px solid #ff9800; position: relative; transition: background 0.4s; }
+        .notif-card.unread::after { content: ""; position: absolute; top: 14px; right: 14px; width: 8px; height: 8px; border-radius: 50%; background: #ff9800; }
+        .notif-card.new-flash { animation: flashIn 1.4s ease; }
+        @keyframes flashIn { 0% { background:#ffe0b2; transform: translateY(-6px); opacity: 0; } 100% { background:#fff3e0; transform: translateY(0); opacity: 1; } }
+        .n-title { font-weight: 700; font-size: 13px; color: #333; margin-bottom: 5px; padding-right: 14px; }
+        .n-msg { font-size: 11px; color: #555; line-height: 1.5; }
+        .n-time { font-size: 10px; color: #999; margin-top: 8px; text-align: right; }
+        .empty-state { text-align: center; color: #aaa; font-size: 12px; margin-top: 60px; }
 
-  .notif-card { background:white; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow:0 4px 10px rgba(0,0,0,0.03); cursor:pointer; border-left:4px solid #009688; position:relative; }
-  .notif-card.read { border-left-color:#ddd; opacity:.7; }
-  .nc-title { font-size:13px; font-weight:700; color:#222; margin-bottom:4px; }
-  .nc-msg { font-size:12px; color:#666; }
-  .nc-date { font-size:10px; color:#aaa; margin-top:6px; }
-  .unread-dot { position:absolute; top:14px; right:14px; width:8px; height:8px; border-radius:50%; background:#e53935; }
-
-  .empty-state { text-align:center; padding:60px 20px; color:#999; }
-  .empty-state .ic { font-size:40px; opacity:.4; margin-bottom:10px; }
-  .empty-state p { font-size:12px; }
-</style>
+        /* Live "new ad" toast that slides down over the app when a match is found */
+        .toast {
+            position: absolute; top: -120px; left: 12px; right: 12px; z-index: 50;
+            background: #2d3436; color: #fff; border-radius: 14px; padding: 14px 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35); display: flex; gap: 12px; align-items: center;
+            transition: top 0.45s cubic-bezier(.34,1.56,.64,1);
+        }
+        .toast.show { top: 16px; }
+        .toast-icon { font-size: 22px; flex-shrink: 0; }
+        .toast-text { flex: 1; font-size: 12px; line-height: 1.4; }
+        .toast-text b { display: block; font-size: 13px; margin-bottom: 2px; }
+        .toast-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; cursor: pointer; font-size: 12px; }
+    </style>
 </head>
 <body>
 <div class="mobile-screen">
-  <div class="header">
-    <a href="vendor-settings.html" class="back-btn">&larr;</a>
-    <div class="page-title">Notifications</div>
-  </div>
-  <div class="container" id="listArea"></div>
+    <div class="header">
+        <a href="settings.html" class="back-btn">←</a>
+        <span class="page-title">Notifications</span>
+        <span class="unread-badge" id="unreadBadge" style="display:none;">0</span>
+    </div>
+
+    <div class="loc-strip">
+        <span id="locLabel">📍 Detecting your location…</span>
+        <button id="refreshLocBtn">Refresh</button>
+    </div>
+
+    <div class="toast" id="toast">
+        <div class="toast-icon">📢</div>
+        <div class="toast-text"><b id="toastTitle">New ad nearby!</b><span id="toastMsg"></span></div>
+        <button class="toast-close" id="toastClose">✕</button>
+    </div>
+
+    <div class="list" id="list"></div>
 </div>
 
 <script>
-  // Notifications live in localStorage("vendorNotifications") as a JSON
-  // array of: { id, title, message, date, read }
-  // ⚠️ NOTE: no backend/admin currently pushes into this key, so this
-  // page will show the empty state until something writes to it —
-  // e.g. an admin panel notifying a vendor their ad was approved/paused.
-  function getNotifications() {
-    try { return JSON.parse(localStorage.getItem("vendorNotifications")) || []; }
-    catch (e) { return []; }
+/* ============================================================
+   REAL VENDOR AD SCHEMA — confirmed by reading your actual
+   post_frame_ad.html / post_video_ad.html / post_survey_ad.html.
+   Every ad is pushed into localStorage["vendorCampaigns"] as:
+   {
+     id: "FRA1234" | "VID1234" | "SUR1234",
+     type: "Frame" | "Video" | "Survey",
+     title: "...",   // ⚠️ Frame ads use "title"
+     name:  "...",   // ⚠️ Video/Survey ads use "name" instead — real
+                      //    inconsistency in your 3 files, handled below
+     status: "Pending" | ??? | "Rejected",  // admin sets the approved
+                      // value in admin_approve_ads.html, which I don't
+                      // have — I'm treating anything that ISN'T
+                      // "Pending" or "Rejected"/"Declined" as live.
+                      // Tell me the exact string your approval page
+                      // sets and I'll tighten this.
+     location: "Gajuwaka, Visakhapatnam, Andhra Pradesh",  // plain
+                      // address STRING from Google Places, not an
+                      // object — used for display only now
+     lat: 17.68, lng: 83.20   // real coordinates — used for matching
+   }
+   Location matching now uses actual distance (lat/lng) between the
+   ad and the viewer instead of fuzzy state/district text matching.
+   ============================================================ */
+
+const SEEN_KEY = "eap_seen_ad_ids";     // ad ids we've already turned into a notification
+const NOTIF_KEY = "eap_user_notifications";
+const LOC_KEY = "eap_user_location";
+const POLL_MS = 4000;                    // how often we check for freshly-approved ads
+const NEARBY_RADIUS_KM = 25;             // how close an ad's target location must be to notify
+
+function loadJSON(key, fallback){
+  try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+  catch(e){ return fallback; }
+}
+function saveJSON(key, val){ localStorage.setItem(key, JSON.stringify(val)); }
+
+function adTitle(ad){ return ad.title || ad.name || "New Ad"; }
+function isLiveStatus(status){
+  const s = (status || "").toLowerCase();
+  return s !== "" && s !== "pending" && !s.includes("reject") && !s.includes("declin");
+}
+function haversineKm(lat1, lon1, lat2, lon2){
+  const R = 6371;
+  const dLat = (lat2-lat1) * Math.PI/180, dLon = (lon2-lon1) * Math.PI/180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ---- default / seed notifications (kept only if nothing exists yet) ---- */
+function seedNotifications(){
+  if(localStorage.getItem(NOTIF_KEY)) return;
+  saveJSON(NOTIF_KEY, [
+    { id: "seed1", title: "🎉 Welcome to EAP!", msg: "Start viewing ads and earning money today. Check out Frame Ads for instant rewards.", time: Date.now() - 60000, unread: false },
+    { id: "seed2", title: "✅ Account Verified", msg: "Your mobile number has been successfully verified.", time: Date.now() - 86400000, unread: false }
+  ]);
+}
+
+/* ---- user location: raw lat/lng (for distance matching) via browser
+   Geolocation, plus a reverse-geocoded label (for display only), cached ---- */
+function getCachedLocation(){ return loadJSON(LOC_KEY, null); }
+function detectLocation(onDone){
+  if(!navigator.geolocation){ onDone(null); return; }
+  navigator.geolocation.getCurrentPosition(
+    async (pos)=>{
+      const { latitude, longitude } = pos.coords;
+      let label = "";
+      try{
+        const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=12&addressdetails=1`, { headers:{ "Accept":"application/json" } });
+        const data = await res.json();
+        const addr = data.address || {};
+        label = addr.suburb || addr.city || addr.town || addr.state_district || addr.state || "";
+      }catch(e){ /* label is cosmetic only — matching still works via lat/lng */ }
+      const loc = { lat: latitude, lng: longitude, label };
+      saveJSON(LOC_KEY, loc);
+      onDone(loc);
+    },
+    ()=> onDone(getCachedLocation()),
+    { timeout: 8000 }
+  );
+}
+
+let userLoc = getCachedLocation();
+
+function renderLocLabel(){
+  const el = document.getElementById("locLabel");
+  if(userLoc && userLoc.lat != null){
+    el.textContent = `📍 Showing ads within ${NEARBY_RADIUS_KM}km of ${userLoc.label || "you"}`;
+  } else {
+    el.textContent = "📍 Location unknown — showing all approved ads";
   }
-  function saveNotifications(list) {
-    localStorage.setItem("vendorNotifications", JSON.stringify(list));
+}
+renderLocLabel();
+detectLocation(loc=>{ if(loc){ userLoc = loc; renderLocLabel(); checkForNewAds(); } });
+document.getElementById("refreshLocBtn").onclick = ()=>{
+  document.getElementById("locLabel").textContent = "📍 Detecting your location…";
+  detectLocation(loc=>{ userLoc = loc; renderLocLabel(); });
+};
+
+/* ---- rendering the list ---- */
+function timeAgo(ts){
+  const diff = Date.now() - ts;
+  const min = Math.floor(diff/60000);
+  if(min < 1) return "Just Now";
+  if(min < 60) return min + " min ago";
+  const hr = Math.floor(min/60);
+  if(hr < 24) return hr + " hr ago";
+  const day = Math.floor(hr/24);
+  if(day === 1) return "Yesterday";
+  return day + " days ago";
+}
+
+function render(){
+  const notifs = loadJSON(NOTIF_KEY, []).sort((a,b)=> b.time - a.time);
+  const list = document.getElementById("list");
+  const unread = notifs.filter(n=>n.unread).length;
+  const badge = document.getElementById("unreadBadge");
+  if(unread > 0){ badge.style.display = "inline-block"; badge.textContent = unread; }
+  else { badge.style.display = "none"; }
+
+  if(notifs.length === 0){
+    list.innerHTML = `<div class="empty-state">No notifications yet.</div>`;
+    return;
   }
 
-  function render() {
-    const notifs = getNotifications().slice().reverse();
-    const listArea = document.getElementById("listArea");
+  list.innerHTML = notifs.map(n => `
+    <div class="notif-card ${n.unread ? "unread" : ""} ${n._flash ? "new-flash" : ""}" data-id="${n.id}" style="${n.color ? `background:${n.color.bg}; border-color:${n.color.border};` : ""}">
+      <div class="n-title">${n.title}</div>
+      <div class="n-msg">${n.msg}</div>
+      <div class="n-time">${timeAgo(n.time)}</div>
+    </div>
+  `).join("");
 
-    if (!notifs.length) {
-      listArea.innerHTML = `
-        <div class="empty-state">
-          <div class="ic">🔔</div>
-          <p>No notifications yet.<br>You'll see updates about your ads here.</p>
-        </div>`;
-      return;
-    }
+  // tapping a card marks it read
+  list.querySelectorAll(".notif-card").forEach(card=>{
+    card.onclick = ()=>{
+      const notifs2 = loadJSON(NOTIF_KEY, []);
+      const idx = notifs2.findIndex(n=>n.id === card.dataset.id);
+      if(idx > -1 && notifs2[idx].unread){ notifs2[idx].unread = false; saveJSON(NOTIF_KEY, notifs2); render(); }
+    };
+  });
+}
 
-    listArea.innerHTML = notifs.map(n => `
-      <div class="notif-card ${n.read ? "read" : ""}" onclick="markRead('${n.id}')">
-        ${!n.read ? '<div class="unread-dot"></div>' : ""}
-        <div class="nc-title">${n.title || "Notification"}</div>
-        <div class="nc-msg">${n.message || ""}</div>
-        <div class="nc-date">${n.date || ""}</div>
-      </div>
-    `).join("");
-  }
+/* ---- toast popup ---- */
+let toastTimer = null;
+function showToast(title, msg){
+  document.getElementById("toastTitle").textContent = title;
+  document.getElementById("toastMsg").textContent = msg;
+  const toast = document.getElementById("toast");
+  toast.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> toast.classList.remove("show"), 5000);
+}
+document.getElementById("toastClose").onclick = ()=> document.getElementById("toast").classList.remove("show");
 
-  function markRead(id) {
-    const list = getNotifications();
-    const item = list.find(n => n.id === id);
-    if (item) item.read = true;
-    saveNotifications(list);
+/* ---- the core "did a new nearby ad get posted" check ----
+   Looks at localStorage["vendorCampaigns"] (confirmed — this is the
+   exact key all three of your post_*_ad.html pages write to), finds
+   live/approved ads we haven't notified about yet, and — if they're
+   within NEARBY_RADIUS_KM of the viewer — turns each into a
+   notification + live toast. Call this on load, on a timer, and
+   whenever another tab writes to vendorCampaigns (e.g. admin
+   approving an ad in admin_approve_ads.html). */
+function checkForNewAds(){
+  const ads = loadJSON("vendorCampaigns", []);
+  if(!ads.length) return;
+  const seen = new Set(loadJSON(SEEN_KEY, []));
+  const notifs = loadJSON(NOTIF_KEY, []);
+  let addedAny = false;
+
+  ads.forEach(ad=>{
+    if(!ad || !ad.id) return;
+    if(seen.has(ad.id)) return;                 // already notified about this one
+    if(!isLiveStatus(ad.status)) return;         // still Pending or was Rejected
+
+    let matchesLocation = true;
+    let distLabel = ad.location || "you";
+    if(userLoc && userLoc.lat != null && ad.lat != null && ad.lng != null){
+      const dist = haversineKm(userLoc.lat, userLoc.lng, ad.lat, ad.lng);
+      matchesLocation = dist <= NEARBY_RADIUS_KM;
+      distLabel = `${dist.toFixed(1)}km away`;
+    } // if either side is missing coordinates, treat as nationwide/unfiltered
+
+    seen.add(ad.id); // mark as processed either way, so we never re-check it
+    if(!matchesLocation) return;
+
+    const title = `📢 New ${ad.type || "Ad"} from a vendor!`;
+    const msg = `${adTitle(ad)} is live — ${distLabel}. Tap to check it out.`;
+    const notif = { id: "ad_" + ad.id, title, msg, time: Date.now(), unread: true, _flash: true };
+    notifs.unshift(notif);
+    addedAny = true;
+    showToast(title, msg);
+  });
+
+  if(addedAny){
+    saveJSON(NOTIF_KEY, notifs);
+    saveJSON(SEEN_KEY, [...seen]);
     render();
+    setTimeout(()=>{
+      // clear the one-time "flash" flag so re-renders don't keep re-animating it
+      const list = loadJSON(NOTIF_KEY, []);
+      list.forEach(n=> delete n._flash);
+      saveJSON(NOTIF_KEY, list);
+    }, 1600);
+  } else {
+    saveJSON(SEEN_KEY, [...seen]);
   }
+}
 
-  render();
+/* ---- boot ---- */
+seedNotifications();
+render();
+checkForNewAds();
+
+setInterval(checkForNewAds, POLL_MS);           // catches new ads posted in the SAME tab/app
+window.addEventListener("storage", (e)=>{        // catches new ads posted from ANOTHER tab (e.g. admin approving one)
+  if(e.key === "vendorCampaigns") checkForNewAds();
+});
 </script>
 </body>
 </html>
