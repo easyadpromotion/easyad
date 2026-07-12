@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script>if(sessionStorage.getItem("eap_admin_authed")!=="1"){document.documentElement.style.display="none";window.location.replace("admin_login.html");}</script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Landing Page Ads</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root{ --dark:#2d3436; --bg:#f0f2f5; --purple:#6c3ce9; --muted:#888; }
+        *{ box-sizing:border-box; }
+        body { font-family:'Poppins', sans-serif; background:#2d3436; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+        .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:var(--bg); border:8px solid #444; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.5), 0 0 0 2px #2d3436; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+
+        .header { background:var(--dark); padding:25px 20px 30px; color:#fff; border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(0,0,0,0.1); flex-shrink:0; }
+        .header-top { display:flex; justify-content:space-between; align-items:center; gap:10px; }
+        .header-left { display:flex; align-items:center; gap:10px; min-width:0; }
+        .back-btn { background:rgba(255,255,255,0.15); width:34px; height:34px; border-radius:10px; display:flex; align-items:center; justify-content:center; color:#fff; font-size:16px; font-weight:700; flex-shrink:0; border:none; cursor:pointer; }
+        .admin-title { font-size:18px; font-weight:700; }
+        .page-subtitle { font-size:11px; color:rgba(255,255,255,0.65); margin-top:2px; }
+        .header-btn { background:rgba(255,255,255,0.2); padding:8px 14px; border-radius:14px; font-size:11px; color:#fff; border:none; font-weight:700; cursor:pointer; font-family:inherit; }
+
+        .content { flex:1; overflow-y:auto; padding:16px 20px 30px; }
+        .content::-webkit-scrollbar{ display:none; }
+
+        /* ── LIST VIEW ── */
+        .ad-row { background:#fff; border-radius:16px; padding:14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.04); }
+        .ad-row.inactive { opacity:0.55; }
+        .ad-row-top { display:flex; align-items:flex-start; gap:12px; }
+        .ad-emoji-box { font-size:26px; width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0; }
+        .ad-row-info { flex:1; min-width:0; }
+        .ad-row-badge { display:inline-block; font-size:9px; font-weight:800; padding:2px 8px; border-radius:8px; margin-bottom:4px; }
+        .ad-row-title { font-size:13px; font-weight:700; color:#333; }
+        .ad-row-desc { font-size:10.5px; color:var(--muted); margin-top:2px; line-height:1.4; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+        .ad-row-actions { display:flex; gap:6px; margin-top:12px; align-items:center; }
+        .ad-btn { border:none; border-radius:10px; padding:7px 10px; font-size:10.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+        .ad-btn-edit { background:#e3f2fd; color:#1565c0; }
+        .ad-btn-delete { background:#ffebee; color:#c62828; }
+        .ad-btn-move { background:var(--bg); color:#555; width:30px; padding:7px 0; }
+        .ad-toggle { margin-left:auto; display:flex; align-items:center; gap:6px; font-size:10px; font-weight:700; color:var(--muted); cursor:pointer; }
+        .switch { width:34px; height:19px; background:#ddd; border-radius:10px; position:relative; transition:0.2s; flex-shrink:0; }
+        .switch.on { background:#4caf50; }
+        .switch::after { content:""; position:absolute; top:2px; left:2px; width:15px; height:15px; background:#fff; border-radius:50%; transition:0.2s; box-shadow:0 1px 3px rgba(0,0,0,0.3); }
+        .switch.on::after { transform:translateX(15px); }
+
+        .add-btn { display:block; width:100%; background:var(--purple); color:#fff; border:none; padding:14px; border-radius:16px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; margin-bottom:16px; box-shadow:0 6px 14px rgba(108,60,233,0.3); }
+        .reset-link { display:block; text-align:center; font-size:11px; color:var(--muted); text-decoration:underline; margin-top:8px; background:none; border:none; cursor:pointer; font-family:inherit; width:100%; padding:6px; }
+        .empty-state { text-align:center; color:#aaa; font-size:12px; margin-top:40px; }
+
+        /* ── EDIT VIEW ── */
+        #editView { display:none; }
+        .field-label { display:block; font-size:10.5px; font-weight:700; color:#555; text-transform:uppercase; letter-spacing:0.4px; margin:14px 0 6px; }
+        .field-input, .field-textarea { width:100%; padding:11px; border:1.5px solid #e2e2e2; border-radius:10px; font-family:inherit; font-size:13px; background:#fff; }
+        .field-textarea { resize:vertical; min-height:60px; }
+        .field-row { display:flex; gap:10px; }
+        .field-row > div { flex:1; }
+        .color-input { width:100%; height:40px; border:1.5px solid #e2e2e2; border-radius:10px; padding:3px; background:#fff; cursor:pointer; }
+        .field-hint { font-size:10px; color:var(--muted); margin-top:4px; }
+        .toggle-row { display:flex; align-items:center; justify-content:space-between; margin:14px 0 4px; }
+        .toggle-row span { font-size:12px; font-weight:700; color:#333; }
+
+        /* live preview — mirrors index.html's real slide styling exactly */
+        .preview-wrap { background:var(--dark); border-radius:16px; padding:14px; margin:18px 0 4px; }
+        .preview-label { font-size:10px; color:rgba(255,255,255,0.5); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
+        .preview-card { background:#fff; border-radius:16px; padding:20px 18px 16px; text-align:center; }
+        .p-emoji { font-size:38px; display:block; margin-bottom:8px; }
+        .p-badge { display:inline-block; font-size:9px; font-weight:800; padding:4px 14px; border-radius:12px; border:1px solid; margin-bottom:10px; letter-spacing:0.5px; }
+        .p-title { font-size:18px; font-weight:800; color:#333; margin-bottom:7px; }
+        .p-desc { font-size:11px; color:#777; line-height:1.6; }
+        .p-cta { display:inline-block; margin-top:14px; background:#ff9800; color:#fff; padding:10px 26px; border-radius:25px; font-size:12px; font-weight:700; }
+
+        .btn-row { display:flex; gap:10px; margin-top:20px; margin-bottom:20px; }
+        .btn-primary { flex:1; background:var(--purple); color:#fff; border:none; padding:14px; border-radius:14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; }
+        .btn-cancel { flex:1; background:#fff; color:#555; border:1.5px solid #e2e2e2; padding:14px; border-radius:14px; font-size:13px; font-weight:700; font-family:inherit; cursor:pointer; }
+    </style>
+</head>
+<body>
+
+<div class="mobile-screen">
+
+    <div class="header">
+        <div class="header-top">
+            <div class="header-left">
+                <button class="back-btn" id="backBtn">‹</button>
+                <div>
+                    <div class="admin-title" id="pageTitle">Landing Page Ads</div>
+                    <div class="page-subtitle" id="pageSubtitle">Homepage carousel — index.html</div>
+                </div>
+            </div>
+            <button class="header-btn" id="headerActionBtn">+ New</button>
+        </div>
+    </div>
+
+    <div class="content">
+
+        <!-- LIST VIEW -->
+        <div id="listView">
+            <p style="font-size:11px; color:var(--muted); line-height:1.5; margin:0 0 16px;">
+                These are the slides shown in the rotating banner at the bottom of your homepage (index.html). Changes save instantly — no need to redeploy.
+            </p>
+            <div id="adList"></div>
+            <button class="reset-link" id="resetBtn">Reset to default 3 ads</button>
+        </div>
+
+        <!-- EDIT / ADD VIEW -->
+        <div id="editView">
+            <label class="field-label">Emoji</label>
+            <input class="field-input" id="f_emoji" placeholder="✈️🌴" maxlength="6">
+
+            <div class="field-row">
+                <div>
+                    <label class="field-label">Badge / Tab Text</label>
+                    <input class="field-input" id="f_badge" placeholder="EAP MEGA GIVEAWAY">
+                </div>
+            </div>
+
+            <div class="field-row">
+                <div>
+                    <label class="field-label">Badge Color</label>
+                    <input class="color-input" type="color" id="f_badgeColor" value="#ff8f00">
+                </div>
+                <div>
+                    <label class="field-label">Badge Background</label>
+                    <input class="color-input" type="color" id="f_badgeBg" value="#fff3e0">
+                </div>
+            </div>
+
+            <label class="field-label">Title</label>
+            <input class="field-input" id="f_title" placeholder="Win a Trip to Dubai!">
+
+            <label class="field-label">Description</label>
+            <textarea class="field-textarea" id="f_desc" placeholder="Short description shown under the title…"></textarea>
+
+            <div class="field-row">
+                <div>
+                    <label class="field-label">Button Text (optional)</label>
+                    <input class="field-input" id="f_cta" placeholder="View Leaderboard">
+                </div>
+                <div>
+                    <label class="field-label">Button Link</label>
+                    <input class="field-input" id="f_ctaLink" placeholder="user_login.html">
+                </div>
+            </div>
+            <div class="field-hint">Leave "Button Text" empty to show no button on this slide.</div>
+
+            <label class="field-label">Duration on screen (seconds)</label>
+            <input class="field-input" type="number" id="f_duration" min="2" max="30" value="5">
+
+            <div class="toggle-row">
+                <span>Active (visible on homepage)</span>
+                <div class="switch on" id="f_activeSwitch"></div>
+            </div>
+
+            <div class="preview-wrap">
+                <div class="preview-label">Live Preview</div>
+                <div class="preview-card">
+                    <span class="p-emoji" id="p_emoji">📢</span>
+                    <span class="p-badge" id="p_badge">PROMO</span>
+                    <div class="p-title" id="p_title">Title goes here</div>
+                    <div class="p-desc" id="p_desc">Description goes here</div>
+                    <br>
+                    <a class="p-cta" id="p_cta" style="display:none;">Button</a>
+                </div>
+            </div>
+
+            <div class="btn-row">
+                <button class="btn-cancel" id="cancelBtn">Cancel</button>
+                <button class="btn-primary" id="saveBtn">Save Ad</button>
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+const STORAGE_KEY = "indexBannerAds";
+
+// Must stay IDENTICAL to index.html's own DEFAULT_ADS fallback, so the very
+// first time an admin opens this page there's no jarring difference between
+// what they see here and what's already live on the homepage.
+const DEFAULT_ADS = [
+    { id:"def1", emoji:"✈️🌴", badge:"EAP MEGA GIVEAWAY", badgeColor:"#ff8f00", badgeBg:"#fff3e0",
+      title:"Win a Trip to Dubai!", desc:"Top earners this month win an all-expenses paid trip. Login now to check the leaderboard!",
+      cta:"View Leaderboard", ctaLink:"user_login.html", duration:5, active:true },
+    { id:"def2", emoji:"💰🎁", badge:"REFER & EARN", badgeColor:"#2e7d32", badgeBg:"#e8f5e9",
+      title:"Invite Friends, Earn ₹50!", desc:"Share your referral code and earn ₹50 for every friend who joins EAP.",
+      cta:"Refer Now", ctaLink:"user_login.html", duration:5, active:true },
+    { id:"def3", emoji:"📱💸", badge:"NEW FEATURE", badgeColor:"#1565c0", badgeBg:"#e3f2fd",
+      title:"Video Ads Now Pay ₹10!", desc:"Watch short video ads and earn up to ₹10 per video. New videos added daily!",
+      cta:"Watch & Earn", ctaLink:"user_login.html", duration:5, active:true }
+];
+
+function loadAds(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){ return DEFAULT_ADS.slice(); } }
+  return DEFAULT_ADS.slice();
+}
+function saveAds(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
+
+let ads = loadAds();
+let editingId = null; // null = adding new
+
+function esc(s){ const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+
+// ── LIST VIEW ──────────────────────────────────────────────────────────
+function renderList(){
+  const container = document.getElementById("adList");
+  if(ads.length === 0){
+    container.innerHTML = `<div class="empty-state">No ads yet. Tap "+ New" to add one.</div>`;
+    return;
+  }
+  container.innerHTML = ads.map((ad, i) => `
+    <div class="ad-row ${ad.active === false ? "inactive" : ""}">
+      <div class="ad-row-top">
+        <div class="ad-emoji-box">${esc(ad.emoji) || "📢"}</div>
+        <div class="ad-row-info">
+          <span class="ad-row-badge" style="color:${ad.badgeColor || "#ff8f00"}; background:${ad.badgeBg || "#fff3e0"};">${esc(ad.badge) || "PROMO"}</span>
+          <div class="ad-row-title">${esc(ad.title) || "(no title)"}</div>
+          <div class="ad-row-desc">${esc(ad.desc)}</div>
+        </div>
+      </div>
+      <div class="ad-row-actions">
+        <button class="ad-btn ad-btn-move" data-act="up" data-i="${i}" ${i===0 ? "disabled style='opacity:0.3;'" : ""}>▲</button>
+        <button class="ad-btn ad-btn-move" data-act="down" data-i="${i}" ${i===ads.length-1 ? "disabled style='opacity:0.3;'" : ""}>▼</button>
+        <button class="ad-btn ad-btn-edit" data-act="edit" data-i="${i}">✏️ Edit</button>
+        <button class="ad-btn ad-btn-delete" data-act="delete" data-i="${i}">🗑️</button>
+        <div class="ad-toggle" data-act="toggle" data-i="${i}">
+          <div class="switch ${ad.active === false ? "" : "on"}"></div>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  container.querySelectorAll("[data-act]").forEach(el=>{
+    const i = parseInt(el.dataset.i, 10);
+    const act = el.dataset.act;
+    el.onclick = ()=>{
+      if(act === "edit") openEdit(i);
+      else if(act === "delete") deleteAd(i);
+      else if(act === "toggle") toggleActive(i);
+      else if(act === "up") moveAd(i, -1);
+      else if(act === "down") moveAd(i, 1);
+    };
+  });
+}
+
+function toggleActive(i){
+  ads[i].active = ads[i].active === false ? true : false;
+  saveAds(ads);
+  renderList();
+}
+function deleteAd(i){
+  if(!confirm(`Delete "${ads[i].title || "this ad"}"? This can't be undone.`)) return;
+  ads.splice(i, 1);
+  saveAds(ads);
+  renderList();
+}
+function moveAd(i, dir){
+  const j = i + dir;
+  if(j < 0 || j >= ads.length) return;
+  const tmp = ads[i]; ads[i] = ads[j]; ads[j] = tmp;
+  saveAds(ads);
+  renderList();
+}
+
+document.getElementById("resetBtn").onclick = ()=>{
+  if(!confirm("Replace ALL current ads with the original default 3? This can't be undone.")) return;
+  ads = DEFAULT_ADS.slice();
+  saveAds(ads);
+  renderList();
+};
+
+// ── EDIT VIEW ──────────────────────────────────────────────────────────
+const FIELDS = ["emoji","badge","badgeColor","badgeBg","title","desc","cta","ctaLink","duration"];
+
+function openEdit(i){
+  editingId = i;
+  const ad = ads[i];
+  document.getElementById("f_emoji").value = ad.emoji || "";
+  document.getElementById("f_badge").value = ad.badge || "";
+  document.getElementById("f_badgeColor").value = ad.badgeColor || "#ff8f00";
+  document.getElementById("f_badgeBg").value = ad.badgeBg || "#fff3e0";
+  document.getElementById("f_title").value = ad.title || "";
+  document.getElementById("f_desc").value = ad.desc || "";
+  document.getElementById("f_cta").value = ad.cta || "";
+  document.getElementById("f_ctaLink").value = ad.ctaLink || "";
+  document.getElementById("f_duration").value = ad.duration || 5;
+  setSwitch(ad.active !== false);
+  showEditView(`Edit Ad`);
+}
+
+function openAdd(){
+  editingId = null;
+  document.getElementById("f_emoji").value = "📢";
+  document.getElementById("f_badge").value = "";
+  document.getElementById("f_badgeColor").value = "#ff8f00";
+  document.getElementById("f_badgeBg").value = "#fff3e0";
+  document.getElementById("f_title").value = "";
+  document.getElementById("f_desc").value = "";
+  document.getElementById("f_cta").value = "";
+  document.getElementById("f_ctaLink").value = "";
+  document.getElementById("f_duration").value = 5;
+  setSwitch(true);
+  showEditView("New Ad");
+}
+
+function setSwitch(on){
+  const sw = document.getElementById("f_activeSwitch");
+  sw.classList.toggle("on", on);
+  sw.dataset.on = on ? "1" : "0";
+}
+document.getElementById("f_activeSwitch").onclick = function(){
+  setSwitch(this.dataset.on !== "1");
+};
+
+function showEditView(title){
+  document.getElementById("pageTitle").textContent = title;
+  document.getElementById("pageSubtitle").textContent = "index.html carousel slide";
+  document.getElementById("listView").style.display = "none";
+  document.getElementById("editView").style.display = "block";
+  document.getElementById("headerActionBtn").style.display = "none";
+  document.getElementById("backBtn").onclick = cancelEdit;
+  updatePreview();
+}
+function showListView(){
+  document.getElementById("pageTitle").textContent = "Landing Page Ads";
+  document.getElementById("pageSubtitle").textContent = "Homepage carousel — index.html";
+  document.getElementById("listView").style.display = "block";
+  document.getElementById("editView").style.display = "none";
+  document.getElementById("headerActionBtn").style.display = "inline-block";
+  document.getElementById("backBtn").onclick = ()=>{ window.location.href = "admin_dashboard.html"; };
+  renderList();
+}
+
+function cancelEdit(){ showListView(); }
+document.getElementById("cancelBtn").onclick = cancelEdit;
+document.getElementById("headerActionBtn").onclick = openAdd;
+
+document.getElementById("saveBtn").onclick = ()=>{
+  const title = document.getElementById("f_title").value.trim();
+  if(!title){ alert("Please enter a title for this ad."); return; }
+
+  const adData = {
+    emoji: document.getElementById("f_emoji").value.trim() || "📢",
+    badge: document.getElementById("f_badge").value.trim() || "PROMO",
+    badgeColor: document.getElementById("f_badgeColor").value,
+    badgeBg: document.getElementById("f_badgeBg").value,
+    title: title,
+    desc: document.getElementById("f_desc").value.trim(),
+    cta: document.getElementById("f_cta").value.trim(),
+    ctaLink: document.getElementById("f_ctaLink").value.trim() || "#",
+    duration: Math.max(2, parseInt(document.getElementById("f_duration").value, 10) || 5),
+    active: document.getElementById("f_activeSwitch").dataset.on === "1"
+  };
+
+  if(editingId === null){
+    adData.id = "ad_" + Date.now();
+    ads.push(adData);
+  } else {
+    adData.id = ads[editingId].id; // keep existing id
+    ads[editingId] = adData;
+  }
+  saveAds(ads);
+  showListView();
+};
+
+// live preview updates as you type
+function updatePreview(){
+  document.getElementById("p_emoji").textContent = document.getElementById("f_emoji").value || "📢";
+  const badgeText = document.getElementById("f_badge").value || "PROMO";
+  const bColor = document.getElementById("f_badgeColor").value;
+  const bBg = document.getElementById("f_badgeBg").value;
+  const badgeEl = document.getElementById("p_badge");
+  badgeEl.textContent = badgeText;
+  badgeEl.style.color = bColor;
+  badgeEl.style.background = bBg;
+  badgeEl.style.borderColor = bColor;
+  document.getElementById("p_title").textContent = document.getElementById("f_title").value || "Title goes here";
+  document.getElementById("p_desc").textContent = document.getElementById("f_desc").value || "Description goes here";
+  const ctaText = document.getElementById("f_cta").value;
+  const ctaEl = document.getElementById("p_cta");
+  if(ctaText){ ctaEl.style.display = "inline-block"; ctaEl.textContent = ctaText; }
+  else { ctaEl.style.display = "none"; }
+}
+["f_emoji","f_badge","f_badgeColor","f_badgeBg","f_title","f_desc","f_cta"].forEach(id=>{
+  document.getElementById(id).addEventListener("input", updatePreview);
+});
+
+// ── boot ──
+document.getElementById("backBtn").onclick = ()=>{ window.location.href = "admin_dashboard.html"; };
+renderList();
+</script>
+</body>
+</html>
