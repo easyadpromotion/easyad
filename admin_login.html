@@ -112,21 +112,48 @@
 
         <p class="error-msg" id="errorText">❌ Access Denied. Invalid Credentials.</p>
 
-        <a href="#" class="footer-link">Lost access key? Contact Developers.</a>
+        <a href="#" class="footer-link" id="toggleChangePass">Change admin password</a>
+
+        <div id="changePassBox" style="display:none; text-align:left; margin-top:20px; padding-top:20px; border-top:1px solid #eee;">
+            <div class="input-group">
+                <label>Current Password</label>
+                <input type="password" id="curPass" placeholder="Current password">
+            </div>
+            <div class="input-group">
+                <label>New Password</label>
+                <input type="password" id="newPass" placeholder="New password">
+            </div>
+            <div class="input-group" style="margin-bottom:10px;">
+                <label>Confirm New Password</label>
+                <input type="password" id="confirmPass" placeholder="Confirm new password">
+            </div>
+            <button class="btn-login" style="background:#555; font-size:14px; padding:12px;" onclick="changePassword()">Update Password</button>
+            <p id="changeMsg" style="font-size:12px; font-weight:700; margin-top:10px; display:none;"></p>
+        </div>
     </div>
 
     <script>
+        // If this browser already has a valid session on THIS site, skip straight to the dashboard.
+        if (sessionStorage.getItem('eap_admin_authed') === '1') {
+            window.location.href = "admin_dashboard.html";
+        }
+
         function checkLogin() {
             var id = document.getElementById('adminId').value;
             var pass = document.getElementById('adminPass').value;
             var error = document.getElementById('errorText');
 
             // 1. GET STORED PASSWORD (or use default 'admin123' if none exists)
+            // NOTE: this is stored per-website (per browser origin). A password set
+            // while testing on your computer (file://...) will NOT carry over to the
+            // live site (https://easyadpromotion.com) — they're separate storage.
+            // Use "Change admin password" below, ON THE LIVE SITE, to set it there.
             var storedPass = localStorage.getItem('admin_password') || "admin123";
 
             // 2. CHECK CREDENTIALS
             // ID is fixed as 'admin', Password checks against storedPass
             if(id === "admin" && pass === storedPass) {
+                sessionStorage.setItem('eap_admin_authed', '1'); // unlocks the dashboard pages for this browser tab session
                 window.location.href = "admin_dashboard.html";
             } else {
                 error.style.display = "block";
@@ -134,6 +161,41 @@
                 card.style.transform = "translateX(10px)";
                 setTimeout(() => card.style.transform = "translateX(0)", 100);
             }
+        }
+
+        // Allow pressing Enter in either field to submit
+        document.getElementById('adminId').addEventListener('keydown', e => { if(e.key === 'Enter') checkLogin(); });
+        document.getElementById('adminPass').addEventListener('keydown', e => { if(e.key === 'Enter') checkLogin(); });
+
+        // ---- Change Password tool ----
+        document.getElementById('toggleChangePass').onclick = function(e){
+            e.preventDefault();
+            var box = document.getElementById('changePassBox');
+            box.style.display = box.style.display === 'none' ? 'block' : 'none';
+        };
+
+        function changePassword(){
+            var storedPass = localStorage.getItem('admin_password') || "admin123";
+            var cur = document.getElementById('curPass').value;
+            var next = document.getElementById('newPass').value;
+            var confirm = document.getElementById('confirmPass').value;
+            var msg = document.getElementById('changeMsg');
+
+            function show(text, ok){
+                msg.textContent = text;
+                msg.style.color = ok ? '#2e7d32' : '#d63031';
+                msg.style.display = 'block';
+            }
+
+            if(cur !== storedPass){ show('❌ Current password is incorrect.', false); return; }
+            if(next.length < 4){ show('❌ New password must be at least 4 characters.', false); return; }
+            if(next !== confirm){ show('❌ New password and confirmation do not match.', false); return; }
+
+            localStorage.setItem('admin_password', next);
+            show('✅ Password updated on this site. Use it next time you log in here.', true);
+            document.getElementById('curPass').value = '';
+            document.getElementById('newPass').value = '';
+            document.getElementById('confirmPass').value = '';
         }
     </script>
 
