@@ -6,246 +6,80 @@
     <title>Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-/* ============================================================
-   SHARED STYLES — used by every page in the admin dashboard app
-   ============================================================ */
-:root{
-  --dark:#2d3436;
-  --bg:#f0f2f5;
-  --purple:#6c3ce9;
-  --purple-dark:#5629d6;
-  --red:#d63031;
-  --green:#2e7d32;
-  --muted:#888;
-  --text:#333;
-}
+        /* 1. APP FRAME STYLES */
+        body { 
+            font-family: 'Poppins', sans-serif; background: #2d3436; 
+            margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; 
+        }
+        
+        .mobile-screen { 
+            width: 100%; max-width: 380px; min-height: 100vh;
+            background: #f0f2f5; border: 8px solid #444; border-radius: 40px; 
+            box-shadow: 0 30px 60px rgba(0,0,0,0.5), 0 0 0 2px #2d3436;
+            display: flex; flex-direction: column;
+            box-sizing: border-box; position: relative; overflow: hidden;
+        }
 
-*{ box-sizing:border-box; }
+        /* HEADER */
+        .header {
+            background: #2d3436; padding: 25px 20px 40px 20px; color: white;
+            border-radius: 0 0 20px 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        .header-top { display: flex; justify-content: space-between; align-items: center; }
+        .admin-title { font-size: 20px; font-weight: 700; }
+        .logout-btn { 
+            background: rgba(255,255,255,0.2); padding: 5px 12px; 
+            border-radius: 15px; font-size: 11px; color: white; text-decoration: none; font-weight: 600;
+        }
 
-body{
-  font-family:'Poppins', sans-serif; background:#2d3436;
-  margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh;
-}
+        /* STATS GRID (Overlaps Header) */
+        .stats-grid { 
+            display: grid; grid-template-columns: 1fr 1fr; gap: 15px; 
+            padding: 0 20px; margin-top: -30px; 
+        }
+        .stat-card { 
+            background: white; padding: 15px; border-radius: 12px; 
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05); text-align: center; 
+        }
+        .stat-num { font-size: 20px; font-weight: 700; color: #2d3436; display: block; }
+        .stat-label { font-size: 11px; color: #888; font-weight: 500; text-transform: uppercase; }
 
-.mobile-screen{
-  width:100%; max-width:380px; min-height:100vh;
-  background:var(--bg); border:8px solid #444; border-radius:40px;
-  box-shadow:0 30px 60px rgba(0,0,0,0.5), 0 0 0 2px #2d3436;
-  display:flex; flex-direction:column;
-  box-sizing:border-box; position:relative; overflow:hidden;
-}
+        /* ACTION LIST */
+        .section-title { margin: 25px 20px 10px; font-size: 14px; font-weight: 700; color: #555; }
+        
+        .action-list { padding: 0 20px; flex: 1; overflow-y: auto; padding-bottom: 50px; }
+        .action-list::-webkit-scrollbar { display: none; }
 
-/* HEADER */
-.header{
-  background:var(--dark); padding:25px 20px 40px 20px; color:#fff;
-  border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(0,0,0,0.1);
-}
-.header-top{ display:flex; justify-content:space-between; align-items:center; gap:10px; }
-.header-left{ display:flex; align-items:center; gap:10px; min-width:0; }
-.back-btn{
-  background:rgba(255,255,255,0.15); width:34px; height:34px; border-radius:10px;
-  display:flex; align-items:center; justify-content:center; color:#fff; text-decoration:none;
-  font-size:16px; font-weight:700; flex-shrink:0; border:none; cursor:pointer;
-}
-.logo{ display:flex; align-items:center; gap:8px; flex-shrink:0; }
-.logo svg{ display:block; }
-.admin-title{ font-size:19px; font-weight:700; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.page-subtitle{ font-size:11px; color:rgba(255,255,255,0.65); margin-top:2px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.logout-btn{
-  background:rgba(255,255,255,0.2); padding:5px 12px;
-  border-radius:15px; font-size:11px; color:#fff; text-decoration:none; font-weight:600; flex-shrink:0;
-}
-.help-btn{
-  width:30px; height:30px; border-radius:50%; border:1.5px solid rgba(255,255,255,0.5);
-  display:flex; align-items:center; justify-content:center; color:#fff; font-size:13px; font-weight:700;
-  background:transparent; cursor:pointer; flex-shrink:0;
-}
+        .action-card { 
+            background: white; padding: 15px; border-radius: 15px; margin-bottom: 12px; 
+            display: flex; align-items: center; text-decoration: none; color: inherit;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.03); transition: transform 0.2s;
+        }
+        .action-card:active { transform: scale(0.98); background: #f9f9f9; }
 
-/* STATS GRID */
-.stats-grid{
-  display:grid; grid-template-columns:1fr 1fr; gap:15px;
-  padding:0 20px; margin-top:-30px;
-}
-.stat-card{
-  background:#fff; padding:15px; border-radius:12px;
-  box-shadow:0 4px 10px rgba(0,0,0,0.05); text-align:center;
-  text-decoration:none; color:inherit; display:block; border:none; cursor:pointer; width:100%;
-  font-family:inherit;
-}
-.stat-num{ font-size:20px; font-weight:700; color:var(--dark); display:block; }
-.stat-label{ font-size:11px; color:var(--muted); font-weight:500; text-transform:uppercase; }
+        .icon-box { 
+            width: 45px; height: 45px; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: center; 
+            font-size: 22px; margin-right: 15px; 
+        }
+        .ac-text h4 { margin: 0; font-size: 14px; color: #333; font-weight: 700; }
+        .ac-text p { margin: 2px 0 0; font-size: 11px; color: #888; }
+        .arrow { margin-left: auto; color: #ccc; font-weight: bold; }
 
-/* SECTION TITLE */
-.section-title{ margin:25px 20px 10px; font-size:14px; font-weight:700; color:#555; }
+        /* BADGE */
+        .badge { 
+            background: #d63031; color: white; font-size: 10px; font-weight: 700;
+            padding: 2px 8px; border-radius: 10px; margin-left: 8px; 
+        }
 
-/* ACTION LIST / CARDS */
-.action-list{ padding:0 20px; flex:1; overflow-y:auto; padding-bottom:50px; }
-.action-list::-webkit-scrollbar{ display:none; }
+        /* COLORS */
+        .bg-orange { background: #fff3e0; color: #e65100; }
+        .bg-blue { background: #e3f2fd; color: #1565c0; }
+        .bg-green { background: #e8f5e9; color: #2e7d32; }
+        .bg-purple { background: #f3e5f5; color: #7b1fa2; }
+        .bg-teal { background: #e0f7fa; color: #00796b; }
 
-.action-card{
-  background:#fff; padding:15px; border-radius:15px; margin-bottom:12px;
-  display:flex; align-items:center; text-decoration:none; color:inherit;
-  box-shadow:0 2px 5px rgba(0,0,0,0.03); transition:transform 0.2s;
-  border:none; width:100%; cursor:pointer; font-family:inherit; text-align:left;
-}
-.action-card:active{ transform:scale(0.98); background:#f9f9f9; }
-
-.icon-box{
-  width:45px; height:45px; border-radius:12px;
-  display:flex; align-items:center; justify-content:center;
-  font-size:22px; margin-right:15px; flex-shrink:0;
-}
-.ac-text{ flex:1; min-width:0; }
-.ac-text h4{ margin:0; font-size:14px; color:#333; font-weight:700; }
-.ac-text p{ margin:2px 0 0; font-size:11px; color:#888; }
-.arrow{ margin-left:auto; color:#ccc; font-weight:bold; }
-
-.badge{
-  background:var(--red); color:#fff; font-size:10px; font-weight:700;
-  padding:2px 8px; border-radius:10px; margin-left:8px;
-}
-
-.bg-orange{ background:#fff3e0; color:#e65100; }
-.bg-blue{ background:#e3f2fd; color:#1565c0; }
-.bg-green{ background:#e8f5e9; color:#2e7d32; }
-.bg-purple{ background:#f3e5f5; color:#7b1fa2; }
-.bg-teal{ background:#e0f7fa; color:#00796b; }
-.bg-pink{ background:#fce4ec; color:#ad1457; }
-
-/* SCROLLABLE CONTENT AREA */
-.content{ flex:1; overflow-y:auto; padding:0 20px 30px; }
-.content::-webkit-scrollbar{ display:none; }
-
-/* PERIOD SELECTOR */
-.period-row{
-  display:flex; gap:8px; overflow-x:auto; padding:14px 0 4px; margin-bottom:4px;
-}
-.period-row::-webkit-scrollbar{ display:none; }
-.period-chip{
-  flex-shrink:0; padding:7px 13px; border-radius:16px; font-size:11px; font-weight:600;
-  background:#fff; color:#666; border:1px solid #e2e2e2; cursor:pointer; white-space:nowrap;
-}
-.period-chip.active{ background:var(--dark); color:#fff; border-color:var(--dark); }
-.date-range-row{ display:none; gap:10px; margin:8px 0 6px; }
-.date-range-row.show{ display:flex; }
-.date-range-row input{
-  flex:1; padding:9px 10px; border-radius:10px; border:1px solid #e2e2e2; font-size:12px; font-family:inherit;
-}
-
-/* DATA BOX (metric card wrapper) */
-.box-grid{ display:flex; flex-direction:column; gap:14px; margin:12px 0; }
-.data-box{
-  background:#fff; border-radius:14px; padding:14px; box-shadow:0 2px 6px rgba(0,0,0,0.04);
-}
-.data-box h5{ margin:0; font-size:13px; font-weight:700; color:var(--dark); }
-.metric-head{ display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
-.metric-total{ font-size:15px; font-weight:700; color:var(--purple); }
-
-/* STATE LIST (Pan-India, per metric) */
-.state-list{ display:flex; flex-direction:column; }
-.state-row{
-  display:flex; align-items:center; padding:11px 2px; border-bottom:1px solid #f1f1f1;
-  text-decoration:none; color:inherit;
-}
-.state-row:last-child{ border-bottom:none; }
-.state-name{ flex:1; font-size:12.5px; color:var(--text); font-weight:600; }
-.state-val{ font-size:13px; font-weight:700; color:var(--dark); margin-right:8px; }
-.state-arrow{ color:#ccc; font-weight:700; font-size:13px; }
-.show-all-btn{
-  width:100%; margin-top:8px; padding:9px; border-radius:10px; border:1px dashed #d8cffa;
-  background:#f7f3ff; color:var(--purple); font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit;
-}
-
-/* DISTRICT / GEO TREE (state drill-down) */
-.geo-tree{ display:flex; flex-direction:column; gap:2px; }
-.geo-row{ display:flex; align-items:center; padding:7px 0; border-bottom:1px dashed #eee; }
-.geo-row:last-child{ border-bottom:none; }
-.geo-name{ flex:1; font-size:12px; color:var(--text); }
-.geo-val{ font-size:12.5px; font-weight:700; color:var(--dark); }
-.geo-tag{
-  font-size:9px; font-weight:700; text-transform:uppercase; color:#fff; background:#9c88e0;
-  padding:2px 6px; border-radius:6px; margin-right:8px; flex-shrink:0;
-}
-.lvl-district{ padding-bottom:2px; }
-.lvl-district .geo-name{ font-size:13.5px; font-weight:700; color:var(--dark); }
-.lvl-district .geo-val{ font-size:14px; color:var(--purple); }
-.lvl-place{ padding-left:14px; }
-.lvl-sub{ padding-left:44px; }
-.lvl-sub .geo-name, .lvl-sub .geo-val{ font-size:10px; color:var(--muted); font-weight:500; }
-.district-block{ padding:10px 0; border-bottom:1px solid #f1f1f1; }
-.district-block:last-child{ border-bottom:none; }
-
-/* CHART CONTAINER */
-.chart-card{
-  background:#fff; border-radius:14px; padding:14px; margin:12px 0; box-shadow:0 2px 6px rgba(0,0,0,0.04);
-}
-.chart-card h5{ margin:0 0 10px; font-size:13px; font-weight:700; color:var(--dark); }
-.chart-wrap{ position:relative; height:150px; }
-.chart-legend{ display:flex; gap:14px; flex-wrap:wrap; margin-top:8px; }
-.legend-item{ display:flex; align-items:center; gap:5px; font-size:10px; color:var(--muted); font-weight:600; }
-.legend-dot{ width:8px; height:8px; border-radius:50%; flex-shrink:0; }
-
-/* PRIMARY / DOWNLOAD BUTTON */
-.btn-primary{
-  display:block; width:100%; background:var(--purple); color:#fff; border:none;
-  padding:15px; border-radius:16px; font-size:14px; font-weight:700; font-family:inherit;
-  cursor:pointer; text-align:center; box-shadow:0 6px 14px rgba(108,60,233,0.35);
-}
-.btn-primary:active{ background:var(--purple-dark); }
-.btn-row{ display:flex; gap:10px; margin:14px 0; }
-.btn-row .btn-primary{ flex:1; padding:13px; font-size:12.5px; box-shadow:none; }
-.btn-secondary{
-  background:#fff; color:var(--dark); border:1.5px solid #e2e2e2;
-}
-
-.fixed-bottom{
-  position:sticky; bottom:0; background:linear-gradient(0deg, var(--bg) 60%, rgba(240,242,245,0));
-  padding:16px 20px 20px;
-}
-
-/* HISTORY TABLE */
-.tx-list{ display:flex; flex-direction:column; gap:10px; margin-top:10px; }
-.tx-row{
-  background:#fff; border-radius:12px; padding:12px 14px; display:flex; justify-content:space-between;
-  align-items:center; box-shadow:0 2px 5px rgba(0,0,0,0.03);
-}
-.tx-left h6{ margin:0; font-size:12.5px; font-weight:700; color:var(--text); }
-.tx-left span{ font-size:10.5px; color:var(--muted); }
-.tx-right{ text-align:right; }
-.tx-amt{ font-size:13px; font-weight:700; color:var(--dark); }
-.tx-status{ font-size:9.5px; font-weight:700; padding:2px 8px; border-radius:8px; margin-top:3px; display:inline-block; }
-.st-success{ background:#e8f5e9; color:#2e7d32; }
-.st-pending{ background:#fff3e0; color:#e65100; }
-.st-failed{ background:#ffebee; color:#c62828; }
-
-/* STATEMENT PAGE (screenshot style) */
-.tabbar{
-  display:flex; background:#e9ebee; border-radius:14px; padding:4px; margin:14px 0;
-}
-.tabbar button{
-  flex:1; border:none; background:transparent; padding:11px; border-radius:11px;
-  font-size:13px; font-weight:700; font-family:inherit; color:#8a8f98; cursor:pointer;
-}
-.tabbar button.active{ background:#fff; color:var(--dark); box-shadow:0 2px 5px rgba(0,0,0,0.08); }
-
-.radio-list{ display:flex; flex-direction:column; }
-.radio-item{
-  display:flex; justify-content:space-between; align-items:center;
-  padding:18px 4px; border-bottom:1px solid #e6e6e6; cursor:pointer;
-}
-.radio-item span{ font-size:15px; color:var(--text); }
-.radio-circle{
-  width:24px; height:24px; border-radius:50%; border:2px solid #ccc; flex-shrink:0;
-  display:flex; align-items:center; justify-content:center;
-}
-.radio-item.checked .radio-circle{ background:var(--green); border-color:var(--green); color:#fff; font-size:13px; font-weight:700; }
-
-@media (max-width:400px){
-  body{ padding:0; }
-  .mobile-screen{ border-radius:0; border:none; min-height:100vh; }
-}
-
-</style>
+    </style>
 </head>
 <body onload="loadStats()">
 
@@ -253,29 +87,24 @@ body{
 
     <div class="header">
         <div class="header-top">
-            <div class="header-left">
-                <div class="logo" id="logoSlot"></div>
-                <div>
-                    <div class="admin-title">Master Control 🛡️</div>
-                </div>
-            </div>
+            <div class="admin-title">Master Control 🛡️</div>
             <a href="admin_login.html" class="logout-btn">Log Out</a>
         </div>
     </div>
 
     <div class="stats-grid">
-        <a href="revenue_dashboard.html" class="stat-card">
+        <div class="stat-card">
             <span class="stat-num">₹ 45.2k</span>
             <span class="stat-label">Revenue</span>
-        </a>
-        <a href="user_dashboard.html" class="stat-card">
+        </div>
+        <div class="stat-card">
             <span class="stat-num">1,250</span>
             <span class="stat-label">Users</span>
-        </a>
-        <a href="live_ads.html" class="stat-card">
+        </div>
+        <div class="stat-card">
             <span class="stat-num">85</span>
             <span class="stat-label">Live Ads</span>
-        </a>
+        </div>
         <div class="stat-card">
             <span class="stat-num" style="color:#d63031;" id="totalPending">0</span>
             <span class="stat-label">Pending</span>
@@ -291,6 +120,15 @@ body{
             <div class="ac-text">
                 <h4>Ad Approvals <span class="badge" id="badgePending">0</span></h4>
                 <p>Verify & Publish campaigns</p>
+            </div>
+            <div class="arrow">ᐳ</div>
+        </a>
+
+        <a href="admin_banner_ads.html" class="action-card">
+            <div class="icon-box bg-teal">🎯</div>
+            <div class="ac-text">
+                <h4>Landing Page Ads</h4>
+                <p>Control the homepage ad carousel</p>
             </div>
             <div class="arrow">ᐳ</div>
         </a>
@@ -327,339 +165,6 @@ body{
 </div>
 
 <script>
-/* ============================================================
-   SHARED HELPERS — used by every page in the admin dashboard app
-   All numbers are DEMO / MOCK data generated locally so every
-   page works without a backend. Replace the generate* functions
-   with real API calls when ready.
-
-   Numbers are generated so child values always sum EXACTLY to
-   their parent (state total = sum of district totals; district
-   total = urban + rural) using splitInteger()'s largest-remainder
-   method — so on-screen totals and the downloaded CSV always match.
-   ============================================================ */
-
-const PERIODS = ["Day", "Week", "Month", "Half Yearly", "Yearly", "Date Range"];
-
-/* ---- deterministic pseudo-random so numbers don't jump around ---- */
-function hashStr(str){
-  let h = 0;
-  for(let i=0;i<str.length;i++){ h = (h<<5) - h + str.charCodeAt(i); h |= 0; }
-  return Math.abs(h);
-}
-function mulberry32(seed){
-  return function(){
-    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function seededInt(seedStr, min, max){
-  const rnd = mulberry32(hashStr(seedStr));
-  return Math.floor(rnd() * (max - min + 1)) + min;
-}
-
-const PERIOD_SCALE = {
-  "Day":1, "Week":6, "Month":22, "Half Yearly":110, "Yearly":230, "Date Range":40,
-  "Last 30 days":22, "Last 90 days":65, "Last 180 days":130, "Last 365 days":230,
-  "Custom Range":40, "Financial Year":230
-};
-
-/* Splits an integer `total` into parts proportional to `weights`,
-   guaranteeing the parts sum EXACTLY to `total` (largest-remainder method). */
-function splitInteger(total, weights){
-  const sumW = weights.reduce((a,b)=>a+b,0) || 1;
-  const raw = weights.map(w => total * w / sumW);
-  const floors = raw.map(Math.floor);
-  let remainder = total - floors.reduce((a,b)=>a+b,0);
-  const order = raw.map((r,i)=>({ i, frac: r - Math.floor(r) })).sort((a,b)=>b.frac - a.frac);
-  for(let k=0; k<remainder && order.length; k++){ floors[order[k % order.length].i] += 1; }
-  return floors;
-}
-
-/* ============================================================
-   PAN-INDIA GEOGRAPHY — all 28 states + 8 union territories,
-   with a few representative districts each. Urban/Rural locality
-   names are illustrative placeholders (pattern-generated) except
-   for a couple of real examples — swap INDIA_GEO for a full
-   State > District > Village dataset / API when you have one.
-   ============================================================ */
-const INDIA_GEO = {
-  "Andhra Pradesh": ["Visakhapatnam","Vijayawada (NTR)","Guntur"],
-  "Arunachal Pradesh": ["Papum Pare","East Siang","West Kameng"],
-  "Assam": ["Kamrup Metropolitan","Dibrugarh","Cachar"],
-  "Bihar": ["Patna","Gaya","Muzaffarpur"],
-  "Chhattisgarh": ["Raipur","Bilaspur","Durg"],
-  "Goa": ["North Goa","South Goa"],
-  "Gujarat": ["Ahmedabad","Surat","Vadodara"],
-  "Haryana": ["Gurugram","Faridabad","Panipat"],
-  "Himachal Pradesh": ["Shimla","Kangra","Mandi"],
-  "Jharkhand": ["Ranchi","East Singhbhum","Dhanbad"],
-  "Karnataka": ["Bengaluru Urban","Mysuru","Dakshina Kannada"],
-  "Kerala": ["Thiruvananthapuram","Ernakulam","Kozhikode"],
-  "Madhya Pradesh": ["Bhopal","Indore","Jabalpur"],
-  "Maharashtra": ["Mumbai Suburban","Pune","Nagpur"],
-  "Manipur": ["Imphal West","Imphal East"],
-  "Meghalaya": ["East Khasi Hills","West Garo Hills"],
-  "Mizoram": ["Aizawl","Lunglei"],
-  "Nagaland": ["Kohima","Dimapur"],
-  "Odisha": ["Khordha","Cuttack","Puri"],
-  "Punjab": ["Ludhiana","Amritsar","Jalandhar"],
-  "Rajasthan": ["Jaipur","Jodhpur","Udaipur"],
-  "Sikkim": ["East Sikkim","West Sikkim"],
-  "Tamil Nadu": ["Chennai","Coimbatore","Madurai"],
-  "Telangana": ["Hyderabad","Rangareddy","Warangal"],
-  "Tripura": ["West Tripura","Gomati"],
-  "Uttar Pradesh": ["Lucknow","Kanpur Nagar","Varanasi"],
-  "Uttarakhand": ["Dehradun","Haridwar","Nainital"],
-  "West Bengal": ["Kolkata","Howrah","Darjeeling"],
-  "Andaman and Nicobar Islands": ["South Andaman"],
-  "Chandigarh": ["Chandigarh"],
-  "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli","Daman"],
-  "Delhi": ["New Delhi","South Delhi","North Delhi"],
-  "Jammu and Kashmir": ["Srinagar","Jammu"],
-  "Ladakh": ["Leh","Kargil"],
-  "Lakshadweep": ["Lakshadweep"],
-  "Puducherry": ["Puducherry","Karaikal"]
-};
-const INDIA_STATE_NAMES = Object.keys(INDIA_GEO);
-
-/* A few authentic examples; everything else falls back to a clear pattern. */
-const LOCALITY_OVERRIDES = {
-  "Visakhapatnam": { urban:"Gajuwaka", urbanSub:"MVP Colony", rural:"Narava", ruralSub:"Sattivalasa" },
-  "Bengaluru Urban": { urban:"Whitefield", urbanSub:"ITPL Road", rural:"Anekal", ruralSub:"Jigani" },
-  "Chennai": { urban:"Ambattur", urbanSub:"Padi", rural:"Sholavaram", ruralSub:"Puzhal" }
-};
-function districtLocalities(district){
-  if(LOCALITY_OVERRIDES[district]) return LOCALITY_OVERRIDES[district];
-  return {
-    urban: district + " Urban Area",
-    urbanSub: district + " Urban Colony",
-    rural: district + " Rural Area",
-    ruralSub: district + " Village Cluster"
-  };
-}
-
-/* ---- state-level value for a metric+period (top of the hierarchy) ---- */
-function generateStateValue(key, period, state){
-  const scale = PERIOD_SCALE[period] || 1;
-  const base = seededInt(key + period + state, 8, 60);
-  return Math.round(base * scale);
-}
-
-/* ---- all states + values for a metric, sorted highest first ---- */
-function generateStateList(key, period){
-  return INDIA_STATE_NAMES
-    .map(state => ({ state, value: generateStateValue(key, period, state) }))
-    .sort((a,b)=> b.value - a.value);
-}
-
-/* ---- district-wise breakdown for one state; district totals sum
-   EXACTLY to the state's value from generateStateValue(). Each
-   district total is split into Urban + Rural, which also sum exactly. ---- */
-function generateDistrictBreakdown(key, period, state){
-  const stateTotal = generateStateValue(key, period, state);
-  const districts = INDIA_GEO[state] || [state + " District"];
-  const weights = districts.map(d => seededInt(key+period+state+d, 5, 30));
-  const totals = splitInteger(stateTotal, weights);
-  return districts.map((d, i)=>{
-    const loc = districtLocalities(d);
-    const dTotal = totals[i];
-    const urbanW = seededInt(key+d+"urbanshare", 45, 65);
-    const [urbanVal, ruralVal] = splitInteger(dTotal, [urbanW, 100-urbanW]);
-    return {
-      district: d, total: dTotal,
-      urban: { name: loc.urban, value: urbanVal, exampleName: loc.urbanSub, exampleValue: Math.round(urbanVal*0.3) },
-      rural: { name: loc.rural, value: ruralVal, exampleName: loc.ruralSub, exampleValue: Math.round(ruralVal*0.35) }
-    };
-  });
-}
-
-/* ---- CSV rows for one state (State Total / District Total / Urban / Rural) ---- */
-function flattenStateForCSV(metricTitle, key, period, state){
-  const rows = [[metricTitle, state, "", "State Total", state, generateStateValue(key, period, state)]];
-  generateDistrictBreakdown(key, period, state).forEach(d=>{
-    rows.push([metricTitle, state, d.district, "District Total", d.district, d.total]);
-    rows.push([metricTitle, state, d.district, "Urban", d.urban.name, d.urban.value]);
-    rows.push([metricTitle, state, d.district, "Rural", d.rural.name, d.rural.value]);
-  });
-  return rows;
-}
-
-/* ---- CSV rows for the whole country for one metric, plus an All-India total
-   row (computed as the sum of the state rows, so it always matches). ---- */
-function flattenIndiaForCSV(metricTitle, key, period){
-  let rows = [];
-  let indiaTotal = 0;
-  INDIA_STATE_NAMES.forEach(state=>{
-    rows = rows.concat(flattenStateForCSV(metricTitle, key, period, state));
-    indiaTotal += generateStateValue(key, period, state);
-  });
-  rows.push([metricTitle, "ALL INDIA", "", "Country Total", "All India", indiaTotal]);
-  return rows;
-}
-
-/* ---- render a Pan-India state list for one metric, with a
-   "Show All State Names" expander and a click-through link per state ---- */
-function renderStateList(container, key, title, period, linkBuilder){
-  const list = generateStateList(key, period);
-  const indiaTotal = list.reduce((a,b)=>a+b.value, 0);
-  const collapsedCount = 5;
-  let expanded = false;
-
-  function paint(){
-    const shown = expanded ? list : list.slice(0, collapsedCount);
-    container.innerHTML = `
-      <div class="metric-head"><h5>${title}</h5><span class="metric-total">${indiaTotal.toLocaleString()}</span></div>
-      <div class="state-list">
-        ${shown.map(s => `
-          <a class="state-row" href="${linkBuilder(s.state)}">
-            <span class="state-name">${s.state}</span>
-            <span class="state-val">${s.value.toLocaleString()}</span>
-            <span class="state-arrow">›</span>
-          </a>`).join("")}
-      </div>
-      ${list.length > collapsedCount ? `<button class="show-all-btn" id="toggle-${CSS.escape(key)}">${expanded ? "Show less" : `Show All State Names (${list.length})`}</button>` : ""}
-    `;
-    if(list.length > collapsedCount){
-      document.getElementById(`toggle-${CSS.escape(key)}`).onclick = ()=>{ expanded = !expanded; paint(); };
-    }
-  }
-  paint();
-}
-
-/* ---- render the district > urban/rural drill-down tree for one state ---- */
-function renderDistrictTree(container, key, period, state){
-  const districts = generateDistrictBreakdown(key, period, state);
-  container.innerHTML = districts.map(d => `
-    <div class="district-block">
-      <div class="geo-row lvl-district"><span class="geo-name">${d.district}</span><span class="geo-val">${d.total.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Urban</span><span class="geo-name">${d.urban.name}</span><span class="geo-val">${d.urban.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.urban.exampleName}</span><span class="geo-val">${d.urban.exampleValue.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Rural</span><span class="geo-name">${d.rural.name}</span><span class="geo-val">${d.rural.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.rural.exampleName}</span><span class="geo-val">${d.rural.exampleValue.toLocaleString()}</span></div>
-    </div>
-  `).join("");
-}
-
-/* ---- period selector chips + date range inputs ----
-   container: element to render chips into
-   onChange(period): callback fired with the chosen period label */
-function initPeriodSelector(container, onChange, dateRangeContainer){
-  container.innerHTML = "";
-  PERIODS.forEach((p, i)=>{
-    const chip = document.createElement("button");
-    chip.className = "period-chip" + (i===2 ? " active" : "");
-    chip.textContent = p;
-    chip.onclick = ()=>{
-      [...container.children].forEach(c=>c.classList.remove("active"));
-      chip.classList.add("active");
-      if(dateRangeContainer){
-        dateRangeContainer.classList.toggle("show", p === "Date Range");
-      }
-      onChange(p);
-    };
-    container.appendChild(chip);
-  });
-  return "Month"; // default selected period
-}
-
-/* ============================================================
-   DEPENDENCY-FREE TREND CHART — plain inline SVG bars, no
-   external chart library, so it always renders even when a page
-   is previewed offline or a CDN script is blocked.
-   ============================================================ */
-function renderTrendChart(containerId, seriesKeys, seriesLabels, period){
-  const container = document.getElementById(containerId);
-  if(!container) return;
-  const labels = ["1","2","3","4","5","6"];
-  const colors = ["#6c3ce9","#1565c0","#2e7d32","#e65100","#ad1457","#00796b"];
-  const series = seriesKeys.map((k)=> labels.map((_,idx)=> seededInt(k+period+idx, 5, 100)));
-  const maxV = Math.max(...series.flat(), 1);
-
-  const W = 300, H = 150, padL = 6, padB = 6, padT = 10;
-  const groupW = (W - padL) / labels.length;
-  const barGap = 3;
-  const barW = (groupW - barGap * (seriesKeys.length + 1)) / seriesKeys.length;
-
-  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:100%;">`;
-  labels.forEach((lab, li)=>{
-    seriesKeys.forEach((k, si)=>{
-      const val = series[si][li];
-      const bh = (val / maxV) * (H - padT - padB);
-      const x = padL + li*groupW + barGap + si*(barW+barGap);
-      const y = H - padB - bh;
-      svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${colors[si % colors.length]}"/>`;
-    });
-  });
-  svg += `</svg>`;
-  container.innerHTML = svg;
-
-  const legendEl = document.getElementById(containerId + "-legend");
-  if(legendEl){
-    legendEl.innerHTML = seriesLabels.map((lab, i)=>
-      `<div class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span>${lab}</div>`
-    ).join("");
-  }
-}
-
-/* ---- CSV export ---- */
-function downloadCSV(filename, headers, rows){
-  let csv = headers.join(",") + "\n";
-  rows.forEach(r=>{ csv += r.map(v => typeof v === "string" && v.includes(",") ? `"${v}"` : v).join(",") + "\n"; });
-  const blob = new Blob([csv], { type:"text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/* ---- mock transaction history ---- */
-const TX_TYPES = { vendor:["Ad Payout","Commission","Bonus"], user:["Referral Earning","Task Reward","Cashback"], company:["Platform Fee","Ad Revenue","Subscription"], general:["Credit","Debit","Adjustment"] };
-const TX_STATUS = ["success","pending","failed"];
-function generateHistory(key, count){
-  const rnd = mulberry32(hashStr(key + "history"));
-  const types = TX_TYPES[key] || TX_TYPES.general;
-  const rows = [];
-  for(let i=0;i<count;i++){
-    const day = Math.floor(rnd()*27)+1;
-    const month = Math.floor(rnd()*6)+1;
-    const amt = Math.floor(rnd()*9000)+150;
-    const type = types[Math.floor(rnd()*types.length)];
-    const status = TX_STATUS[Math.floor(rnd()*3)];
-    rows.push({
-      id: "TXN" + (100000 + Math.floor(rnd()*899999)),
-      date: `${String(day).padStart(2,"0")}-${String(month).padStart(2,"0")}-2026`,
-      type, amt, status
-    });
-  }
-  return rows;
-}
-
-/* ---- read a query-string param ---- */
-function qParam(name, fallback){
-  const v = new URLSearchParams(window.location.search).get(name);
-  return v || fallback;
-}
-
-/* ---- reusable app logo (inline SVG so no external image needed) ---- */
-function logoSVG(size){
-  size = size || 32;
-  return `<svg width="${size}" height="${size}" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <defs><linearGradient id="lg" x1="0" y1="0" x2="40" y2="40" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#8b5cf6"/><stop offset="1" stop-color="#6c3ce9"/>
-    </linearGradient></defs>
-    <path d="M20 2 L36 9 V19 C36 29 29.5 36 20 39 C10.5 36 4 29 4 19 V9 Z" fill="url(#lg)"/>
-    <path d="M13 20.5 L18 25.5 L27 15" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-  </svg>`;
-}
-
-</script>
-<script>
-    document.getElementById("logoSlot").innerHTML = logoSVG(34);
-
     function loadStats() {
         // Count Pending Ads from Memory
         const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
@@ -667,7 +172,7 @@ function logoSVG(size){
 
         // Update UI
         document.getElementById("totalPending").innerText = pendingCount;
-
+        
         // Update Badge
         const badge = document.getElementById("badgePending");
         if(pendingCount > 0) {
