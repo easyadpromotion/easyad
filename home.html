@@ -6,15 +6,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- ✅ Your actual API key with all required libraries -->
+    <!-- ✅ Your actual API key with all required libraries.
+         This key is ONLY used to render the little map inside the "view on map"
+         modal — city detection below does NOT depend on it, so location still
+         works even if this key/SDK has a problem. -->
     <script>
-        function initMap() {
-            // Maps SDK is ready — now detect location
-            if (typeof pendingLocationDetect === 'function') pendingLocationDetect();
-        }
+        var mapsReady = false;
+        var mapsFailed = false;
+        function initMap() { mapsReady = true; }
+        // Fires if Google blocks this key for this domain (referrer restriction,
+        // API not enabled, billing not set up, etc.) — without this, a blocked
+        // key fails completely silently and the map modal hangs forever.
+        window.gm_authFailure = function () {
+            mapsFailed = true;
+            console.error("❌ gm_authFailure: Google Maps blocked this request for this domain/key. " +
+                "Check the key's HTTP referrer restrictions and that Maps JavaScript API is enabled.");
+        };
     </script>
     <script async
-        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIYCrCcEG-A-tDPVrM2I8bcEQ6k3VeNxc&callback=initMap&libraries=maps,marker&v=beta">
+        src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIYCrCcEG-A-tDPVrM2I8bcEQ6k3VeNxc&callback=initMap&libraries=marker&v=beta">
     </script>
 
     <style>
@@ -77,6 +87,27 @@
         .nav-txt { font-size: 10px; font-weight: 600; }
         .nav-item.active { color: #ff9800; }
         .empty-state { text-align: center; color: #aaa; font-size: 12px; margin-top: 20px; }
+
+        .notif-badge {
+            display: none; position: absolute; top: -2px; right: -2px;
+            background: #d63031; color: #fff; font-size: 9px; font-weight: 800;
+            min-width: 16px; height: 16px; border-radius: 8px; align-items: center;
+            justify-content: center; padding: 0 3px; border: 2px solid #ff9800;
+        }
+        .notif-badge.show { display: flex; }
+
+        /* Live "new ad nearby" toast — same pattern as notifications.html so
+           a matching ad pops up no matter which screen the user is on */
+        .home-toast {
+            position: absolute; top: -120px; left: 12px; right: 12px; z-index: 300;
+            background: #2d3436; color: #fff; border-radius: 14px; padding: 14px 16px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35); display: flex; gap: 12px; align-items: center;
+            transition: top 0.45s cubic-bezier(.34,1.56,.64,1); cursor: pointer;
+        }
+        .home-toast.show { top: 16px; }
+        .home-toast-text { flex: 1; font-size: 12px; line-height: 1.4; }
+        .home-toast-text b { display: block; font-size: 13px; margin-bottom: 2px; }
+        .home-toast-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; cursor: pointer; font-size: 12px; }
     </style>
 </head>
 
@@ -90,7 +121,10 @@
             <div class="app-logo-box">
                 <img src="EAP-LOGO.jpg" class="logo-img" onerror="this.src='https://via.placeholder.com/40'">
             </div>
-            <div class="icon-btn">🔔</div>
+            <div class="icon-btn" id="notifBtn" onclick="window.location.href='notifications.html'" style="position:relative;">
+                🔔
+                <span id="notifBadge" class="notif-badge">0</span>
+            </div>
         </div>
         <div class="stats-row">
             <div class="stat-card" onclick="openMap()" title="Tap to view map">
@@ -106,6 +140,13 @@
                 <div class="stat-icon">💰</div>
             </div>
         </div>
+    </div>
+
+    <!-- LIVE "NEW AD NEARBY" TOAST -->
+    <div class="home-toast" id="homeToast" onclick="window.location.href='notifications.html'">
+        <div style="font-size:22px; flex-shrink:0;">📢</div>
+        <div class="home-toast-text"><b id="homeToastTitle">New ad nearby!</b><span id="homeToastMsg"></span></div>
+        <button class="home-toast-close" onclick="event.stopPropagation(); document.getElementById('homeToast').classList.remove('show');">✕</button>
     </div>
 
     <!-- MAP MODAL -->
@@ -148,16 +189,9 @@
     // ── State ──────────────────────────────────────────────────
     var userLat = null, userLng = null;
     var mapInstance = null, markerInstance = null;
-    var mapsReady = false;
+    // mapsReady / mapsFailed / initMap / gm_authFailure are defined in the
+    // <head> script now — city detection below no longer depends on them.
     var activeMobile = null, userProfile = null;
-
-    // Called by Google Maps SDK once loaded
-    function initMap() {
-        mapsReady = true;
-    }
-
-    // Exposed so initMap callback can trigger it after SDK loads
-    function pendingLocationDetect() {}
 
     // ── Page Load ──────────────────────────────────────────────
     function loadHome() {
@@ -175,6 +209,10 @@
         // Start GPS
         startLocationDetect();
 
+        // Notifications badge (from the shared notification store)
+        updateNotifBadge();
+        checkForNewAds();
+
         // Tasks
         loadTasks();
     }
@@ -190,8 +228,10 @@
             function(pos) {
                 userLat = pos.coords.latitude;
                 userLng  = pos.coords.longitude;
-                // Wait until Maps SDK is ready, then geocode
-                waitForMapsAndGeocode();
+                // Resolve the city name straight away — this does NOT wait on
+                // or depend on the Google Maps SDK, so it still works even if
+                // that script is blocked, slow, or misconfigured for this domain.
+                reverseGeocodeAndSetCity(userLat, userLng);
             },
             function(err) {
                 console.warn("GPS error:", err.message);
@@ -201,44 +241,48 @@
         );
     }
 
-    function waitForMapsAndGeocode() {
-        if (mapsReady && window.google && window.google.maps) {
-            doReverseGeocode();
-        } else {
-            // SDK not ready yet — retry in 300ms
-            setTimeout(waitForMapsAndGeocode, 300);
-        }
+    // ── Reverse Geocode via OpenStreetMap Nominatim ─────────────
+    // Free, no API key, no SDK dependency — this is what actually determines
+    // the city name shown in the header. The Google Maps SDK (if it loads) is
+    // used only for the little visual map inside the "view on map" modal.
+    function reverseGeocodeAndSetCity(lat, lng) {
+        var city = userProfile.city || "India";
+        var fullAddr = city;
+
+        fetch("https://nominatim.openstreetmap.org/reverse?format=json&lat=" + lat + "&lon=" + lng + "&zoom=12&addressdetails=1", {
+            headers: { "Accept": "application/json" }
+        })
+        .then(function(res){ return res.json(); })
+        .then(function(data){
+            var addr = data.address || {};
+            city = addr.suburb || addr.city || addr.town || addr.state_district || addr.county || addr.state || city;
+            fullAddr = data.display_name || city;
+            finishLocationUpdate(city, fullAddr, lat, lng);
+        })
+        .catch(function(e){
+            console.warn("Reverse geocode failed, falling back:", e.message);
+            finishLocationUpdate(city, fullAddr, lat, lng);
+        });
     }
 
-    // ── Reverse Geocode using google.maps.Geocoder ─────────────
-    // This works on file:// because it uses the loaded SDK, not a raw fetch()
-    function doReverseGeocode() {
-        var geocoder = new google.maps.Geocoder();
-        geocoder.geocode({ location: { lat: userLat, lng: userLng } }, function(results, status) {
-            if (status === "OK" && results.length > 0) {
-                var comps = results[0].address_components;
-                var city  = getComp(comps, "locality")
-                         || getComp(comps, "administrative_area_level_2")
-                         || getComp(comps, "administrative_area_level_1")
-                         || "India";
+    function finishLocationUpdate(city, fullAddr, lat, lng) {
+        setCity(city);
+        document.getElementById("mapCity").innerText    = city;
+        document.getElementById("mapAddress").innerText = fullAddr;
 
-                var fullAddr = results[0].formatted_address || city;
+        // Persist to this user's profile
+        userProfile.city = city;
+        userProfile.lat  = lat;
+        userProfile.lng  = lng;
+        localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(userProfile));
 
-                setCity(city);
-                document.getElementById("mapCity").innerText    = city;
-                document.getElementById("mapAddress").innerText = fullAddr;
+        // Also share it with the app-wide location cache that notifications.html
+        // reads, so "new ad nearby" distance-matching stays in sync everywhere.
+        localStorage.setItem("eap_user_location", JSON.stringify({ lat: lat, lng: lng, label: city }));
 
-                // Persist
-                userProfile.city = city;
-                userProfile.lat  = userLat;
-                userProfile.lng  = userLng;
-                localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(userProfile));
-
-            } else {
-                console.warn("Geocoder status:", status);
-                setCity(userProfile.city || "India");
-            }
-        });
+        // A fresh location is exactly when a previously-out-of-range ad might now
+        // be in range, so re-check for nearby ads immediately.
+        checkForNewAds();
     }
 
     function getComp(comps, type) {
@@ -253,7 +297,15 @@
     // ── Map Modal ──────────────────────────────────────────────
     function openMap() {
         document.getElementById("mapOverlay").classList.add("open");
-        if (userLat && userLng && mapsReady) renderMap();
+        if (userLat && userLng && mapsReady) {
+            renderMap();
+        } else if (mapsFailed) {
+            document.getElementById("googleMap").innerHTML =
+                '<div style="display:flex;align-items:center;justify-content:center;height:250px;color:#aaa;font-size:12px;text-align:center;padding:0 20px;">Map preview is unavailable right now.<br>Your city is still detected correctly above.</div>';
+        } else if (userLat && userLng) {
+            // Got GPS coords but the Maps SDK hasn't finished loading yet — poll briefly.
+            setTimeout(function(){ if (document.getElementById("mapOverlay").classList.contains("open")) openMap(); }, 400);
+        }
     }
 
     function closeMap() {
@@ -305,7 +357,12 @@
     function loadTasks() {
         var allAds   = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
         var viewed   = userProfile.viewedAds || [];
-        var active   = allAds.filter(function(ad){ return ad.status === "Active" && viewed.indexOf(ad.id) === -1; });
+        // NOTE: was checking ad.status === "Active" — tightened to match
+        // whatever admin_approve_ads.html actually sets (see isLiveStatus()
+        // below). If your approval page uses a specific status string like
+        // "Approved" or "Live", both this and the notification matcher will
+        // pick it up automatically as long as it isn't "Pending"/"Rejected".
+        var active   = allAds.filter(function(ad){ return isLiveStatus(ad.status) && viewed.indexOf(ad.id) === -1; });
         var container = document.getElementById("taskContainer");
 
         container.innerHTML = "";
@@ -329,6 +386,101 @@
             container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">' + icon + '</div><div class="t-info"><div class="t-name">' + name + '</div><div class="t-sub">' + cat + '</div></div></div><a href="' + link + '" class="start-btn">Start</a></div>';
         });
     }
+
+    // ═══════════════════════════════════════════════════════════
+    // NOTIFICATION ENGINE — shares localStorage keys with
+    // notifications.html so both pages agree on what's been seen,
+    // what's unread, and what counts as "nearby". Having this here
+    // (not just on notifications.html) is what makes a new ad pop
+    // up immediately while the user is sitting on the home screen,
+    // which is where they'll actually see it most of the time.
+    // ═══════════════════════════════════════════════════════════
+    var SEEN_KEY = "eap_seen_ad_ids";
+    var NOTIF_KEY = "eap_user_notifications";
+    var LOC_KEY = "eap_user_location";
+    var NEARBY_RADIUS_KM = 25;
+    var POLL_MS = 4000;
+
+    function loadJSON(key, fallback) {
+        try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
+        catch (e) { return fallback; }
+    }
+    function saveJSON(key, val) { localStorage.setItem(key, JSON.stringify(val)); }
+    function adTitle(ad) { return ad.title || ad.name || ad.adName || "New Ad"; }
+    function isLiveStatus(status) {
+        var s = (status || "").toLowerCase();
+        return s !== "" && s !== "pending" && s.indexOf("reject") === -1 && s.indexOf("declin") === -1;
+    }
+    function haversineKm(lat1, lon1, lat2, lon2) {
+        var R = 6371;
+        var dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+        var a = Math.sin(dLat/2)*Math.sin(dLat/2) + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)*Math.sin(dLon/2);
+        return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    }
+
+    function updateNotifBadge() {
+        var notifs = loadJSON(NOTIF_KEY, []);
+        var unread = notifs.filter(function(n){ return n.unread; }).length;
+        var badge = document.getElementById("notifBadge");
+        if (unread > 0) { badge.textContent = unread > 9 ? "9+" : unread; badge.classList.add("show"); }
+        else { badge.classList.remove("show"); }
+    }
+
+    function showHomeToast(title, msg) {
+        document.getElementById("homeToastTitle").textContent = title;
+        document.getElementById("homeToastMsg").textContent = msg;
+        var toast = document.getElementById("homeToast");
+        toast.classList.add("show");
+        clearTimeout(showHomeToast._t);
+        showHomeToast._t = setTimeout(function(){ toast.classList.remove("show"); }, 5000);
+    }
+
+    function checkForNewAds() {
+        var ads = loadJSON("vendorCampaigns", []);
+        if (!ads.length) return;
+        var userLoc = loadJSON(LOC_KEY, null);
+        var seen = loadJSON(SEEN_KEY, []);
+        var seenSet = {};
+        seen.forEach(function(id){ seenSet[id] = true; });
+        var notifs = loadJSON(NOTIF_KEY, []);
+        var addedAny = false;
+
+        ads.forEach(function(ad) {
+            if (!ad || !ad.id || seenSet[ad.id]) return;
+            if (!isLiveStatus(ad.status)) return;
+
+            var matchesLocation = true, distLabel = ad.location || "you";
+            if (userLoc && userLoc.lat != null && ad.lat != null && ad.lng != null) {
+                var dist = haversineKm(userLoc.lat, userLoc.lng, ad.lat, ad.lng);
+                matchesLocation = dist <= NEARBY_RADIUS_KM;
+                distLabel = dist.toFixed(1) + "km away";
+            }
+
+            seenSet[ad.id] = true; // processed either way
+            if (!matchesLocation) return;
+
+            var title = "📢 New " + (ad.type || "Ad") + " from a vendor!";
+            var msg = adTitle(ad) + " is live — " + distLabel + ". Tap to check it out.";
+            notifs.unshift({ id: "ad_" + ad.id, title: title, msg: msg, time: Date.now(), unread: true });
+            addedAny = true;
+            showHomeToast(title, msg);
+        });
+
+        var newSeen = [];
+        for (var k in seenSet) newSeen.push(k);
+        saveJSON(SEEN_KEY, newSeen);
+
+        if (addedAny) {
+            saveJSON(NOTIF_KEY, notifs);
+            updateNotifBadge();
+        }
+    }
+
+    setInterval(checkForNewAds, POLL_MS);              // catches ads posted in this same tab/session
+    window.addEventListener("storage", function(e){    // catches ads posted/approved from another tab
+        if (e.key === "vendorCampaigns") checkForNewAds();
+        if (e.key === NOTIF_KEY) updateNotifBadge();
+    });
 </script>
 </body>
 </html>
