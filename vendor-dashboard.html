@@ -47,7 +47,6 @@
       background: white; padding: 20px 15px; border-radius: 18px;
       box-shadow: 0 5px 15px rgba(0,0,0,0.03); text-align: center;
       border-bottom: 4px solid transparent; transition: transform 0.2s;
-      cursor: pointer;
     }
     .stat-card:active { transform: scale(0.98); }
     .stat-val { font-size: 24px; font-weight: 800; color: #333; margin-bottom: 5px; display: block; line-height: 1; }
@@ -73,9 +72,9 @@
       width: 48px; height: 48px; border-radius: 14px; 
       display: flex; justify-content: center; align-items: center; font-size: 22px; flex-shrink: 0;
     }
-    .bg-new, .bg-create { background: #e0f2f1; color: #009688; }
+    .bg-new { background: #e0f2f1; color: #009688; }
     .bg-manage { background: #fff3e0; color: #ff9800; }
-    .bg-bill, .bg-invoice { background: #e3f2fd; color: #2196f3; }
+    .bg-bill { background: #e3f2fd; color: #2196f3; }
     .bg-supp { background: #f3e5f5; color: #9c27b0; }
 
     .ac-text h4 { margin: 0 0 4px 0; font-size: 14px; font-weight: 700; color: #333; }
@@ -90,9 +89,8 @@
       border-top: 1px solid #eee; box-sizing: border-box;
       box-shadow: 0 -5px 20px rgba(0,0,0,0.05);
     }
-    .nav-item { text-align: center; color: #aaa; font-size: 10px; cursor: pointer; flex: 1; user-select: none; }
+    .nav-item { text-align: center; color: #aaa; font-size: 10px; cursor: pointer; flex: 1; }
     .nav-item.active { color: #009688; font-weight: 700; }
-    .nav-item:active { opacity: 0.6; }
     .nav-icon { font-size: 22px; display: block; margin-bottom: 3px; }
 
   </style>
@@ -115,20 +113,20 @@
   <div class="content-area">
     
     <div class="stats-grid">
-      <div class="stat-card st-teal" onclick="window.location.href='active-ads.html'">
-        <span class="stat-val" id="statActive">0</span>
+      <div class="stat-card st-teal">
+        <span class="stat-val">12</span>
         <span class="stat-label">Active Ads</span>
       </div>
-      <div class="stat-card st-blue" onclick="window.location.href='total-views.html'">
-        <span class="stat-val" id="statViews">0</span>
+      <div class="stat-card st-blue">
+        <span class="stat-val">8.5k</span>
         <span class="stat-label">Total Views</span>
       </div>
-      <div class="stat-card st-orange" onclick="window.location.href='paused-ads.html'">
-        <span class="stat-val" id="statPaused">0</span>
+      <div class="stat-card st-orange">
+        <span class="stat-val">3</span>
         <span class="stat-label">Paused</span>
       </div>
-      <div class="stat-card st-green" onclick="window.location.href='completed-ads.html'">
-        <span class="stat-val" id="statCompleted">0</span>
+      <div class="stat-card st-green">
+        <span class="stat-val">45</span>
         <span class="stat-label">Completed</span>
       </div>
     </div>
@@ -136,7 +134,7 @@
     <div class="sec-title">Quick Actions</div>
 
     <a href="select_ad_type.html" class="action-card">
-    <div class="ac-icon bg-create">📢</div> <div class="ac-text">
+    <div class="ac-icon bg-new">📢</div> <div class="ac-text">
         <h4>Create New Ad</h4>
         <p>Post Frame, Video or Survey Ads</p>
     </div>
@@ -172,10 +170,6 @@
 
   </div>
 
-  <!-- ══════════════════════════════════════════════════════════
-       BOTTOM NAV — all four items now go to real pages built for
-       this app (my-ads.html, wallet.html, vendor-settings.html).
-       ══════════════════════════════════════════════════════════ -->
   <div class="bottom-nav">
     <div class="nav-item active" onclick="window.location.href='vendor-dashboard.html'">
       <span class="nav-icon">🏠</span> Home
@@ -183,7 +177,7 @@
     <div class="nav-item" onclick="window.location.href='my-ads.html'">
       <span class="nav-icon">📢</span> My Ads
     </div>
-    <div class="nav-item" onclick="window.location.href='wallet.html'">
+    <div class="nav-item" onclick="window.location.href='vendor_wallet.html'">
       <span class="nav-icon">👛</span> Wallet
     </div>
     <div class="nav-item" onclick="window.location.href='vendor-settings.html'">
@@ -196,52 +190,13 @@
 <script>
   window.onload = function() {
     const mobile = localStorage.getItem("activeVendor");
-    if (mobile) {
+    if(mobile) {
       const vendor = JSON.parse(localStorage.getItem("vendorProfile_" + mobile));
-      if (vendor && vendor.name) {
+      if(vendor && vendor.name) {
         document.getElementById("vendorName").innerText = vendor.name;
       }
     }
-    loadDashboardStats();
   };
-
-  // ── LIVE STATS (pulled from the same "vendorCampaigns" localStorage
-  // key that frame-ads.html / post_video_ad.html / post_survey_ad.html
-  // save each new ad into) ──────────────────────────────────────────
-  function loadDashboardStats() {
-    let ads = [];
-    try {
-      ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-    } catch (e) {
-      ads = [];
-    }
-
-    let active = 0, paused = 0, completed = 0, totalViews = 0;
-
-    ads.forEach(function (ad) {
-      const status = (ad.status || "").toLowerCase();
-      if (status === "active") active++;
-      else if (status === "paused") paused++;
-      else if (status === "completed") completed++;
-
-      // Frame ads currently don't carry a "stats" object (only
-      // video/survey ads do) — default to 0 views when missing.
-      const views = (ad.stats && typeof ad.stats.views === "number") ? ad.stats.views : 0;
-      totalViews += views;
-    });
-
-    document.getElementById("statActive").innerText = active;
-    document.getElementById("statViews").innerText = formatCount(totalViews);
-    document.getElementById("statPaused").innerText = paused;
-    document.getElementById("statCompleted").innerText = completed;
-  }
-
-  function formatCount(n) {
-    if (n >= 1000) {
-      return (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
-    }
-    return String(n);
-  }
 </script>
 
 </body>
