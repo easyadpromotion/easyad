@@ -230,12 +230,68 @@
             width: 20px; 
             border-radius: 3px; 
         }
+
+        /* ── LANGUAGE PICKER ── */
+        .lang-btn {
+            position: absolute; top: 16px; right: 16px; z-index: 60;
+            background: rgba(255,255,255,0.9); border: none; border-radius: 20px;
+            padding: 7px 12px 7px 10px; display: flex; align-items: center; gap: 5px;
+            font-family: inherit; font-size: 11px; font-weight: 700; color: #01579b;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .lang-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.55); z-index: 100; align-items: flex-end; justify-content: center;
+        }
+        .lang-overlay.open { display: flex; }
+        .lang-sheet {
+            background: #fff; width: 100%; max-height: 78%; border-radius: 26px 26px 0 0;
+            display: flex; flex-direction: column; animation: sheetUp 0.25s ease;
+        }
+        @keyframes sheetUp { from { transform: translateY(30px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        .lang-sheet-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 18px 20px 12px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0;
+        }
+        .lang-sheet-title { font-size: 15px; font-weight: 800; color: #333; }
+        .lang-sheet-close {
+            background: #f0f0f0; border: none; width: 28px; height: 28px; border-radius: 50%;
+            font-size: 13px; cursor: pointer; color: #555;
+        }
+        .lang-list { overflow-y: auto; padding: 8px 12px 20px; }
+        .lang-row {
+            display: flex; align-items: center; justify-content: space-between; width: 100%;
+            background: none; border: none; text-align: left; padding: 12px 10px; border-radius: 12px;
+            font-family: inherit; cursor: pointer;
+        }
+        .lang-row:active { background: #f5f5f5; }
+        .lang-row.selected { background: #e3f2fd; }
+        .lang-native { font-size: 15px; font-weight: 700; color: #222; }
+        .lang-english { font-size: 10.5px; color: #999; margin-top: 1px; }
+        .lang-check { color: #1565c0; font-weight: 800; font-size: 14px; visibility: hidden; }
+        .lang-row.selected .lang-check { visibility: visible; }
+        .lang-beta-tag {
+            font-size: 8.5px; font-weight: 700; color: #e65100; background: #fff3e0;
+            padding: 1px 6px; border-radius: 6px; margin-left: 8px; flex-shrink: 0;
+        }
     </style>
 </head>
 
 <body>
 
 <div class="mobile-screen">
+
+    <!-- LANGUAGE PICKER -->
+    <button class="lang-btn" id="langBtn">🌐 <span id="langBtnLabel">EN</span></button>
+    <div class="lang-overlay" id="langOverlay">
+        <div class="lang-sheet">
+            <div class="lang-sheet-header">
+                <span class="lang-sheet-title" id="langSheetTitle" data-i18n="langModal">Select Language</span>
+                <button class="lang-sheet-close" id="langCloseBtn">✕</button>
+            </div>
+            <div class="lang-list" id="langList"></div>
+        </div>
+    </div>
 
     <!-- LOGO -->
     <div class="logo-container">
@@ -245,23 +301,23 @@
     </div>
 
     <!-- WELCOME TEXT -->
-    <div class="welcome-title">Welcome to EAP</div>
-    <div class="welcome-sub">Choose your role to start:</div>
+    <div class="welcome-title" data-i18n="welcomeTitle">Welcome to EAP</div>
+    <div class="welcome-sub" data-i18n="welcomeSub">Choose your role to start:</div>
 
     <!-- ROLE BUTTONS -->
     <div class="btn-container">
         <a href="user_login.html" class="role-btn btn-user">
             <div class="btn-text">
-                <span class="btn-title">I am a User</span>
-                <span class="btn-desc">View ads &amp; earn money</span>
+                <span class="btn-title" data-i18n="roleUserTitle">I am a User</span>
+                <span class="btn-desc" data-i18n="roleUserDesc">View ads &amp; earn money</span>
             </div>
             <div class="btn-icon">👤</div>
         </a>
 
         <a href="vendor-login.html" class="role-btn btn-vendor">
             <div class="btn-text">
-                <span class="btn-title">I am a Vendor</span>
-                <span class="btn-desc">Post ads &amp; promote business</span>
+                <span class="btn-title" data-i18n="roleVendorTitle">I am a Vendor</span>
+                <span class="btn-desc" data-i18n="roleVendorDesc">Post ads &amp; promote business</span>
             </div>
             <div class="btn-icon">🏢</div>
         </a>
@@ -283,6 +339,162 @@
 </div>
 
 <script>
+// ═══════════════════════════════════════════════════════════════════════
+// LANGUAGE SYSTEM (Pan-India)
+// Covers English + all 22 languages in the Constitution's 8th Schedule.
+// Every language appears in the picker so the app looks and feels
+// complete for the whole country. Full UI translations are provided for
+// the languages below marked (translated) — these are the ones spoken
+// natively by the large majority of India's population, and I'm
+// confident in their accuracy.
+//
+// The remaining languages (marked "beta" in the picker with a small
+// orange tag) currently fall back to English text. I deliberately did
+// NOT guess at full-sentence translations for these — getting a few
+// words wrong in a widely-spoken language is a minor issue; getting it
+// wrong in a lower-resource language a business relies on to reach a
+// specific community is a real credibility risk. Get these reviewed by
+// a native speaker and drop them into the `DICT` object below (same
+// shape as the others) whenever you're ready — no other code needs to
+// change.
+// ═══════════════════════════════════════════════════════════════════════
+
+var LANGUAGES = [
+    { code:"en",  native:"English",      english:"English",   translated:true  },
+    { code:"hi",  native:"हिन्दी",        english:"Hindi",      translated:true  },
+    { code:"bn",  native:"বাংলা",         english:"Bengali",    translated:true  },
+    { code:"te",  native:"తెలుగు",        english:"Telugu",     translated:true  },
+    { code:"mr",  native:"मराठी",         english:"Marathi",    translated:true  },
+    { code:"ta",  native:"தமிழ்",         english:"Tamil",      translated:true  },
+    { code:"ur",  native:"اردو",          english:"Urdu",       translated:true, rtl:true },
+    { code:"gu",  native:"ગુજરાતી",       english:"Gujarati",   translated:true  },
+    { code:"kn",  native:"ಕನ್ನಡ",         english:"Kannada",    translated:true  },
+    { code:"or",  native:"ଓଡ଼ିଆ",         english:"Odia",       translated:true  },
+    { code:"ml",  native:"മലയാളം",       english:"Malayalam",  translated:true  },
+    { code:"pa",  native:"ਪੰਜਾਬੀ",        english:"Punjabi",    translated:true  },
+    { code:"as",  native:"অসমীয়া",       english:"Assamese",   translated:true  },
+    { code:"ne",  native:"नेपाली",         english:"Nepali",     translated:true  },
+    { code:"mai", native:"मैथिली",         english:"Maithili",   translated:false },
+    { code:"sa",  native:"संस्कृतम्",       english:"Sanskrit",   translated:false },
+    { code:"kok", native:"कोंकणी",        english:"Konkani",    translated:false },
+    { code:"doi", native:"डोगरी",         english:"Dogri",      translated:false },
+    { code:"brx", native:"बड़ो",          english:"Bodo",       translated:false },
+    { code:"mni", native:"মৈতৈলোন্",      english:"Manipuri",   translated:false },
+    { code:"sd",  native:"سنڌي",          english:"Sindhi",     translated:false, rtl:true },
+    { code:"ks",  native:"کٲشُر",          english:"Kashmiri",   translated:false, rtl:true },
+    { code:"sat", native:"संताली",        english:"Santali",    translated:false }
+];
+
+var DICT = {
+    en: { langModal:"Select Language", welcomeTitle:"Welcome to EAP", welcomeSub:"Choose your role to start:",
+          roleUserTitle:"I am a User", roleUserDesc:"View ads & earn money",
+          roleVendorTitle:"I am a Vendor", roleVendorDesc:"Post ads & promote business" },
+
+    hi: { langModal:"भाषा चुनें", welcomeTitle:"EAP में आपका स्वागत है", welcomeSub:"शुरू करने के लिए अपनी भूमिका चुनें:",
+          roleUserTitle:"मैं एक उपयोगकर्ता हूँ", roleUserDesc:"विज्ञापन देखें और पैसे कमाएं",
+          roleVendorTitle:"मैं एक वेंडर हूँ", roleVendorDesc:"विज्ञापन पोस्ट करें और व्यवसाय बढ़ाएं" },
+
+    bn: { langModal:"ভাষা নির্বাচন করুন", welcomeTitle:"EAP-এ স্বাগতম", welcomeSub:"শুরু করতে আপনার ভূমিকা বেছে নিন:",
+          roleUserTitle:"আমি একজন ব্যবহারকারী", roleUserDesc:"বিজ্ঞাপন দেখুন ও আয় করুন",
+          roleVendorTitle:"আমি একজন বিক্রেতা", roleVendorDesc:"বিজ্ঞাপন পোস্ট করুন ও ব্যবসা প্রচার করুন" },
+
+    te: { langModal:"భాషను ఎంచుకోండి", welcomeTitle:"EAPకి స్వాగతం", welcomeSub:"ప్రారంభించడానికి మీ పాత్రను ఎంచుకోండి:",
+          roleUserTitle:"నేను ఒక వినియోగదారుడిని", roleUserDesc:"ప్రకటనలు చూడండి & సంపాదించండి",
+          roleVendorTitle:"నేను ఒక వెండర్‌ని", roleVendorDesc:"ప్రకటనలు పోస్ట్ చేయండి & వ్యాపారాన్ని ప్రచారం చేయండి" },
+
+    mr: { langModal:"भाषा निवडा", welcomeTitle:"EAP मध्ये आपले स्वागत आहे", welcomeSub:"सुरू करण्यासाठी आपली भूमिका निवडा:",
+          roleUserTitle:"मी एक वापरकर्ता आहे", roleUserDesc:"जाहिराती पहा आणि पैसे कमवा",
+          roleVendorTitle:"मी एक विक्रेता आहे", roleVendorDesc:"जाहिराती पोस्ट करा आणि व्यवसाय वाढवा" },
+
+    ta: { langModal:"மொழியைத் தேர்ந்தெடுக்கவும்", welcomeTitle:"EAP-க்கு வரவேற்கிறோம்", welcomeSub:"தொடங்க உங்கள் பங்கைத் தேர்ந்தெடுக்கவும்:",
+          roleUserTitle:"நான் ஒரு பயனர்", roleUserDesc:"விளம்பரங்களைப் பார்த்து சம்பாதிக்கவும்",
+          roleVendorTitle:"நான் ஒரு விற்பனையாளர்", roleVendorDesc:"விளம்பரங்களை இடுகையிட்டு வணிகத்தை மேம்படுத்தவும்" },
+
+    ur: { langModal:"زبان منتخب کریں", welcomeTitle:"EAP میں خوش آمدید", welcomeSub:"شروع کرنے کے لیے اپنا کردار منتخب کریں:",
+          roleUserTitle:"میں ایک صارف ہوں", roleUserDesc:"اشتہارات دیکھیں اور پیسے کمائیں",
+          roleVendorTitle:"میں ایک وینڈر ہوں", roleVendorDesc:"اشتہارات پوسٹ کریں اور کاروبار کو فروغ دیں" },
+
+    gu: { langModal:"ભાષા પસંદ કરો", welcomeTitle:"EAP માં તમારું સ્વાગત છે", welcomeSub:"શરૂ કરવા માટે તમારી ભૂમિકા પસંદ કરો:",
+          roleUserTitle:"હું એક વપરાશકર્તા છું", roleUserDesc:"જાહેરાતો જુઓ અને કમાણી કરો",
+          roleVendorTitle:"હું એક વિક્રેતા છું", roleVendorDesc:"જાહેરાતો પોસ્ટ કરો અને વ્યવસાય પ્રમોટ કરો" },
+
+    kn: { langModal:"ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ", welcomeTitle:"EAP ಗೆ ಸ್ವಾಗತ", welcomeSub:"ಪ್ರಾರಂಭಿಸಲು ನಿಮ್ಮ ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ:",
+          roleUserTitle:"ನಾನು ಒಬ್ಬ ಬಳಕೆದಾರ", roleUserDesc:"ಜಾಹೀರಾತುಗಳನ್ನು ವೀಕ್ಷಿಸಿ ಮತ್ತು ಗಳಿಸಿ",
+          roleVendorTitle:"ನಾನು ಒಬ್ಬ ಮಾರಾಟಗಾರ", roleVendorDesc:"ಜಾಹೀರಾತುಗಳನ್ನು ಪೋಸ್ಟ್ ಮಾಡಿ ಮತ್ತು ವ್ಯಾಪಾರವನ್ನು ಉತ್ತೇಜಿಸಿ" },
+
+    or: { langModal:"ଭାଷା ବାଛନ୍ତୁ", welcomeTitle:"EAP କୁ ସ୍ୱାଗତ", welcomeSub:"ଆରମ୍ଭ କରିବାକୁ ଆପଣଙ୍କର ଭୂମିକା ବାଛନ୍ତୁ:",
+          roleUserTitle:"ମୁଁ ଜଣେ ଉପଯୋଗକର୍ତ୍ତା", roleUserDesc:"ବିଜ୍ଞାପନ ଦେଖନ୍ତୁ ଏବଂ ରୋଜଗାର କରନ୍ତୁ",
+          roleVendorTitle:"ମୁଁ ଜଣେ ବିକ୍ରେତା", roleVendorDesc:"ବିଜ୍ଞାପନ ପୋଷ୍ଟ କରନ୍ତୁ ଏବଂ ବ୍ୟବସାୟ ପ୍ରୋତ୍ସାହିତ କରନ୍ତୁ" },
+
+    ml: { langModal:"ഭാഷ തിരഞ്ഞെടുക്കുക", welcomeTitle:"EAP-ലേക്ക് സ്വാഗതം", welcomeSub:"ആരംഭിക്കാൻ നിങ്ങളുടെ റോൾ തിരഞ്ഞെടുക്കുക:",
+          roleUserTitle:"ഞാൻ ഒരു ഉപയോക്താവ്", roleUserDesc:"പരസ്യങ്ങൾ കാണുകയും സമ്പാദിക്കുകയും ചെയ്യുക",
+          roleVendorTitle:"ഞാൻ ഒരു വെണ്ടർ", roleVendorDesc:"പരസ്യങ്ങൾ പോസ്റ്റ് ചെയ്ത് ബിസിനസ്സ് പ്രമോട്ട് ചെയ്യുക" },
+
+    pa: { langModal:"ਭਾਸ਼ਾ ਚੁਣੋ", welcomeTitle:"EAP ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ", welcomeSub:"ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਆਪਣੀ ਭੂਮਿਕਾ ਚੁਣੋ:",
+          roleUserTitle:"ਮੈਂ ਇੱਕ ਯੂਜ਼ਰ ਹਾਂ", roleUserDesc:"ਇਸ਼ਤਿਹਾਰ ਦੇਖੋ ਅਤੇ ਕਮਾਓ",
+          roleVendorTitle:"ਮੈਂ ਇੱਕ ਵੈਂਡਰ ਹਾਂ", roleVendorDesc:"ਇਸ਼ਤਿਹਾਰ ਪੋਸਟ ਕਰੋ ਅਤੇ ਕਾਰੋਬਾਰ ਨੂੰ ਉਤਸ਼ਾਹਿਤ ਕਰੋ" },
+
+    as: { langModal:"ভাষা বাছনি কৰক", welcomeTitle:"EAP লৈ স্বাগতম", welcomeSub:"আৰম্ভ কৰিবলৈ আপোনাৰ ভূমিকা বাছনি কৰক:",
+          roleUserTitle:"মই এজন ব্যৱহাৰকাৰী", roleUserDesc:"বিজ্ঞাপন চাওক আৰু উপাৰ্জন কৰক",
+          roleVendorTitle:"মই এজন বিক্ৰেতা", roleVendorDesc:"বিজ্ঞাপন পোষ্ট কৰক আৰু ব্যৱসায় প্ৰচাৰ কৰক" },
+
+    ne: { langModal:"भाषा छान्नुहोस्", welcomeTitle:"EAP मा स्वागत छ", welcomeSub:"सुरु गर्न आफ्नो भूमिका छान्नुहोस्:",
+          roleUserTitle:"म एक प्रयोगकर्ता हुँ", roleUserDesc:"विज्ञापनहरू हेर्नुहोस् र कमाउनुहोस्",
+          roleVendorTitle:"म एक विक्रेता हुँ", roleVendorDesc:"विज्ञापनहरू पोस्ट गर्नुहोस् र व्यवसाय प्रवर्द्धन गर्नुहोस्" }
+};
+
+var currentLang = localStorage.getItem("eap_lang") || "en";
+
+function t(key) {
+    var d = DICT[currentLang];
+    if (d && d[key]) return d[key];
+    return DICT.en[key] || key; // always falls back to English, never shows a raw key
+}
+
+function applyLang(code) {
+    currentLang = code;
+    localStorage.setItem("eap_lang", code);
+
+    var langMeta = LANGUAGES.find(function(l){ return l.code === code; }) || LANGUAGES[0];
+    document.getElementById("langBtnLabel").innerText = langMeta.english === "English" ? "EN" : langMeta.native;
+    document.documentElement.setAttribute("lang", code);
+    document.documentElement.setAttribute("dir", langMeta.rtl ? "rtl" : "ltr");
+
+    document.querySelectorAll("[data-i18n]").forEach(function(el){
+        el.innerText = t(el.getAttribute("data-i18n"));
+    });
+
+    renderLangList();
+}
+
+function renderLangList() {
+    var listEl = document.getElementById("langList");
+    listEl.innerHTML = "";
+    LANGUAGES.forEach(function(lang){
+        var row = document.createElement("button");
+        row.className = "lang-row" + (lang.code === currentLang ? " selected" : "");
+        row.innerHTML =
+            '<div>' +
+                '<div class="lang-native">' + lang.native + (lang.translated ? "" : '<span class="lang-beta-tag">EN for now</span>') + '</div>' +
+                '<div class="lang-english">' + lang.english + '</div>' +
+            '</div>' +
+            '<span class="lang-check">✓</span>';
+        row.onclick = function(){ applyLang(lang.code); closeLangSheet(); };
+        listEl.appendChild(row);
+    });
+}
+
+function openLangSheet(){ document.getElementById("langOverlay").classList.add("open"); }
+function closeLangSheet(){ document.getElementById("langOverlay").classList.remove("open"); }
+
+document.getElementById("langBtn").onclick = openLangSheet;
+document.getElementById("langCloseBtn").onclick = closeLangSheet;
+document.getElementById("langOverlay").onclick = function(e){
+    if (e.target === document.getElementById("langOverlay")) closeLangSheet();
+};
+
+applyLang(currentLang); // apply saved (or default English) language immediately on load
+
 // ── DEFAULT ADS ────────────────────────────────────────────────────────
 var DEFAULT_ADS = [
     {
