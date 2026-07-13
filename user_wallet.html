@@ -285,7 +285,7 @@
   <div class="bottom-nav">
     <a href="home.html"    class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
     <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
-    <a href="wallet.html"  class="nav-item active"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
+    <a href="user_wallet.html"  class="nav-item active"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
     <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
   </div>
 
@@ -304,13 +304,15 @@
     renderTransactions();
   }
 
+  var STATUS_LABEL = { not_paid: "Not Paid", hold: "On Hold", paid: "Paid" };
+
   function renderTransactions(){
     var history = user.adHistory || [];
     var list    = document.getElementById("txList");
 
     // Also show withdrawal history
     var allRequests = JSON.parse(localStorage.getItem("withdrawalRequests"))||[];
-    var myWithdraw  = allRequests.filter(function(r){ return r.mobile===activeMobile; });
+    var myWithdraw  = allRequests.filter(function(r){ return r.userPhone===activeMobile; });
 
     if(!history.length && !myWithdraw.length){
       list.innerHTML='<div style="text-align:center;color:#aaa;font-size:12px;margin-top:30px;">No transactions yet</div>';
@@ -333,11 +335,12 @@
 
     // Show withdrawals
     myWithdraw.slice().reverse().forEach(function(w){
+      var label = STATUS_LABEL[w.status] || w.status;
       list.innerHTML +=
         '<div class="tx-card">' +
           '<div class="tx-left">' +
             '<div class="tx-icon debit-icon">⬇️</div>' +
-            '<div class="tx-info"><h4>Withdrawal</h4><p>UPI: '+w.upi+' • '+w.date+' • '+w.status+'</p></div>' +
+            '<div class="tx-info"><h4>Withdrawal</h4><p>UPI: '+w.vpa+' • '+w.requestedDate+' • '+label+'</p></div>' +
           '</div>' +
           '<div class="tx-val debit">-₹'+parseFloat(w.amount||0).toFixed(2)+'</div>' +
         '</div>';
@@ -365,7 +368,23 @@
     user.wallet = (parseFloat(user.wallet)-amt).toFixed(2);
     localStorage.setItem("userProfile_"+activeMobile,JSON.stringify(user));
 
-    var req = { id:"WID"+Math.floor(Math.random()*99999), user:user.name, mobile:activeMobile, amount:amt, upi:upi, status:"Pending", date:new Date().toLocaleDateString() };
+    // NOTE: this shape must match what admin_withdrawals.html / withdrawal_detail.html
+    // expect, or requests submitted here won't show up correctly on the admin side.
+    var req = {
+      id: "WID" + Math.floor(Math.random()*99999),
+      userName: user.name || activeMobile,
+      userPhone: activeMobile,
+      amount: amt,
+      mode: "upi",
+      vpa: upi,
+      bankAccount: "",
+      ifsc: "",
+      requestedDate: new Date().toLocaleDateString(),
+      status: "not_paid",     // admin's vocabulary: "not_paid" | "hold" | "paid"
+      holdReason: "",
+      referenceId: "",
+      utr: ""
+    };
     var reqs = JSON.parse(localStorage.getItem("withdrawalRequests"))||[];
     reqs.push(req);
     localStorage.setItem("withdrawalRequests",JSON.stringify(reqs));
@@ -440,7 +459,7 @@
   // ── DOWNLOAD STATEMENT ──────────────────────────────────────
   function downloadStatement(){
     var history  = user.adHistory || [];
-    var requests = (JSON.parse(localStorage.getItem("withdrawalRequests"))||[]).filter(function(r){ return r.mobile===activeMobile; });
+    var requests = (JSON.parse(localStorage.getItem("withdrawalRequests"))||[]).filter(function(r){ return r.userPhone===activeMobile; });
 
     // Determine date range
     var fromDate = null, toDate = new Date();
@@ -477,7 +496,7 @@
     }
 
     var filteredHistory  = history.filter(function(tx){ return inRange(tx.date); });
-    var filteredWithdraw = requests.filter(function(w){ return inRange(w.date); });
+    var filteredWithdraw = requests.filter(function(w){ return inRange(w.requestedDate); });
 
     if(!filteredHistory.length && !filteredWithdraw.length){
       showToast("No transactions found for this period");
@@ -508,11 +527,11 @@
       var idx = filteredHistory.length+i;
       rows +=
         '<tr style="background:'+(idx%2===0?'#fff':'#fafafa')+'">' +
-          '<td style="padding:8px 10px;">'+(w.date||"-")+'</td>' +
+          '<td style="padding:8px 10px;">'+(w.requestedDate||"-")+'</td>' +
           '<td style="padding:8px 10px;">Withdrawal</td>' +
-          '<td style="padding:8px 10px;">UPI: '+w.upi+'</td>' +
+          '<td style="padding:8px 10px;">UPI: '+w.vpa+'</td>' +
           '<td style="padding:8px 10px;color:#c62828;font-weight:700;">-₹'+parseFloat(w.amount||0).toFixed(2)+'</td>' +
-          '<td style="padding:8px 10px;color:'+(w.status==="Approved"?"#2e7d32":w.status==="Rejected"?"#c62828":"#ff9800")+';">'+w.status+'</td>' +
+          '<td style="padding:8px 10px;color:'+(w.status==="paid"?"#2e7d32":w.status==="hold"?"#e65100":"#ff9800")+';">'+(STATUS_LABEL[w.status]||w.status)+'</td>' +
         '</tr>';
     });
 
