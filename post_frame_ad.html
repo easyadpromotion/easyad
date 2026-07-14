@@ -235,6 +235,12 @@
         }
         .btn-sub:active { transform: scale(.98); }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body>
 
@@ -856,6 +862,12 @@ function calcCost() {
 }
 
 // ── PUBLISH AD ───────────────────────────────────────────
+function parseCurrency(str) {
+    if (typeof str === "number") return str;
+    if (!str) return 0;
+    return parseFloat(String(str).replace(/[₹,\s]/g, "")) || 0;
+}
+
 function publishAd() {
     const name = document.getElementById("campName").value.trim();
     const cat = document.getElementById("campCat").value;
@@ -864,7 +876,9 @@ function publishAd() {
     const total = document.getElementById("tot").innerText;
     const loc = selLoc.address;
     const fi = document.getElementById("adImage");
+    const mobile = localStorage.getItem("activeVendor");
 
+    if (!mobile) { alert("You're not signed in — please log in before posting an ad."); return; }
     if (!name) { alert("Please enter Campaign Name"); return; }
     if (!desc) { alert("Please enter Ad Description"); return; }
     if (cat === "Select Category") { alert("Please select a Category"); return; }
@@ -879,41 +893,62 @@ function publishAd() {
         c.width = 800;
         c.height = img.height * (800 / img.width);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        saveAd(name, cat, desc, views, total, c.toDataURL("image/jpeg", 0.7), loc);
+        c.toBlob(function(blob) {
+            saveAd(name, cat, desc, views, total, blob, loc, mobile);
+        }, "image/jpeg", 0.7);
     };
 }
 
-function saveAd(name, cat, desc, views, total, image, loc) {
+// ⚠️ REQUIRES a Storage bucket named "ad-images" to exist in Supabase,
+// set to Public. Create it once via Dashboard → Storage → New bucket.
+// (Not something SQL can create — it's a Storage-specific setting.)
+async function saveAd(name, cat, desc, views, total, imageBlob, loc, mobile) {
+    const submitBtn = document.querySelector(".btn-sub");
+    submitBtn.disabled = true;
+    submitBtn.innerText = "Uploading image...";
+
     try {
-        const ad = {
-            id: "FRA" + Math.floor(Math.random() * 9999),
+        const filePath = `frame/${mobile}_${Date.now()}.jpg`;
+        const { error: uploadError } = await supabaseClient
+            .storage.from('ad-images')
+            .upload(filePath, imageBlob, { contentType: 'image/jpeg' });
+
+        if (uploadError) {
+            throw new Error("Image upload failed: " + uploadError.message);
+        }
+
+        const { data: urlData } = supabaseClient.storage.from('ad-images').getPublicUrl(filePath);
+        const imageUrl = urlData.publicUrl;
+
+        submitBtn.innerText = "Saving ad...";
+
+        const { error: insertError } = await supabaseClient.from('campaigns').insert({
+            vendor_mobile: mobile,
             type: "Frame",
             title: name,
-            desc: desc,
+            description: desc,
             category: cat,
-            image: image,
-            budget: total,
-            target: views,
+            image_url: imageUrl,
+            target_views: parseInt(views) || null,
+            budget: parseCurrency(total),
             status: "Pending",
-            date: new Date().toLocaleDateString(),
             location: loc,
-            mapLink: loc,
             lat: selLoc.lat,
-            lng: selLoc.lng
-        };
+            lng: selLoc.lng,
+            place_id: selLoc.placeId || null
+        });
 
-        const all = JSON.parse(localStorage.getItem("all_frame_ads") || "[]");
-        all.push(ad);
-        localStorage.setItem("all_frame_ads", JSON.stringify(all));
-
-        const vc = JSON.parse(localStorage.getItem("vendorCampaigns") || "[]");
-        vc.push(ad);
-        localStorage.setItem("vendorCampaigns", JSON.stringify(vc));
+        if (insertError) {
+            throw new Error("Saving ad failed: " + insertError.message);
+        }
 
         alert("✅ Ad Submitted Successfully!");
         window.location.href = "vendor-dashboard.html";
-    } catch(e) {
-        alert(e.name === "QuotaExceededError" ? "❌ Storage Full." : "❌ Error: " + e.message);
+    } catch (e) {
+        console.error(e);
+        alert("❌ " + e.message);
+        submitBtn.disabled = false;
+        submitBtn.innerText = "PAY & PUBLISH AD";
     }
 }
 </script>
