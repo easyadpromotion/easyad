@@ -35,6 +35,12 @@
   .nav-item.active { color:#009688; font-weight:700; }
   .nav-icon { font-size:22px; display:block; margin-bottom:3px; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body>
 <div class="mobile-screen">
@@ -54,21 +60,55 @@
   <div class="bottom-nav">
     <div class="nav-item" onclick="window.location.href='vendor-dashboard.html'"><span class="nav-icon">🏠</span> Home</div>
     <div class="nav-item active" onclick="window.location.href='my-ads.html'"><span class="nav-icon">📢</span> My Ads</div>
-    <div class="nav-item" onclick="window.location.href='wallet.html'"><span class="nav-icon">👛</span> Wallet</div>
+    <div class="nav-item" onclick="window.location.href='vendor_wallet.html'"><span class="nav-icon">👛</span> Wallet</div>
     <div class="nav-item" onclick="window.location.href='vendor-settings.html'"><span class="nav-icon">⚙️</span> Settings</div>
   </div>
 </div>
 
 <script>
-  function getAds() {
-    try { return JSON.parse(localStorage.getItem("vendorCampaigns")) || []; }
-    catch (e) { return []; }
+  // ── Supabase-backed getAds() — replaces localStorage("vendorCampaigns") ──
+  // Scoped to the currently logged-in vendor (vendor_mobile column).
+  async function getAds() {
+    const mobile = localStorage.getItem("activeVendor");
+    if (!mobile) return [];
+    const { data, error } = await supabaseClient
+      .from('campaigns')
+      .select('*')
+      .eq('vendor_mobile', mobile)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('Supabase getAds error:', error); return []; }
+    return (data || []).map(adaptRow);
+  }
+
+  function adaptRow(row) {
+    return {
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      name: row.title,
+      desc: row.description,
+      category: row.category,
+      image: row.image_url,
+      budget: row.budget != null ? "₹ " + Number(row.budget).toFixed(2) : "—",
+      target: row.target_views,
+      status: row.status,
+      date: row.created_at ? new Date(row.created_at).toLocaleDateString() : "—",
+      location: row.location,
+      lat: row.lat,
+      lng: row.lng,
+      stats: { views: row.views || 0, clicks: row.clicks || 0, spent: row.spent || 0 },
+      pausedAt: row.paused_at ? new Date(row.paused_at).toLocaleString() : null,
+      pauseReason: row.paused_reason,
+      completedDate: row.completed_at ? new Date(row.completed_at).toLocaleDateString() : null,
+      rejectReason: row.reject_reason,
+      vendorMobile: row.vendor_mobile
+    };
   }
   function getAdName(ad) { return ad.title || ad.name || ad.id || "Untitled Ad"; }
   function typeIcon(t) { return t === "Frame" ? "🖼️" : t === "Video" ? "🎬" : t === "Survey" ? "📋" : "📢"; }
 
-  function render() {
-    const ads = getAds().filter(a => (a.status || "").toLowerCase() === "active");
+  async function render() {
+    const ads = (await getAds()).filter(a => (a.status || "").toLowerCase() === "active");
     document.getElementById("summaryCount").innerText = ads.length;
     const listArea = document.getElementById("listArea");
 
