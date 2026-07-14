@@ -236,6 +236,12 @@
             padding: 5px 12px; border-radius: 20px; border: none; cursor: pointer; font-family: 'Poppins',sans-serif;
         }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body onload="generateQuestions()">
 
@@ -372,10 +378,10 @@
 
         for (var i = 1; i <= count; i++) {
             var html = `
-            <div class="question-block">
+            <div class="question-block" data-qindex="${i}">
                 <div class="q-number">${i}</div>
                 <label>Question ${i}</label>
-                <input type="text" placeholder="Type question here...">
+                <input type="text" id="qText-${i}" placeholder="Type question here...">
                 <div class="options-list" id="optionsList-${i}">
                     <div class="option-row">
                         <input type="text" placeholder="Option 1" class="opt-input">
@@ -439,41 +445,100 @@
     }
 
     // --- FUNCTION TO SAVE AD ---
-    function publishSurvey() {
-        const name = document.getElementById('campName').value;
+    function parseCurrency(str) {
+        if (typeof str === "number") return str;
+        if (!str) return 0;
+        return parseFloat(String(str).replace(/[₹,\s]/g, "")) || 0;
+    }
+
+    async function publishSurvey() {
+        const name = document.getElementById('campName').value.trim();
+        const tagline = document.getElementById('campTag').value.trim();
         const category = document.getElementById('campCat').value;
         const totalCost = document.getElementById('totalDisplay').innerText;
         const responses = document.getElementById('responses').value;
         const loc = selLoc.address;
+        const mobile = localStorage.getItem("activeVendor");
 
+        if (!mobile) { alert("You're not signed in — please log in before posting an ad."); return; }
         if (!name) { alert("Please enter Campaign Name"); return; }
         if (!loc) { alert("Please search and select a Target Location"); return; }
 
-        // 1. Create Ad Object
-        const newAd = {
-            id: "SUR" + Math.floor(Math.random() * 9999),
-            type: "Survey",
-            name: name,
-            category: category,
-            stats: { views: 0, clicks: 0, spent: 0 },
-            budget: totalCost,
-            target: responses,
-            status: "Pending", // Important: Starts as Pending
-            date: new Date().toLocaleDateString(),
-            location: loc,
-            mapLink: loc,
-            lat: selLoc.lat,
-            lng: selLoc.lng
-        };
+        // Gather questions + options from the DOM
+        const blocks = document.querySelectorAll('#questionsContainer .question-block');
+        const questions = [];
+        for (const block of blocks) {
+            const qIndex = block.getAttribute('data-qindex');
+            const qText = document.getElementById('qText-' + qIndex).value.trim();
+            if (!qText) { alert('Please fill in Question ' + qIndex + ' (or reduce "How many questions?").'); return; }
 
-        // 2. Get Existing Ads & Save
-        let ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-        ads.push(newAd);
-        localStorage.setItem("vendorCampaigns", JSON.stringify(ads));
+            const optionInputs = block.querySelectorAll('.opt-input');
+            const options = [];
+            optionInputs.forEach(inp => {
+                const val = inp.value.trim();
+                if (val) options.push(val);
+            });
+            if (options.length < 2) { alert('Question ' + qIndex + ' needs at least 2 filled-in options.'); return; }
 
-        // 3. Redirect
-        alert("Survey Submitted! Sent to Admin for Approval.");
-        window.location.href = "manage_campaigns.html"; // Go to list
+            questions.push({ text: qText, options: options });
+        }
+        if (!questions.length) { alert('Please add at least one question.'); return; }
+
+        const submitBtn = document.querySelector('.btn-submit');
+        submitBtn.disabled = true;
+        submitBtn.innerText = "Submitting...";
+
+        try {
+            // 1. Insert the campaign row, get its generated id back
+            const { data: campaign, error: campaignError } = await supabaseClient
+                .from('campaigns')
+                .insert({
+                    vendor_mobile: mobile,
+                    type: "Survey",
+                    title: name,
+                    description: tagline || null,
+                    category: category,
+                    target_views: parseInt(responses) || null,
+                    budget: parseCurrency(totalCost),
+                    status: "Pending",
+                    location: loc,
+                    lat: selLoc.lat,
+                    lng: selLoc.lng,
+                    place_id: selLoc.placeId || null
+                })
+                .select()
+                .single();
+
+            if (campaignError) throw new Error("Saving survey failed: " + campaignError.message);
+
+            // 2. Insert each question, then its options
+            for (let i = 0; i < questions.length; i++) {
+                const q = questions[i];
+                const { data: qRow, error: qError } = await supabaseClient
+                    .from('survey_questions')
+                    .insert({ campaign_id: campaign.id, question_text: q.text, order_index: i })
+                    .select()
+                    .single();
+
+                if (qError) throw new Error("Saving question " + (i + 1) + " failed: " + qError.message);
+
+                const optionRows = q.options.map((opt, idx) => ({
+                    question_id: qRow.id,
+                    option_text: opt,
+                    order_index: idx
+                }));
+                const { error: optError } = await supabaseClient.from('survey_options').insert(optionRows);
+                if (optError) throw new Error("Saving options for question " + (i + 1) + " failed: " + optError.message);
+            }
+
+            alert("Survey Submitted! Sent to Admin for Approval.");
+            window.location.href = "vendor-dashboard.html";
+        } catch (e) {
+            console.error(e);
+            alert("❌ " + e.message);
+            submitBtn.disabled = false;
+            submitBtn.innerText = "PAY & PUBLISH SURVEY";
+        }
     }
 
     // ══════════════════════════════════════════════════════
