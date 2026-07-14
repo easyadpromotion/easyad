@@ -96,6 +96,12 @@
     .nav-icon { font-size: 22px; display: block; margin-bottom: 3px; }
 
   </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body>
 
@@ -205,15 +211,23 @@
     loadDashboardStats();
   };
 
-  // ── LIVE STATS (pulled from the same "vendorCampaigns" localStorage
-  // key that frame-ads.html / post_video_ad.html / post_survey_ad.html
-  // save each new ad into) ──────────────────────────────────────────
-  function loadDashboardStats() {
+  // ── LIVE STATS (pulled from Supabase "campaigns" table, filtered to
+  // the logged-in vendor — replaces the old localStorage("vendorCampaigns")
+  // read, which only ever saw ads posted from this same browser) ──────
+  async function loadDashboardStats() {
+    const mobile = localStorage.getItem("activeVendor");
     let ads = [];
-    try {
-      ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-    } catch (e) {
-      ads = [];
+
+    if (mobile) {
+      const { data, error } = await supabaseClient
+        .from('campaigns')
+        .select('status, views')
+        .eq('vendor_mobile', mobile);
+      if (error) {
+        console.error('Supabase loadDashboardStats error:', error);
+      } else {
+        ads = data || [];
+      }
     }
 
     let active = 0, paused = 0, completed = 0, totalViews = 0;
@@ -223,11 +237,7 @@
       if (status === "active") active++;
       else if (status === "paused") paused++;
       else if (status === "completed") completed++;
-
-      // Frame ads currently don't carry a "stats" object (only
-      // video/survey ads do) — default to 0 views when missing.
-      const views = (ad.stats && typeof ad.stats.views === "number") ? ad.stats.views : 0;
-      totalViews += views;
+      totalViews += (typeof ad.views === "number") ? ad.views : 0;
     });
 
     document.getElementById("statActive").innerText = active;
