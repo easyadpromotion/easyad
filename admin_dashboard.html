@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>if(sessionStorage.getItem("eap_admin_authed")!=="1"){document.documentElement.style.display="none";window.location.replace("admin_login.html");}</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
@@ -78,9 +77,14 @@
         .bg-blue { background: #e3f2fd; color: #1565c0; }
         .bg-green { background: #e8f5e9; color: #2e7d32; }
         .bg-purple { background: #f3e5f5; color: #7b1fa2; }
-        .bg-teal { background: #e0f7fa; color: #00796b; }
 
     </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body onload="loadStats()">
 
@@ -89,7 +93,7 @@
     <div class="header">
         <div class="header-top">
             <div class="admin-title">Master Control 🛡️</div>
-            <a href="#" class="logout-btn" onclick="sessionStorage.removeItem('eap_admin_authed'); window.location.href='admin_login.html'; return false;">Log Out</a>
+            <a href="admin_login.html" class="logout-btn">Log Out</a>
         </div>
     </div>
 
@@ -125,19 +129,10 @@
             <div class="arrow">ᐳ</div>
         </a>
 
-        <a href="admin_banner_ads.html" class="action-card">
-            <div class="icon-box bg-teal">🎯</div>
-            <div class="ac-text">
-                <h4>Landing Page Ads</h4>
-                <p>Control the homepage ad carousel</p>
-            </div>
-            <div class="arrow">ᐳ</div>
-        </a>
-
         <a href="admin_withdrawals.html" class="action-card">
             <div class="icon-box bg-blue">💸</div>
             <div class="ac-text">
-                <h4>Withdrawals <span class="badge" id="badgeWithdrawals">0</span></h4>
+                <h4>Withdrawals <span class="badge">7</span></h4>
                 <p>Approve bank transfers</p>
             </div>
             <div class="arrow">ᐳ</div>
@@ -166,39 +161,20 @@
 </div>
 
 <script>
-    function hashStr(str){ let h=0; for(let i=0;i<str.length;i++){ h=(h<<5)-h+str.charCodeAt(i); h|=0; } return Math.abs(h); }
-    function mulberry32(seed){ return function(){ seed|=0; seed=(seed+0x6D2B79F5)|0; let t=Math.imul(seed^(seed>>>15),1|seed); t=(t+Math.imul(t^(t>>>7),61|t))^t; return ((t^(t>>>14))>>>0)/4294967296; }; }
+    async function loadStats() {
+        // Count Pending Ads across ALL vendors — admin view is intentionally
+        // unfiltered (unlike vendor-facing pages, which scope to one vendor_mobile)
+        const { data, error } = await supabaseClient
+            .from('campaigns')
+            .select('status')
+            .eq('status', 'Pending');
 
-    const WD_NAMES = ["Ravi Kumar","Priya Sharma","Arjun Reddy","Sneha Iyer","Karthik Nair","Divya Menon","Manoj Rao","Ananya Das","Suresh Pillai","Lakshmi Devi","Vikram Singh","Pooja Patel","Rahul Verma","Meera Joseph","Aditya Kumar"];
-    const WD_BANKS = ["HDFC0000123","ICIC0000456","SBIN0000789","AXIS0000321","UTIB0000654"];
-    function seedWithdrawalsIfNeeded(){
-        if(localStorage.getItem("withdrawalRequests")) return;
-        const rnd = mulberry32(hashStr("withdrawals-seed"));
-        const statuses = ["not_paid","not_paid","not_paid","hold","hold","paid","paid"];
-        const rows = WD_NAMES.map((name, i)=>{
-            const day = Math.floor(rnd()*10)+1;
-            const useUpi = rnd() > 0.5;
-            return {
-                id: "WD" + (10230 + i),
-                userName: name,
-                userPhone: "9" + Math.floor(100000000 + rnd()*899999999),
-                amount: Math.floor(500 + rnd()*9500),
-                mode: useUpi ? "upi" : "bank",
-                vpa: useUpi ? name.toLowerCase().replace(/\s+/g,"") + "@okhdfcbank" : "",
-                bankAccount: useUpi ? "" : String(1000000000 + Math.floor(rnd()*8999999999)),
-                ifsc: useUpi ? "" : WD_BANKS[Math.floor(rnd()*WD_BANKS.length)],
-                requestedDate: `${String(day).padStart(2,"0")}-07-2026`,
-                status: statuses[i % statuses.length],
-                holdReason: "", referenceId: "", utr: ""
-            };
-        });
-        localStorage.setItem("withdrawalRequests", JSON.stringify(rows));
-    }
+        if (error) {
+            console.error('Supabase loadStats error:', error);
+            return;
+        }
 
-    function loadStats() {
-        // Count Pending Ads from Memory
-        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-        const pendingCount = ads.filter(ad => ad.status === "Pending").length;
+        const pendingCount = (data || []).length;
 
         // Update UI
         document.getElementById("totalPending").innerText = pendingCount;
@@ -210,18 +186,6 @@
             badge.style.display = "inline-block";
         } else {
             badge.style.display = "none";
-        }
-
-        // Withdrawals badge — count requests still Not Paid or on Hold
-        seedWithdrawalsIfNeeded();
-        const withdrawals = JSON.parse(localStorage.getItem("withdrawalRequests")) || [];
-        const wdPending = withdrawals.filter(w => w.status === "not_paid" || w.status === "hold").length;
-        const wdBadge = document.getElementById("badgeWithdrawals");
-        if(wdPending > 0){
-            wdBadge.innerText = wdPending;
-            wdBadge.style.display = "inline-block";
-        } else {
-            wdBadge.style.display = "none";
         }
     }
 </script>
