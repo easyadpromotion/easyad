@@ -58,6 +58,12 @@
   .empty-state .ic { font-size:40px; opacity:.4; margin-bottom:10px; }
   .empty-state p { font-size:12px; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body>
 <div class="mobile-screen">
@@ -84,21 +90,46 @@
   // video, survey) needs to stamp ad.vendorMobile = localStorage
   // .getItem("activeVendor") when it saves — happy to add that.
 
+  // ⚠️ DATA MODEL NOTE: this queue reads from the shared Supabase
+  // "campaigns" table with no vendor filter — admin intentionally sees
+  // every vendor's ads here, unlike vendor-facing pages which scope to
+  // one vendor_mobile.
+
   const FILTERS = ["Pending", "Active", "Rejected", "All"];
   let currentFilter = "Pending";
 
-  function getAds() {
-    try { return JSON.parse(localStorage.getItem("vendorCampaigns")) || []; }
-    catch (e) { return []; }
+  async function getAds() {
+    const { data, error } = await supabaseClient
+      .from('campaigns')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (error) { console.error('Supabase getAds error:', error); return []; }
+    return (data || []).map(adaptRow);
   }
-  function saveAds(ads) {
-    localStorage.setItem("vendorCampaigns", JSON.stringify(ads));
-    // Frame ads also mirror into "all_frame_ads" — keep that in sync too
-    // so frame-ad-specific views don't go stale.
-    try {
-      const frameAds = ads.filter(a => a.type === "Frame");
-      localStorage.setItem("all_frame_ads", JSON.stringify(frameAds));
-    } catch (e) {}
+
+  function adaptRow(row) {
+    return {
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      name: row.title,
+      desc: row.description,
+      category: row.category,
+      image: row.image_url,
+      budget: row.budget != null ? "₹ " + Number(row.budget).toFixed(2) : "—",
+      target: row.target_views,
+      status: row.status,
+      date: row.created_at ? new Date(row.created_at).toLocaleDateString() : "—",
+      location: row.location,
+      lat: row.lat,
+      lng: row.lng,
+      stats: { views: row.views || 0, clicks: row.clicks || 0, spent: row.spent || 0 },
+      pausedAt: row.paused_at ? new Date(row.paused_at).toLocaleString() : null,
+      pauseReason: row.paused_reason,
+      completedDate: row.completed_at ? new Date(row.completed_at).toLocaleDateString() : null,
+      rejectReason: row.reject_reason,
+      vendorMobile: row.vendor_mobile
+    };
   }
   function getAdName(ad) { return ad.title || ad.name || ad.id || "Untitled Ad"; }
   function typeIcon(t) { return t === "Frame" ? "🖼️" : t === "Video" ? "🎬" : t === "Survey" ? "📋" : "📢"; }
@@ -130,8 +161,8 @@
     render();
   }
 
-  function render() {
-    const allAds = getAds();
+  async function render() {
+    const allAds = await getAds();
     const pendingCount = allAds.filter(a => (a.status || "").toLowerCase() === "pending").length;
     document.getElementById("pendingCount").innerText = pendingCount + " Pending";
 
@@ -139,7 +170,7 @@
     if (currentFilter !== "All") {
       ads = ads.filter(a => (a.status || "Pending").toLowerCase() === currentFilter.toLowerCase());
     }
-    ads = ads.slice().reverse(); // newest first
+    // Supabase query already orders newest-first (created_at desc)
 
     const listArea = document.getElementById("listArea");
     if (!ads.length) {
@@ -183,25 +214,28 @@
     }).join("");
   }
 
-  function approveAd(id) {
-    const ads = getAds();
-    const ad = ads.find(a => a.id === id);
-    if (!ad) return;
-    ad.status = "Active";
-    ad.approvedDate = new Date().toLocaleString();
-    saveAds(ads);
+  async function approveAd(id) {
+    const { error } = await supabaseClient
+      .from('campaigns')
+      .update({ status: 'Active', approved_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) { console.error('Supabase approveAd error:', error); alert('Failed to approve — check console.'); return; }
     render();
   }
 
-  function rejectAd(id) {
+  async function rejectAd(id) {
     const reason = prompt("Reason for rejecting this ad (optional):", "");
-    const ads = getAds();
-    const ad = ads.find(a => a.id === id);
-    if (!ad) return;
-    ad.status = "Rejected";
-    ad.rejectReason = reason || "";
-    ad.rejectedDate = new Date().toLocaleString();
-    saveAds(ads);
+    const { error } = await supabaseClient
+      .from('campaigns')
+      .update({
+        status: 'Rejected',
+        reject_reason: reason || "",
+        // no dedicated rejected_at column in schema — status + updated
+        // timestamp on the row itself covers it; add a column later if
+        // you want a separate rejected-at timestamp
+      })
+      .eq('id', id);
+    if (error) { console.error('Supabase rejectAd error:', error); alert('Failed to reject — check console.'); return; }
     render();
   }
 
