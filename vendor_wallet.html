@@ -41,6 +41,12 @@
   .nav-item.active { color:#009688; font-weight:700; }
   .nav-icon { font-size:22px; display:block; margin-bottom:3px; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body>
 <div class="mobile-screen">
@@ -69,9 +75,43 @@
 </div>
 
 <script>
-  function getAds() {
-    try { return JSON.parse(localStorage.getItem("vendorCampaigns")) || []; }
-    catch (e) { return []; }
+  // ── Supabase-backed getAds() — replaces localStorage("vendorCampaigns") ──
+  // Scoped to the currently logged-in vendor (vendor_mobile column).
+  async function getAds() {
+    const mobile = localStorage.getItem("activeVendor");
+    if (!mobile) return [];
+    const { data, error } = await supabaseClient
+      .from('campaigns')
+      .select('*')
+      .eq('vendor_mobile', mobile)
+      .order('created_at', { ascending: false });
+    if (error) { console.error('Supabase getAds error:', error); return []; }
+    return (data || []).map(adaptRow);
+  }
+
+  function adaptRow(row) {
+    return {
+      id: row.id,
+      type: row.type,
+      title: row.title,
+      name: row.title,
+      desc: row.description,
+      category: row.category,
+      image: row.image_url,
+      budget: row.budget != null ? "₹ " + Number(row.budget).toFixed(2) : "—",
+      target: row.target_views,
+      status: row.status,
+      date: row.created_at ? new Date(row.created_at).toLocaleDateString() : "—",
+      location: row.location,
+      lat: row.lat,
+      lng: row.lng,
+      stats: { views: row.views || 0, clicks: row.clicks || 0, spent: row.spent || 0 },
+      pausedAt: row.paused_at ? new Date(row.paused_at).toLocaleString() : null,
+      pauseReason: row.paused_reason,
+      completedDate: row.completed_at ? new Date(row.completed_at).toLocaleDateString() : null,
+      rejectReason: row.reject_reason,
+      vendorMobile: row.vendor_mobile
+    };
   }
   function getAdName(ad) { return ad.title || ad.name || ad.id || "Untitled Ad"; }
   function typeIcon(t) { return t === "Frame" ? "🖼️" : t === "Video" ? "🎬" : t === "Survey" ? "📋" : "📢"; }
@@ -89,8 +129,8 @@
   //   refund   = unitCost * (targetViews - deliveredViews)
   // Frame ads (no "stats" object yet) are skipped — their views aren't
   // tracked, so we can't compute a fair refund for them.
-  function computeRefunds() {
-    const ads = getAds().filter(a => (a.status || "").toLowerCase() === "completed");
+  async function computeRefunds() {
+    const ads = (await getAds()).filter(a => (a.status || "").toLowerCase() === "completed");
     const refunds = [];
 
     ads.forEach(ad => {
@@ -111,8 +151,8 @@
     return refunds;
   }
 
-  function render() {
-    const refunds = computeRefunds();
+  async function render() {
+    const refunds = await computeRefunds();
     const total = refunds.reduce((sum, r) => sum + r.refund, 0);
     document.getElementById("balanceAmt").innerText = formatCurrency(total);
 
