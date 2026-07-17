@@ -262,6 +262,12 @@
     .nav-item.active { color: #ff9800; }
     .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
   </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 
 <body onload="loadAds()">
@@ -414,11 +420,47 @@
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {wallet:0,viewedAds:[],adHistory:[]};
 
-  function loadAds(){
+  // ── Supabase-backed loadAds() — replaces localStorage("vendorCampaigns")
+  // Filters server-side to type=Frame AND status=Active — this also fixes
+  // a pre-existing bug where the old code showed everything except
+  // "Rejected" ads, meaning un-approved Pending ads were visible (and
+  // earnable) to real users before an admin ever reviewed them.
+  async function loadAds(){
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet||0).toFixed(2);
-    var allAds = JSON.parse(localStorage.getItem("vendorCampaigns"))
-              || JSON.parse(localStorage.getItem("all_frame_ads")) || [];
-    var frameAds = allAds.filter(function(a){ return a.type==="Frame" && a.status!=="Rejected"; });
+
+    const { data, error } = await supabaseClient
+      .from('campaigns')
+      .select('*')
+      .eq('type', 'Frame')
+      .eq('status', 'Active')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase loadAds error:', error);
+      document.getElementById("adContainer").innerHTML =
+        '<div class="empty-msg">⚠️ Couldn\'t load ads right now.<br>Please try again shortly.</div>';
+      return;
+    }
+
+    const frameAds = (data || []).map(function (row) {
+      return {
+        id: row.id,
+        type: row.type,
+        status: row.status,
+        title: row.title,
+        name: row.title,
+        desc: row.description,
+        description: row.description,
+        category: row.category,
+        image: row.image_url,
+        webLink: null,   // not currently collected on the vendor-side forms
+        website: null,
+        mapLink: row.location,
+        location: row.location,
+        address: row.location
+      };
+    });
+
     var container = document.getElementById("adContainer");
     if(!frameAds.length){
       container.innerHTML='<div class="empty-msg">📭 No active frame ads found.<br>Check back soon!</div>';
@@ -606,14 +648,21 @@
 
   function openWeb(enc){ var url=decodeURIComponent(enc); if(!url.startsWith("http")) url="https://"+url; var a=document.createElement("a"); a.href=url; a.target="_blank"; a.rel="noopener"; a.style.display="none"; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); },300); }
 
+  // Official Maps Embed API key — free/unlimited usage, but Google requires
+  // "Maps Embed API" to be enabled on the project and a billing account linked.
+  // Reuses the same key already restricted to this domain earlier.
+  var EMBED_API_KEY = "AIzaSyB_RipP0Lg8bgfYkOmZTMMKJQP__azFMm0";
+
   function openLocation(enc){
     var loc=decodeURIComponent(enc).trim(); var body=document.getElementById("locBody");
     if(!loc){ body.innerHTML='<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this ad yet.</div></div>'; }
     else {
       var isUrl=loc.startsWith("http");
       var mapsUrl=isUrl?loc:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(loc);
-      var embedUrl=isUrl?"":"https://maps.google.com/maps?q="+encodeURIComponent(loc)+"&output=embed";
-      body.innerHTML=(embedUrl?'<iframe class="loc-map-frame" src="'+embedUrl+'" allowfullscreen loading="lazy"></iframe>':'')
+      // Official Maps Embed API (place mode) — replaces the old unofficial
+      // "maps.google.com/maps?q=...&output=embed" trick.
+      var embedUrl=isUrl?"":"https://www.google.com/maps/embed/v1/place?key="+EMBED_API_KEY+"&q="+encodeURIComponent(loc);
+      body.innerHTML=(embedUrl?'<iframe class="loc-map-frame" src="'+embedUrl+'" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>':'')
         +'<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">'+loc+'</div></div>'
         +'<button class="open-maps-btn" onclick="openViaA(\''+mapsUrl+'\')">🗺️ Open in Google Maps</button>';
     }
