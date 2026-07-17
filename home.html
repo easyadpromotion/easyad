@@ -109,6 +109,12 @@
         .home-toast-text b { display: block; font-size: 13px; margin-bottom: 2px; }
         .home-toast-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; cursor: pointer; font-size: 12px; }
     </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 
 <body onload="loadHome()">
@@ -353,9 +359,32 @@
         }
     }
 
+    // ── Supabase-backed getActiveAds() — shared by loadTasks() and
+    // checkForNewAds() below. Replaces localStorage("vendorCampaigns").
+    async function getActiveAds() {
+        const { data, error } = await supabaseClient
+            .from('campaigns')
+            .select('*')
+            .order('created_at', { ascending: false });
+        if (error) { console.error('Supabase getActiveAds error:', error); return []; }
+        return (data || []).map(function (row) {
+            return {
+                id: row.id,
+                type: row.type,
+                status: row.status,
+                title: row.title,
+                name: row.title,
+                category: row.category,
+                location: row.location,
+                lat: row.lat,
+                lng: row.lng
+            };
+        });
+    }
+
     // ── Tasks ──────────────────────────────────────────────────
-    function loadTasks() {
-        var allAds   = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
+    async function loadTasks() {
+        var allAds   = await getActiveAds();
         var viewed   = userProfile.viewedAds || [];
         // NOTE: was checking ad.status === "Active" — tightened to match
         // whatever admin_approve_ads.html actually sets (see isLiveStatus()
@@ -435,8 +464,8 @@
         showHomeToast._t = setTimeout(function(){ toast.classList.remove("show"); }, 5000);
     }
 
-    function checkForNewAds() {
-        var ads = loadJSON("vendorCampaigns", []);
+    async function checkForNewAds() {
+        var ads = await getActiveAds();
         if (!ads.length) return;
         var userLoc = loadJSON(LOC_KEY, null);
         var seen = loadJSON(SEEN_KEY, []);
@@ -476,9 +505,13 @@
         }
     }
 
-    setInterval(checkForNewAds, POLL_MS);              // catches ads posted in this same tab/session
-    window.addEventListener("storage", function(e){    // catches ads posted/approved from another tab
-        if (e.key === "vendorCampaigns") checkForNewAds();
+    setInterval(checkForNewAds, POLL_MS);
+    // ⚠️ The old cross-tab "storage" event listener for vendorCampaigns is
+    // removed — that only ever fired when localStorage changed on this
+    // same origin/browser, which doesn't apply now that ads live in
+    // Supabase. The setInterval poll above is now the only mechanism that
+    // catches new/approved ads, including ones posted from other devices.
+    window.addEventListener("storage", function(e){
         if (e.key === NOTIF_KEY) updateNotifBadge();
     });
 </script>
