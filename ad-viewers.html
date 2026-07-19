@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ad Viewers</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family:'Poppins',sans-serif; background:#e0f2f1; margin:0; padding:20px; display:flex; justify-content:center; min-height:100vh; }
+  .mobile-screen { width:100%; max-width:380px; min-height:100vh; background:#f8f9fa; border:8px solid #fff; border-radius:40px; box-shadow:0 30px 60px rgba(0,0,0,0.1),0 0 0 2px #b2dfdb; display:flex; flex-direction:column; position:relative; overflow:hidden; }
+  .header { background:#2196f3; padding:25px 20px 20px; color:white; display:flex; align-items:center; border-radius:0 0 20px 20px; box-shadow:0 4px 10px rgba(33,150,243,0.25); z-index:10; flex-shrink:0; }
+  .back-btn { text-decoration:none; color:white; font-size:24px; margin-right:15px; font-weight:bold; }
+  .header-text { min-width:0; }
+  .page-title { font-size:16px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .page-sub { font-size:11px; opacity:.85; margin-top:2px; }
+  .container { padding:20px; flex:1; overflow-y:auto; }
+  .container::-webkit-scrollbar { display:none; }
+
+  .summary-bar { background:white; border-radius:14px; padding:16px; margin-bottom:18px; text-align:center; box-shadow:0 4px 10px rgba(0,0,0,0.03); border-bottom:4px solid #2196f3; }
+  .summary-num { font-size:26px; font-weight:800; color:#2196f3; }
+  .summary-lbl { font-size:11px; color:#888; font-weight:600; text-transform:uppercase; letter-spacing:.5px; }
+
+  .viewer-card { background:white; border-radius:14px; padding:14px 16px; margin-bottom:12px; box-shadow:0 4px 10px rgba(0,0,0,0.03); border-left:4px solid #2196f3; }
+  .vc-top { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+  .vc-sno { background:#e3f2fd; color:#2196f3; font-weight:800; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; }
+  .vc-name { font-weight:700; font-size:14px; color:#222; }
+
+  .vc-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .cell { background:#f8fbfd; border-radius:8px; padding:8px 10px; }
+  .cell span { font-size:9px; color:#888; text-transform:uppercase; display:block; margin-bottom:2px; }
+  .cell b { font-size:12px; color:#222; word-break:break-word; }
+
+  .empty-state, .error-state { text-align:center; padding:60px 20px; color:#999; }
+  .empty-state .ic, .error-state .ic { font-size:40px; opacity:.4; margin-bottom:10px; }
+  .empty-state p, .error-state p { font-size:12px; }
+</style>
+</head>
+<body>
+<div class="mobile-screen">
+  <div class="header">
+    <a href="total-views.html" class="back-btn">&larr;</a>
+    <div class="header-text">
+      <div class="page-title" id="pageTitle">Ad Viewers</div>
+      <div class="page-sub" id="pageSub">Loading…</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <div class="summary-bar">
+      <div class="summary-num" id="summaryCount">0</div>
+      <div class="summary-lbl">Total Viewers</div>
+    </div>
+    <div id="listArea"></div>
+  </div>
+</div>
+
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const campaignId = params.get('id');
+
+  // Show only first name + a masked last name — never the full name.
+  function maskName(first, last) {
+    const f = (first || "").trim();
+    const l = (last || "").trim();
+    if (!f && !l) return "Guest";
+    const maskedLast = l ? "x".repeat(Math.max(l.length, 3)) : "";
+    return (f + (maskedLast ? " " + maskedLast : "")).trim();
+  }
+
+  // Show only the first 2 and last 2 digits — everything else masked.
+  function maskPhone(mobile) {
+    const digits = (mobile || "").replace(/\D/g, "");
+    if (digits.length < 4) return "—";
+    const first2 = digits.slice(0, 2);
+    const last2 = digits.slice(-2);
+    const midLen = Math.max(digits.length - 4, 4);
+    return first2 + "x".repeat(midLen) + last2;
+  }
+
+  // dd-mm-yyyy & 24-hour HH:MM
+  function formatDateTime(ts) {
+    const d = new Date(ts);
+    const dd = String(d.getDate()).padStart(2, "0");
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const yyyy = d.getFullYear();
+    const HH = String(d.getHours()).padStart(2, "0");
+    const MI = String(d.getMinutes()).padStart(2, "0");
+    return `${dd}-${mm}-${yyyy} & ${HH}:${MI}`;
+  }
+
+  async function loadViewers() {
+    const listArea = document.getElementById("listArea");
+
+    if (!campaignId) {
+      document.getElementById("pageSub").innerText = "";
+      listArea.innerHTML = `<div class="error-state"><div class="ic">⚠️</div><p>No ad specified.</p></div>`;
+      return;
+    }
+
+    const mobile = localStorage.getItem("activeVendor");
+
+    // Confirm this campaign belongs to the logged-in vendor before
+    // showing any viewer details — a lightweight check (not real
+    // security without RLS, but stops casual URL-guessing).
+    const { data: campaign, error: campaignErr } = await supabaseClient
+      .from('campaigns')
+      .select('title, vendor_mobile')
+      .eq('id', campaignId)
+      .single();
+
+    if (campaignErr || !campaign || campaign.vendor_mobile !== mobile) {
+      document.getElementById("pageSub").innerText = "";
+      listArea.innerHTML = `<div class="error-state"><div class="ic">🔒</div><p>This ad wasn't found, or doesn't belong to your account.</p></div>`;
+      return;
+    }
+
+    document.getElementById("pageTitle").innerText = campaign.title || "Ad Viewers";
+    document.getElementById("pageSub").innerText = "Who viewed this ad";
+
+    const { data: viewers, error: viewersErr } = await supabaseClient
+      .from('ad_views')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('viewed_at', { ascending: false });
+
+    if (viewersErr) {
+      console.error('Supabase loadViewers error:', viewersErr);
+      listArea.innerHTML = `<div class="error-state"><div class="ic">⚠️</div><p>Couldn't load viewers right now.</p></div>`;
+      return;
+    }
+
+    document.getElementById("summaryCount").innerText = (viewers || []).length;
+
+    if (!viewers || !viewers.length) {
+      listArea.innerHTML = `<div class="empty-state"><div class="ic">👀</div><p>No one has viewed this ad yet.</p></div>`;
+      return;
+    }
+
+    listArea.innerHTML = viewers.map(function (v, i) {
+      return `
+        <div class="viewer-card">
+          <div class="vc-top">
+            <div class="vc-sno">${i + 1}</div>
+            <div class="vc-name">${maskName(v.viewer_first_name, v.viewer_last_name)}</div>
+          </div>
+          <div class="vc-grid">
+            <div class="cell"><span>Location</span><b>${v.viewer_location || "Unknown"}</b></div>
+            <div class="cell"><span>Phone</span><b>${maskPhone(v.viewer_mobile)}</b></div>
+            <div class="cell" style="grid-column:1 / -1;"><span>Date &amp; Time</span><b>${formatDateTime(v.viewed_at)}</b></div>
+          </div>
+        </div>`;
+    }).join("");
+  }
+
+  loadViewers();
+</script>
+</body>
+</html>
