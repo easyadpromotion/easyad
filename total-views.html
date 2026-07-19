@@ -22,7 +22,8 @@
 
   .sec-title { font-size:13px; font-weight:700; color:#333; margin-bottom:10px; }
 
-  .ad-row { background:white; border-radius:12px; padding:14px; margin-bottom:10px; box-shadow:0 3px 8px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; }
+  .ad-row { background:white; border-radius:12px; padding:14px; margin-bottom:10px; box-shadow:0 3px 8px rgba(0,0,0,0.03); display:flex; justify-content:space-between; align-items:center; cursor:pointer; }
+  .ad-row:active { background:#f5f9ff; }
   .ad-name { font-size:13px; font-weight:600; color:#222; }
   .ad-type { font-size:9px; color:#2196f3; background:#e3f2fd; padding:2px 7px; border-radius:20px; font-weight:700; margin-left:6px; }
   .ad-views { font-size:16px; font-weight:800; color:#2196f3; }
@@ -132,7 +133,7 @@
     }
 
     listArea.innerHTML = withViews.map(ad => `
-      <div class="ad-row">
+      <div class="ad-row" onclick="window.location.href='ad-viewers.html?id=${ad.id}'">
         <div class="ad-name">${typeIcon(ad.type)} ${getAdName(ad)}<span class="ad-type">${ad.type || "Ad"}</span></div>
         <div class="ad-views">${ad.stats.views}<small>views</small></div>
       </div>
