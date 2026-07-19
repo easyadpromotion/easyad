@@ -5,6 +5,12 @@
   <title>Video Ads</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  </script>
   <style>
     body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
     .mobile-screen { background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden; }
@@ -86,12 +92,27 @@
   const activeMobile = localStorage.getItem("activeUser");
   let user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
 
-  function loadAds() {
+  // ── Supabase-backed loadAds() — replaces localStorage("vendorCampaigns") ──
+  async function loadAds() {
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
-    const allAds = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
     const container = document.getElementById("adContainer");
-    
-    const videoAds = allAds.filter(ad => ad.type === "Video" && ad.status === "Active");
+
+    const { data, error } = await supabaseClient
+      .from('campaigns')
+      .select('*')
+      .eq('type', 'Video')
+      .eq('status', 'Active')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Supabase loadAds error:', error);
+      container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>⚠️ Couldn't load ads right now. Please try again shortly.</div>";
+      return;
+    }
+
+    const videoAds = (data || []).map(function (row) {
+      return { id: row.id, name: row.title, category: row.category };
+    });
     const viewedList = user.viewedAds || [];
 
     if(videoAds.length === 0) { container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>No video ads available.</div>"; return; }
