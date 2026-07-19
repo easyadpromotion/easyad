@@ -92,6 +92,34 @@
   const activeMobile = localStorage.getItem("activeUser");
   let user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
 
+  // ── Records a real view event in Supabase — see the identical
+  // helper in frame-ads.html for full explanation.
+  async function recordAdView(campaignId){
+    try{
+      const profile = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {};
+      let firstName = profile.firstName || "";
+      let lastName  = profile.lastName  || "";
+      if(!firstName && !lastName && profile.name){
+        const parts = profile.name.trim().split(/\s+/);
+        firstName = parts[0] || "";
+        lastName  = parts.slice(1).join(" ") || "";
+      }
+      let loc = null;
+      try{ loc = JSON.parse(localStorage.getItem("eap_user_location")); }catch(e){}
+
+      await supabaseClient.from('ad_views').insert({
+        campaign_id: campaignId,
+        viewer_mobile: activeMobile || null,
+        viewer_first_name: firstName || null,
+        viewer_last_name: lastName || null,
+        viewer_location: (loc && loc.label) ? loc.label : null,
+        viewer_lat: (loc && loc.lat != null) ? loc.lat : null,
+        viewer_lng: (loc && loc.lng != null) ? loc.lng : null
+      });
+      await supabaseClient.rpc('increment_campaign_views', { p_campaign_id: campaignId });
+    }catch(e){ console.error('recordAdView error:', e); }
+  }
+
   // ── Supabase-backed loadAds() — replaces localStorage("vendorCampaigns") ──
   async function loadAds() {
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
@@ -175,6 +203,7 @@
     document.getElementById("vidOverlay").style.display = "none";
     loadAds();
     alert("₹1.50 Added to Wallet!");
+    recordAdView(activeAdId); // fire-and-forget
   }
 
   function closeVideo() {
