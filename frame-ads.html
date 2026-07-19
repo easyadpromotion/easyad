@@ -420,6 +420,39 @@
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {wallet:0,viewedAds:[],adHistory:[]};
 
+  // ── Records a real view event in Supabase (ad_views table) and
+  // atomically increments campaigns.views — this is what makes vendor
+  // "Total Views" actually populate, and feeds the vendor-facing
+  // "who viewed my ad" detail screen. Fire-and-forget: never blocks
+  // the user's reward flow, and fails silently (logged to console)
+  // so a network hiccup here never breaks claiming a reward.
+  async function recordAdView(campaignId){
+    try{
+      const profile = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {};
+      let firstName = profile.firstName || "";
+      let lastName  = profile.lastName  || "";
+      if(!firstName && !lastName && profile.name){
+        const parts = profile.name.trim().split(/\s+/);
+        firstName = parts[0] || "";
+        lastName  = parts.slice(1).join(" ") || "";
+      }
+      let loc = null;
+      try{ loc = JSON.parse(localStorage.getItem("eap_user_location")); }catch(e){}
+
+      await supabaseClient.from('ad_views').insert({
+        campaign_id: campaignId,
+        viewer_mobile: activeMobile || null,
+        viewer_first_name: firstName || null,
+        viewer_last_name: lastName || null,
+        viewer_location: (loc && loc.label) ? loc.label : null,
+        viewer_lat: (loc && loc.lat != null) ? loc.lat : null,
+        viewer_lng: (loc && loc.lng != null) ? loc.lng : null
+      });
+      await supabaseClient.rpc('increment_campaign_views', { p_campaign_id: campaignId });
+    }catch(e){ console.error('recordAdView error:', e); }
+  }
+
+
   // ── Supabase-backed loadAds() — replaces localStorage("vendorCampaigns")
   // Filters server-side to type=Frame AND status=Active — this also fixes
   // a pre-existing bug where the old code showed everything except
@@ -582,6 +615,7 @@
     localStorage.setItem("userProfile_"+activeMobile, JSON.stringify(user));
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
     closeOverlay(); loadAds(); showToast("₹0.70 Credited! 🎉");
+    recordAdView(activeAdId); // fire-and-forget — doesn't block the reward UX
   }
 
   function openShare(adId){ _shareAdId=adId; openSheet("shareSheet"); }
