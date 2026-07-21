@@ -85,6 +85,10 @@
     .ov-video-bg { position: absolute; top: -15%; left: -15%; width: 130%; height: 130%; background-size: cover; background-position: center; filter: blur(20px) brightness(0.35); }
     .full-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: transparent; z-index: 2; display: block; }
     .ov-cat-badge { position: absolute; bottom: 10px; left: 12px; background: rgba(229,57,53,0.92); color: white; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px; z-index: 10; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ov-external-note { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0 24px; }
+    .ov-external-btn { background: #e53935; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 12px; font-family: 'Poppins', sans-serif; }
+    .thumb-embed-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.65); color: white; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 8px; z-index: 5; }
+    .thumb-poster-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
     .ov-content { flex: 1; background: white; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
     .ov-title-area { padding: 12px 16px 8px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
@@ -197,6 +201,12 @@
     <div class="ov-video-section">
       <div class="ov-video-bg" id="overlayBg"></div>
       <video class="full-video" id="overlayVideo" playsinline webkit-playsinline controls></video>
+      <iframe class="full-video" id="overlayIframe" style="display:none;border:0;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <div class="ov-external-note" id="ovExternalNote" style="display:none;">
+        <div style="font-size:34px;margin-bottom:8px;">🔗</div>
+        <div style="font-size:12px;font-weight:700;margin-bottom:10px;" id="ovExternalText">This video is hosted externally.</div>
+        <button class="ov-external-btn" id="ovExternalBtn" onclick="openExternalVideo()">Watch Now ↗</button>
+      </div>
       <div class="ov-cat-badge" id="ovCat">General</div>
     </div>
 
@@ -309,6 +319,34 @@
 <script>
   var REWARD_AMOUNT = 1.50;
 
+  // ── Classifies a saved video_url so we render it the right way.
+  // Vendors can either upload a real file (stored in the 'ad-videos'
+  // Supabase bucket, or any other direct .mp4/.webm/.mov link) OR paste a
+  // YouTube / Instagram page link. A <video> tag can only play the former —
+  // YouTube/Instagram need an iframe embed instead, and if we can't safely
+  // embed at all we fall back to an "open externally" link.
+  function classifyVideoUrl(url) {
+    if (!url) return { type: "none" };
+    var u = url.trim();
+
+    var yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{6,})/);
+    if (yt) {
+      return { type: "youtube", id: yt[1], embedUrl: "https://www.youtube.com/embed/" + yt[1] + "?rel=0&playsinline=1", watchUrl: u, thumb: "https://img.youtube.com/vi/" + yt[1] + "/hqdefault.jpg" };
+    }
+
+    var ig = u.match(/instagram\.com\/(reel|p|tv)\/([a-zA-Z0-9_-]+)/);
+    if (ig) {
+      return { type: "instagram", embedUrl: "https://www.instagram.com/" + ig[1] + "/" + ig[2] + "/embed", watchUrl: u };
+    }
+
+    if (/\.(mp4|webm|mov|m3u8|ogg)(\?|#|$)/i.test(u) || u.indexOf("/storage/v1/object/public/") !== -1) {
+      return { type: "file", src: u };
+    }
+
+    // Unknown link type (some other page URL) — can't embed reliably, offer an external link instead.
+    return { type: "external", watchUrl: u };
+  }
+
   var activeAdId = null, activeAdObj = null, canEarn = false, watchTimer = null, watchElapsed = 0, MIN_WATCH_SECONDS = 10;
   var _shareAdId = null, _referCode = null, _commentAdId = null;
   var activeMobile = localStorage.getItem("activeUser");
@@ -395,17 +433,37 @@
       var mapLink = ad.mapLink || "";
       var refCode = "EAP" + String(ad.id).slice(-4).toUpperCase();
 
-      var thumbHtml = ad.video
-        ? '<video class="thumb-video" preload="metadata" muted playsinline'
+      var vc = classifyVideoUrl(ad.video);
+      var thumbHtml;
+      if (vc.type === "file") {
+        thumbHtml = '<video class="thumb-video" preload="metadata" muted playsinline'
           + (ad.poster ? ' poster="' + ad.poster + '"' : '')
-          + '><source src="' + ad.video + '#t=0.1"></video>'
-          + '<div class="play-icon">▶</div>'
-        : '<div class="thumb-placeholder">🎬<span>No video uploaded</span></div>';
+          + '><source src="' + vc.src + '#t=0.1"></video>'
+          + '<div class="play-icon">▶</div>';
+      } else if (vc.type === "youtube") {
+        thumbHtml = '<img class="thumb-poster-img" src="' + vc.thumb + '" alt="">'
+          + '<div class="thumb-embed-badge">▶ YouTube</div>'
+          + '<div class="play-icon">▶</div>';
+      } else if (vc.type === "instagram") {
+        thumbHtml = (ad.poster ? '<img class="thumb-poster-img" src="' + ad.poster + '" alt="">' : '<div class="thumb-placeholder">📸<span>Instagram video</span></div>')
+          + '<div class="thumb-embed-badge">📸 Instagram</div>'
+          + '<div class="play-icon">▶</div>';
+      } else if (vc.type === "external") {
+        thumbHtml = (ad.poster ? '<img class="thumb-poster-img" src="' + ad.poster + '" alt="">' : '<div class="thumb-placeholder">🔗<span>Tap to watch</span></div>')
+          + '<div class="play-icon">▶</div>';
+      } else {
+        thumbHtml = '<div class="thumb-placeholder">🎬<span>No video uploaded</span></div>';
+      }
 
       var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">₹' + REWARD_AMOUNT.toFixed(2) + ' Reward</span>';
-      var btnHtml = isClaimed
-        ? '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>'
-        : '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ₹' + REWARD_AMOUNT.toFixed(2) + '</button>';
+      var btnHtml;
+      if (isClaimed) {
+        btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>';
+      } else if (vc.type === "none") {
+        btnHtml = '<button class="earn-btn" style="background:#ccc;box-shadow:none;cursor:default;" disabled>Video Not Ready</button>';
+      } else {
+        btnHtml = '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ₹' + REWARD_AMOUNT.toFixed(2) + '</button>';
+      }
 
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
       var webClick = webLink ? 'onclick="openWeb(\'' + encodeURIComponent(webLink) + '\')"' : "";
@@ -429,20 +487,50 @@
     });
   }
 
-  function setOverlayVideo(src, poster) {
+  var activeVideoClass = { type: "none" };
+
+  function setOverlayMedia(ad) {
     var v = document.getElementById("overlayVideo");
-    v.pause();
-    v.removeAttribute("src");
-    v.load();
-    if (src) v.src = src;
-    if (poster) { v.poster = poster; document.getElementById("overlayBg").style.backgroundImage = "url('" + poster + "')"; }
-    else { document.getElementById("overlayBg").style.backgroundImage = "none"; }
+    var f = document.getElementById("overlayIframe");
+    var note = document.getElementById("ovExternalNote");
+    var bg = document.getElementById("overlayBg");
+
+    v.pause(); v.removeAttribute("src"); v.load(); v.style.display = "none";
+    f.src = "about:blank"; f.style.display = "none";
+    note.style.display = "none";
+
+    var vc = classifyVideoUrl(ad.video);
+    activeVideoClass = vc;
+    bg.style.backgroundImage = ad.poster ? "url('" + ad.poster + "')" : "none";
+
+    if (vc.type === "file") {
+      v.style.display = "block";
+      if (ad.poster) v.poster = ad.poster;
+      v.src = vc.src;
+    } else if (vc.type === "youtube" || vc.type === "instagram") {
+      f.style.display = "block";
+      f.src = vc.embedUrl;
+    } else if (vc.type === "external") {
+      note.style.display = "flex";
+      document.getElementById("ovExternalText").innerText = "This video is hosted externally — tap below to watch it.";
+    } else {
+      note.style.display = "flex";
+      document.getElementById("ovExternalText").innerText = "No video has been uploaded for this ad yet.";
+      document.getElementById("ovExternalBtn").style.display = "none";
+    }
+    document.getElementById("ovExternalBtn").style.display = (vc.type === "external") ? "inline-block" : (vc.type === "none" ? "none" : "inline-block");
+  }
+
+  function openExternalVideo() {
+    if (!activeVideoClass.watchUrl) return;
+    var a = document.createElement("a"); a.href = activeVideoClass.watchUrl; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none";
+    document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300);
   }
 
   function fillOverlay(ad) {
     var title = ad.title || ad.name || "Ad";
     var cat = ad.category || "General";
-    setOverlayVideo(ad.video || "", ad.poster || "");
+    setOverlayMedia(ad);
     document.getElementById("ovTopTitle").innerText = title;
     document.getElementById("ovTitle").innerText = title;
     document.getElementById("ovDesc").innerText = ad.desc || ad.description || "";
@@ -460,6 +548,7 @@
   function openAd(id) {
     var ad = getAds().find(function (a) { return a.id === id; });
     if (!ad) return;
+    if (classifyVideoUrl(ad.video).type === "none") { showToast("Video not uploaded yet for this ad."); return; }
     activeAdId = id; activeAdObj = ad; canEarn = true; watchElapsed = 0;
     fillOverlay(ad);
     document.getElementById("ovBadge").style.display = "none";
@@ -471,7 +560,11 @@
     document.getElementById("adOverlay").style.display = "flex";
 
     var v = document.getElementById("overlayVideo");
-    v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
+    if (activeVideoClass.type === "file") {
+      v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
+      // unlock the moment the (shorter) uploaded video finishes playing
+      v.onended = function () { unlockClaim(); };
+    }
 
     stopWatchTracking();
     watchTimer = setInterval(function () {
@@ -480,8 +573,6 @@
       document.getElementById("timerDisplay").innerText = remaining;
       if (remaining <= 0) unlockClaim();
     }, 1000);
-    // also unlock the moment the (shorter) video finishes playing
-    v.onended = function () { unlockClaim(); };
   }
 
   function unlockClaim() {
@@ -501,14 +592,16 @@
     document.getElementById("closeBtn").style.display = "block";
     document.getElementById("adOverlay").style.display = "flex";
     stopWatchTracking();
-    var v = document.getElementById("overlayVideo");
-    v.play().catch(function () {});
+    if (activeVideoClass.type === "file") {
+      document.getElementById("overlayVideo").play().catch(function () {});
+    }
   }
 
   function closeOverlay() {
     stopWatchTracking();
     var v = document.getElementById("overlayVideo");
     v.pause();
+    document.getElementById("overlayIframe").src = "about:blank";
     document.getElementById("adOverlay").style.display = "none";
   }
 
