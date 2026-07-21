@@ -5,107 +5,329 @@
   <title>Video Ads</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  </script>
   <style>
-    body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-    .mobile-screen { background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden; }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .mobile-screen {
+      background: #fff;
+      width: 100%;
+      max-width: 380px;
+      height: 100vh;
+      max-height: 850px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+      border-radius: 30px;
+      overflow: hidden;
+    }
+
     /* HEADER (Red for Video) */
-    .header { background: #e53935; padding: 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(229, 57, 53, 0.3); z-index: 10; }
-    .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 10px; }
-    .page-title { font-size: 16px; font-weight: 700; }
+    .header { background: #e53935; padding: 18px 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(229,57,53,0.25); z-index: 10; flex-shrink: 0; }
+    .back-btn { font-size: 22px; text-decoration: none; color: white; margin-right: 10px; }
+    .page-title { font-size: 15px; font-weight: 700; }
     .wallet-pill { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 
-    /* LIST */
-    .ad-list { padding: 20px; overflow-y: auto; padding-bottom: 80px; flex: 1; }
-    .ad-card { background: white; border-radius: 12px; overflow: hidden; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; }
-    
-    .video-thumb { height: 160px; background: #000; position: relative; display: flex; align-items: center; justify-content: center; }
-    .thumb-img { width: 100%; height: 100%; object-fit: cover; opacity: 0.7; }
-    .play-icon { position: absolute; font-size: 40px; color: white; text-shadow: 0 2px 10px rgba(0,0,0,0.5); }
-    
-    .ad-content { padding: 12px; }
-    .ad-title { font-weight: 700; font-size: 14px; color: #333; margin-bottom: 5px; }
-    .action-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
-    .view-btn { background: #e53935; color: white; border: none; padding: 6px 16px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; }
-    .view-btn.completed { background: #eee; color: #888; cursor: default; }
+    /* AD LIST */
+    .ad-list { padding: 15px; overflow-y: auto; padding-bottom: 90px; flex: 1; }
 
-    /* PLAYER OVERLAY */
-    .vid-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 100; display: none; flex-direction: column; justify-content: center; align-items: center; color: white; }
-    .loader { border: 4px solid #333; border-top: 4px solid #e53935; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin-bottom: 20px; }
-    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-    
-    .claim-btn { background: #4caf50; color: white; padding: 12px 40px; border-radius: 30px; border: none; font-weight: 700; cursor: pointer; margin-top: 20px; display: none; }
-    .close-vid-btn { margin-top: 15px; background: transparent; border: 1px solid #555; color: #aaa; padding: 8px 20px; border-radius: 20px; cursor: pointer; font-size: 12px; }
+    /* AD CARD */
+    .ad-card { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; }
 
-    /* BOTTOM NAV */
+    /* 9:16 poster box in the list (capped height so the feed stays scannable) */
+    .video-thumb { width: 100%; aspect-ratio: 9 / 16; max-height: 360px; background: #000; position: relative; overflow: hidden; }
+    @supports not (aspect-ratio: 9/16) { .video-thumb { height: 320px; } }
+    .thumb-video { width: 100%; height: 100%; object-fit: cover; display: block; background: #000; }
+    .thumb-placeholder { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #666; background: #111; flex-direction: column; gap: 8px; font-size: 12px; }
+    .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.45); display: flex; align-items: center; justify-content: center; font-size: 22px; color: white; pointer-events: none; }
+    .dur-badge { position: absolute; bottom: 8px; right: 8px; background: rgba(0,0,0,0.65); color: white; font-size: 9px; font-weight: 700; padding: 3px 7px; border-radius: 8px; }
+
+    .action-row { padding: 10px 12px 6px; display: flex; align-items: center; justify-content: space-between; }
+    .ad-title-txt { font-weight: 700; font-size: 13px; color: #222; margin-bottom: 4px; line-height: 1.3; }
+    .badges-row { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; }
+    .reward-tag { background: #ffebee; color: #c62828; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; }
+    .claimed-tag { background: #f3f3f3; color: #999; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; border: 1px solid #e0e0e0; }
+    .earn-btn { background: #e53935; color: white; border: none; padding: 8px 16px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; white-space: nowrap; flex-shrink: 0; box-shadow: 0 3px 10px rgba(229,57,53,0.3); font-family: 'Poppins', sans-serif; }
+    .view-again-btn { background: #ffebee; color: #e53935; border: 1px solid #ffcdd2; padding: 7px 13px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 10px; white-space: nowrap; flex-shrink: 0; font-family: 'Poppins', sans-serif; }
+
+    /* ENGAGE ROW */
+    .engage-row { display: flex; align-items: center; justify-content: space-around; padding: 8px 10px 12px; border-top: 1px solid #f5f5f5; gap: 2px; }
+    .eng-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; flex: 1; background: none; border: none; font-family: 'Poppins', sans-serif; transition: transform 0.15s; padding: 0; }
+    .eng-btn:active { transform: scale(0.88); }
+    .eng-btn.disabled { opacity: 0.32; pointer-events: none; }
+    .eng-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+    .eng-label { font-size: 8px; font-weight: 700; color: #666; }
+    .eng-share   .eng-icon { background: #e3f2fd; }
+    .eng-refer   .eng-icon { background: #f3e5f5; }
+    .eng-comment .eng-icon { background: #fff8e1; }
+    .eng-web     .eng-icon { background: #e8f5e9; }
+    .eng-map     .eng-icon { background: #fce4ec; }
+
+    /* FULL SCREEN VIDEO OVERLAY */
+    .ad-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 100; display: none; flex-direction: column; overflow: hidden; }
+
+    .ov-topbar { position: relative; background: #1a1a1a; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10; }
+    .ov-topbar-title { font-size: 12px; font-weight: 700; color: white; flex: 1; margin-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ov-close-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+    /* True 9:16 / 1080x1920 video stage — never stretched, never cropped oddly */
+    .ov-video-section { width: 100%; aspect-ratio: 9 / 16; max-height: 62vh; position: relative; background: #000; flex-shrink: 0; overflow: hidden; }
+    @supports not (aspect-ratio: 9/16) { .ov-video-section { height: 60vh; } }
+    .ov-video-bg { position: absolute; top: -15%; left: -15%; width: 130%; height: 130%; background-size: cover; background-position: center; filter: blur(20px) brightness(0.35); }
+    .full-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: transparent; z-index: 2; display: block; }
+    .ov-cat-badge { position: absolute; bottom: 10px; left: 12px; background: rgba(229,57,53,0.92); color: white; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px; z-index: 10; text-transform: uppercase; letter-spacing: 0.5px; }
+
+    .ov-content { flex: 1; background: white; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    .ov-title-area { padding: 12px 16px 8px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+    .ov-title { font-size: 14px; font-weight: 800; color: #1a1a1a; line-height: 1.4; margin-bottom: 5px; word-break: break-word; }
+    .ov-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .ov-category { font-size: 10px; color: #e53935; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ov-dot { color: #ddd; font-size: 10px; }
+    .ov-verified { font-size: 10px; color: #aaa; }
+    .ov-already-tag { background: #ffebee; color: #e53935; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #ffcdd2; }
+
+    .ov-desc-area { flex: 1; overflow-y: auto; padding: 10px 16px 6px; min-height: 0; }
+    .ov-desc { font-size: 12px; color: #555; line-height: 1.7; word-break: break-word; }
+
+    .ov-earn-zone { background: white; border-top: 1px solid #f0f0f0; padding: 10px 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+    .timer-ring { width: 50px; height: 50px; border-radius: 50%; border: 4px solid #e53935; background: #ffebee; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #e53935; font-size: 18px; box-shadow: 0 0 0 4px rgba(229,57,53,0.12); }
+    .timer-label { font-size: 10px; color: #aaa; font-weight: 600; text-align: center; margin-top: -4px; }
+    .claim-btn { background: linear-gradient(135deg, #4caf50, #388e3c); color: white; padding: 12px 0; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; font-size: 14px; width: 100%; box-shadow: 0 4px 16px rgba(76,175,80,0.35); display: none; font-family: 'Poppins', sans-serif; }
+    .close-ov-btn { background: #f5f5f5; color: #666; padding: 11px 0; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 13px; width: 100%; display: none; font-family: 'Poppins', sans-serif; }
+
+    /* BACKDROP */
+    .modal-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 150; display: none; }
+    .modal-backdrop.open { display: block; }
+
+    /* BOTTOM SHEET */
+    .bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; z-index: 200; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); display: none; flex-direction: column; }
+    .bottom-sheet.open { display: flex; }
+    .sheet-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 14px auto 4px; flex-shrink: 0; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; flex-shrink: 0; }
+    .sheet-title { font-size: 15px; font-weight: 800; color: #333; }
+    .sheet-close { background: #f0f0f0; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+
+    .share-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 6px 16px 28px; }
+    .share-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.15s; }
+    .share-item:active { transform: scale(0.88); }
+    .share-ico { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .share-lbl { font-size: 9px; font-weight: 700; color: #555; text-align: center; }
+
+    .refer-body { padding: 10px 20px 30px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .refer-code-box { background: #ffebee; border: 2px dashed #e53935; border-radius: 14px; padding: 12px 24px; text-align: center; width: 100%; }
+    .refer-code { font-size: 24px; font-weight: 800; color: #e53935; letter-spacing: 3px; }
+    .full-btn { width: 100%; padding: 12px 0; border-radius: 25px; border: none; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-red { background: #e53935; color: white; }
+    .btn-wa  { background: #25D366; color: white; }
+
+    .comment-body { display: flex; flex-direction: column; overflow: hidden; padding: 0 16px; }
+    .comment-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 120px; max-height: 260px; padding: 8px 0; }
+    .comment-item { display: flex; gap: 8px; align-items: flex-start; }
+    .c-avatar { width: 30px; height: 30px; border-radius: 50%; background: #e53935; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .c-body { background: #f8f8f8; border-radius: 12px; padding: 7px 10px; flex: 1; }
+    .c-name { font-size: 10px; font-weight: 700; color: #333; }
+    .c-time { color: #bbb; font-weight: 400; font-size: 9px; margin-left: 4px; }
+    .c-text { font-size: 11px; color: #555; margin-top: 2px; line-height: 1.4; }
+    .comment-input-row { display: flex; gap: 8px; align-items: center; border-top: 1px solid #f0f0f0; padding: 10px 0 20px; flex-shrink: 0; }
+    .comment-input { flex: 1; padding: 9px 14px; border-radius: 20px; border: 1px solid #e0e0e0; font-family: 'Poppins', sans-serif; font-size: 12px; outline: none; }
+    .comment-input:focus { border-color: #e53935; }
+    .send-btn { background: #e53935; border: none; color: white; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .loc-body { padding: 10px 20px 30px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .loc-map-frame { width: 100%; height: 200px; border-radius: 16px; border: none; }
+    .loc-address { background: #fce4ec; border-radius: 12px; padding: 12px 16px; width: 100%; display: flex; align-items: center; gap: 10px; }
+    .loc-address-text { font-size: 12px; color: #333; font-weight: 600; line-height: 1.4; }
+    .open-maps-btn { background: #fce4ec; color: #e53935; border: none; padding: 10px 0; border-radius: 20px; width: 100%; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .loc-not-provided { text-align: center; padding: 20px 10px; }
+    .loc-not-icon { font-size: 48px; margin-bottom: 10px; }
+    .loc-not-title { font-size: 15px; font-weight: 800; color: #555; margin-bottom: 6px; }
+    .loc-not-sub { font-size: 11px; color: #aaa; line-height: 1.5; }
+
+    .toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 9px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; z-index: 999; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.25); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+    .toast.show { opacity: 1; }
+
     .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; z-index: 50; }
     .nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; color: #999; flex: 1; }
     .nav-icon { font-size: 20px; margin-bottom: 2px; }
     .nav-text { font-size: 9px; font-weight: 600; }
-    .nav-item.active { color: #e53935; } /* Red active state */
-
+    .nav-item.active { color: #e53935; }
+    .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
   </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
+
 <body onload="loadAds()">
 <div class="mobile-screen">
+
+  <!-- HEADER -->
   <div class="header">
-    <div style="display:flex; align-items:center;">
+    <div style="display:flex;align-items:center;">
       <a href="home.html" class="back-btn">←</a>
       <div class="page-title">Video Ads</div>
     </div>
-    <div class="wallet-pill">💰 <span id="headerBalance">0.00</span></div>
+    <div class="wallet-pill">💰 ₹<span id="headerBalance">0.00</span></div>
   </div>
 
+  <!-- AD LIST -->
   <div class="ad-list" id="adContainer"></div>
 
-  <div class="vid-overlay" id="vidOverlay">
-    <div id="loadingState" style="text-align:center;">
-        <div class="loader"></div>
-        <div>Playing Video Ad...</div>
-        <div style="font-size:12px; color:#aaa; margin-top:5px;">Please watch for 10 seconds</div>
+  <!-- FULL SCREEN VIDEO OVERLAY -->
+  <div class="ad-overlay" id="adOverlay">
+
+    <div class="ov-topbar">
+      <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
+      <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
     </div>
-    <div id="finishState" style="display:none; text-align:center;">
-        <div style="font-size:40px;">✅</div>
-        <h3>Ad Completed</h3>
-        <button class="claim-btn" style="display:block;" onclick="claimReward()">Collect Reward</button>
-        <button class="close-vid-btn" onclick="closeVideo()">Close</button>
+
+    <!-- True 9:16 (1080x1920) video stage -->
+    <div class="ov-video-section">
+      <div class="ov-video-bg" id="overlayBg"></div>
+      <video class="full-video" id="overlayVideo" playsinline webkit-playsinline controls></video>
+      <div class="ov-cat-badge" id="ovCat">General</div>
+    </div>
+
+    <div class="ov-content">
+      <div class="ov-title-area">
+        <div class="ov-title" id="ovTitle">Loading…</div>
+        <div class="ov-meta">
+          <span class="ov-category" id="ovCatLabel">General</span>
+          <span class="ov-dot">•</span>
+          <span class="ov-verified" id="ovVerified">Verified Ad</span>
+          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ Already Viewed</span>
+        </div>
+      </div>
+
+      <div class="ov-desc-area">
+        <div class="ov-desc" id="ovDesc">Loading description…</div>
+      </div>
+
+      <div class="ov-earn-zone">
+        <div id="timerWrap" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+          <div class="timer-ring" id="timerDisplay">10</div>
+          <div class="timer-label" id="timerLabel">Watch to earn ₹1.50</div>
+        </div>
+        <button class="claim-btn" id="claimBtn" onclick="claimReward()">🎉 Claim ₹1.50 Reward</button>
+        <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()">Close</button>
+      </div>
     </div>
   </div>
 
-  <div class="bottom-nav">
-      <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
-      <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
-      <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
-      <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+  <!-- BACKDROP -->
+  <div class="modal-backdrop" id="backdrop" onclick="closeAllModals()"></div>
+
+  <!-- SHARE SHEET -->
+  <div class="bottom-sheet" id="shareSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🔗 Share This Ad</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="share-grid">
+      <div class="share-item" onclick="doShare('whatsapp')"><div class="share-ico" style="background:#dcf8c6;">💬</div><div class="share-lbl">WhatsApp</div></div>
+      <div class="share-item" onclick="doShare('telegram')"><div class="share-ico" style="background:#d9efff;">✈️</div><div class="share-lbl">Telegram</div></div>
+      <div class="share-item" onclick="doShare('facebook')"><div class="share-ico" style="background:#e7eeff;">👍</div><div class="share-lbl">Facebook</div></div>
+      <div class="share-item" onclick="doShare('twitter')"><div class="share-ico" style="background:#e0f7fa;">🐦</div><div class="share-lbl">Twitter / X</div></div>
+      <div class="share-item" onclick="doShare('instagram')"><div class="share-ico" style="background:#fce4ec;">📸</div><div class="share-lbl">Instagram</div></div>
+      <div class="share-item" onclick="doShare('copy')"><div class="share-ico" style="background:#f3e5f5;">🔗</div><div class="share-lbl">Copy Link</div></div>
+      <div class="share-item" onclick="doShare('sms')"><div class="share-ico" style="background:#fff8e1;">📱</div><div class="share-lbl">SMS</div></div>
+      <div class="share-item" onclick="doShare('email')"><div class="share-ico" style="background:#f1f8e9;">📧</div><div class="share-lbl">Email</div></div>
+    </div>
   </div>
+
+  <!-- REFER SHEET -->
+  <div class="bottom-sheet" id="referSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🎁 Refer & Earn</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="refer-body">
+      <div style="font-size:42px;">🎁</div>
+      <div style="font-size:12px;color:#888;text-align:center;line-height:1.5;">Share this code with friends.<br>Earn bonus when they join EAP!</div>
+      <div class="refer-code-box">
+        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;">REFERRAL CODE</div>
+        <div class="refer-code" id="referCodeDisplay">EAP0000</div>
+      </div>
+      <button class="full-btn btn-red" onclick="copyReferCode()">📋 Copy Code</button>
+      <button class="full-btn btn-wa" onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
+    </div>
+  </div>
+
+  <!-- COMMENT SHEET -->
+  <div class="bottom-sheet" id="commentSheet" style="max-height:70%;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">💬 Comments</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="comment-body">
+      <div class="comment-list" id="commentList"></div>
+      <div class="comment-input-row">
+        <input type="text" class="comment-input" id="commentInput" placeholder="Write a comment…" maxlength="120">
+        <button class="send-btn" onclick="postComment()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCATION SHEET -->
+  <div class="bottom-sheet" id="locationSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">📍 Vendor Location</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="loc-body" id="locBody"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
+    <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
+    <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
+    <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+  </div>
+
 </div>
 
 <script>
-  let activeAdId = null;
-  let activeAdName = "";
-  const activeMobile = localStorage.getItem("activeUser");
-  let user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
+  var REWARD_AMOUNT = 1.50;
 
-  // ── Records a real view event in Supabase — see the identical
-  // helper in frame-ads.html for full explanation.
-  async function recordAdView(campaignId){
-    try{
-      const profile = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {};
+  var activeAdId = null, activeAdObj = null, canEarn = false, watchTimer = null, watchElapsed = 0, MIN_WATCH_SECONDS = 10;
+  var _shareAdId = null, _referCode = null, _commentAdId = null;
+  var activeMobile = localStorage.getItem("activeUser");
+  var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
+
+  // ── Records a real view event in Supabase (ad_views table) and atomically
+  // increments campaigns.views — identical helper to frame-ads.html.
+  async function recordAdView(campaignId) {
+    try {
+      const profile = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || {};
       let firstName = profile.firstName || "";
-      let lastName  = profile.lastName  || "";
-      if(!firstName && !lastName && profile.name){
+      let lastName = profile.lastName || "";
+      if (!firstName && !lastName && profile.name) {
         const parts = profile.name.trim().split(/\s+/);
         firstName = parts[0] || "";
-        lastName  = parts.slice(1).join(" ") || "";
+        lastName = parts.slice(1).join(" ") || "";
       }
       let loc = null;
-      try{ loc = JSON.parse(localStorage.getItem("eap_user_location")); }catch(e){}
+      try { loc = JSON.parse(localStorage.getItem("eap_user_location")); } catch (e) {}
 
       await supabaseClient.from('ad_views').insert({
         campaign_id: campaignId,
@@ -117,13 +339,14 @@
         viewer_lng: (loc && loc.lng != null) ? loc.lng : null
       });
       await supabaseClient.rpc('increment_campaign_views', { p_campaign_id: campaignId });
-    }catch(e){ console.error('recordAdView error:', e); }
+    } catch (e) { console.error('recordAdView error:', e); }
   }
 
-  // ── Supabase-backed loadAds() — replaces localStorage("vendorCampaigns") ──
+  // ── Supabase-backed loadAds() ── type=Video, status=Active only.
+  // NOTE: assumes campaigns has a `video_url` column holding the uploaded
+  // video file (1080x1920 / 9:16). `image_url` is used as the poster/thumb.
   async function loadAds() {
-    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
-    const container = document.getElementById("adContainer");
+    document.getElementById("headerBalance").innerText = parseFloat(user.wallet || 0).toFixed(2);
 
     const { data, error } = await supabaseClient
       .from('campaigns')
@@ -134,81 +357,260 @@
 
     if (error) {
       console.error('Supabase loadAds error:', error);
-      container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>⚠️ Couldn't load ads right now. Please try again shortly.</div>";
+      document.getElementById("adContainer").innerHTML =
+        '<div class="empty-msg">⚠️ Couldn\'t load ads right now.<br>Please try again shortly.</div>';
       return;
     }
 
     const videoAds = (data || []).map(function (row) {
-      return { id: row.id, name: row.title, category: row.category };
+      return {
+        id: row.id,
+        title: row.title,
+        name: row.title,
+        desc: row.description,
+        description: row.description,
+        category: row.category,
+        video: row.video_url,
+        poster: row.image_url,
+        webLink: row.website || null,
+        mapLink: row.location || null,
+        location: row.location
+      };
     });
-    const viewedList = user.viewedAds || [];
 
-    if(videoAds.length === 0) { container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>No video ads available.</div>"; return; }
+    var container = document.getElementById("adContainer");
+    if (!videoAds.length) {
+      container.innerHTML = '<div class="empty-msg">📭 No active video ads found.<br>Check back soon!</div>';
+      return;
+    }
+    window._videoAds = videoAds;
     container.innerHTML = "";
+    var viewed = user.viewedAds || [];
 
-    videoAds.forEach((ad) => {
-      const isViewed = viewedList.includes(ad.id);
-      const btnText = isViewed ? "Watched" : "Watch & Earn ₹1.50";
-      const btnClass = isViewed ? "view-btn completed" : "view-btn";
-      
-      const html = `
-        <div class="ad-card">
-          <div class="video-thumb">
-             <img src="https://images.unsplash.com/photo-1492633423870-43d1cd2775eb?w=600" class="thumb-img">
-             <div class="play-icon">▶</div>
-          </div>
-          <div class="ad-content">
-            <div class="ad-title">${ad.name}</div>
-            <div class="action-row">
-              <span style="font-size:11px; color:#888;">${ad.category}</span>
-              <button class="${btnClass}" onclick="playVideo('${ad.id}', '${ad.name}', ${isViewed})">${btnText}</button>
-            </div>
-          </div>
-        </div>`;
-      container.innerHTML += html;
+    videoAds.forEach(function (ad) {
+      var isClaimed = viewed.indexOf(ad.id) !== -1;
+      var title = ad.title || ad.name || "Untitled Ad";
+      var category = ad.category || "General";
+      var webLink = ad.webLink || "";
+      var mapLink = ad.mapLink || "";
+      var refCode = "EAP" + String(ad.id).slice(-4).toUpperCase();
+
+      var thumbHtml = ad.video
+        ? '<video class="thumb-video" preload="metadata" muted playsinline'
+          + (ad.poster ? ' poster="' + ad.poster + '"' : '')
+          + '><source src="' + ad.video + '#t=0.1"></video>'
+          + '<div class="play-icon">▶</div>'
+        : '<div class="thumb-placeholder">🎬<span>No video uploaded</span></div>';
+
+      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">₹' + REWARD_AMOUNT.toFixed(2) + ' Reward</span>';
+      var btnHtml = isClaimed
+        ? '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>'
+        : '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ₹' + REWARD_AMOUNT.toFixed(2) + '</button>';
+
+      var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
+      var webClick = webLink ? 'onclick="openWeb(\'' + encodeURIComponent(webLink) + '\')"' : "";
+      var mapClass = "eng-btn eng-map";
+
+      container.innerHTML +=
+        '<div class="ad-card" id="card_' + ad.id + '">'
+          + '<div class="video-thumb" onclick="' + (isClaimed ? 'openViewAgain' : 'openAd') + '(\'' + ad.id + '\')">' + thumbHtml + '</div>'
+          + '<div class="action-row">'
+            + '<div style="flex:1;margin-right:10px;"><div class="ad-title-txt">' + title + '</div><div class="badges-row">' + badgeHtml + '</div></div>'
+            + btnHtml
+          + '</div>'
+          + '<div class="engage-row">'
+            + '<button class="eng-btn eng-share" onclick="openShare(\'' + ad.id + '\')"><div class="eng-icon">🔗</div><span class="eng-label">Share</span></button>'
+            + '<button class="eng-btn eng-refer" onclick="openRefer(\'' + ad.id + '\',\'' + refCode + '\')"><div class="eng-icon">🎁</div><span class="eng-label">Refer</span></button>'
+            + '<button class="eng-btn eng-comment" onclick="openComments(\'' + ad.id + '\')"><div class="eng-icon">💬</div><span class="eng-label">Comments</span></button>'
+            + '<button class="' + webClass + '" ' + webClick + '><div class="eng-icon">🌐</div><span class="eng-label">Website</span></button>'
+            + '<button class="' + mapClass + '" onclick="openLocation(\'' + encodeURIComponent(mapLink) + '\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
+          + '</div>'
+        + '</div>';
     });
   }
 
-  function playVideo(id, name, isViewed) {
-    if(isViewed) return;
-    activeAdId = id; activeAdName = name;
-    
-    document.getElementById("vidOverlay").style.display = "flex";
-    document.getElementById("loadingState").style.display = "block";
-    document.getElementById("finishState").style.display = "none";
+  function setOverlayVideo(src, poster) {
+    var v = document.getElementById("overlayVideo");
+    v.pause();
+    v.removeAttribute("src");
+    v.load();
+    if (src) v.src = src;
+    if (poster) { v.poster = poster; document.getElementById("overlayBg").style.backgroundImage = "url('" + poster + "')"; }
+    else { document.getElementById("overlayBg").style.backgroundImage = "none"; }
+  }
 
-    setTimeout(() => {
-        document.getElementById("loadingState").style.display = "none";
-        document.getElementById("finishState").style.display = "block";
-    }, 5000); // 5 Seconds Simulated Video
+  function fillOverlay(ad) {
+    var title = ad.title || ad.name || "Ad";
+    var cat = ad.category || "General";
+    setOverlayVideo(ad.video || "", ad.poster || "");
+    document.getElementById("ovTopTitle").innerText = title;
+    document.getElementById("ovTitle").innerText = title;
+    document.getElementById("ovDesc").innerText = ad.desc || ad.description || "";
+    document.getElementById("ovCat").innerText = cat;
+    document.getElementById("ovCatLabel").innerText = cat;
+  }
+
+  function stopWatchTracking() {
+    clearInterval(watchTimer);
+    watchTimer = null;
+    var v = document.getElementById("overlayVideo");
+    v.onended = null;
+  }
+
+  function openAd(id) {
+    var ad = getAds().find(function (a) { return a.id === id; });
+    if (!ad) return;
+    activeAdId = id; activeAdObj = ad; canEarn = true; watchElapsed = 0;
+    fillOverlay(ad);
+    document.getElementById("ovBadge").style.display = "none";
+    document.getElementById("timerWrap").style.display = "flex";
+    document.getElementById("claimBtn").style.display = "none";
+    document.getElementById("closeBtn").style.display = "none";
+    document.getElementById("timerLabel").innerText = "Watch to earn ₹" + REWARD_AMOUNT.toFixed(2);
+    document.getElementById("timerDisplay").innerText = MIN_WATCH_SECONDS;
+    document.getElementById("adOverlay").style.display = "flex";
+
+    var v = document.getElementById("overlayVideo");
+    v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
+
+    stopWatchTracking();
+    watchTimer = setInterval(function () {
+      watchElapsed++;
+      var remaining = Math.max(MIN_WATCH_SECONDS - watchElapsed, 0);
+      document.getElementById("timerDisplay").innerText = remaining;
+      if (remaining <= 0) unlockClaim();
+    }, 1000);
+    // also unlock the moment the (shorter) video finishes playing
+    v.onended = function () { unlockClaim(); };
+  }
+
+  function unlockClaim() {
+    stopWatchTracking();
+    document.getElementById("timerWrap").style.display = "none";
+    document.getElementById("claimBtn").style.display = "block";
+  }
+
+  function openViewAgain(id) {
+    var ad = getAds().find(function (a) { return a.id === id; });
+    if (!ad) return;
+    activeAdId = id; activeAdObj = ad; canEarn = false;
+    fillOverlay(ad);
+    document.getElementById("ovBadge").style.display = "inline-block";
+    document.getElementById("timerWrap").style.display = "none";
+    document.getElementById("claimBtn").style.display = "none";
+    document.getElementById("closeBtn").style.display = "block";
+    document.getElementById("adOverlay").style.display = "flex";
+    stopWatchTracking();
+    var v = document.getElementById("overlayVideo");
+    v.play().catch(function () {});
+  }
+
+  function closeOverlay() {
+    stopWatchTracking();
+    var v = document.getElementById("overlayVideo");
+    v.pause();
+    document.getElementById("adOverlay").style.display = "none";
   }
 
   function claimReward() {
-    user.wallet = parseFloat(user.wallet) + 1.50;
-    
-    if(!user.adHistory) user.adHistory = [];
-    user.adHistory.push({
-        id: activeAdId,
-        name: activeAdName,
-        type: 'Video',
-        amount: 1.50,
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString()
-    });
-
-    if(!user.viewedAds) user.viewedAds = [];
-    user.viewedAds.push(activeAdId);
-    
+    if (!canEarn) return; canEarn = false;
+    user.wallet = parseFloat(user.wallet || 0) + REWARD_AMOUNT;
+    user.adHistory = user.adHistory || [];
+    user.adHistory.push({ id: activeAdId, name: activeAdObj ? (activeAdObj.title || activeAdObj.name) : activeAdId, type: "Video", amount: REWARD_AMOUNT, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
+    user.viewedAds = user.viewedAds || [];
+    if (user.viewedAds.indexOf(activeAdId) === -1) user.viewedAds.push(activeAdId);
     localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
-    document.getElementById("vidOverlay").style.display = "none";
-    loadAds();
-    alert("₹1.50 Added to Wallet!");
-    recordAdView(activeAdId); // fire-and-forget
+    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
+    closeOverlay(); loadAds(); showToast("₹" + REWARD_AMOUNT.toFixed(2) + " Credited! 🎉");
+    recordAdView(activeAdId); // fire-and-forget — doesn't block the reward UX
   }
 
-  function closeVideo() {
-    document.getElementById("vidOverlay").style.display = "none";
+  function openShare(adId) { _shareAdId = adId; openSheet("shareSheet"); }
+
+  function doShare(platform) {
+    var ad = getAds().find(function (a) { return a.id === _shareAdId; }) || {};
+    var adTitle = ad.title || ad.name || "EAP Ad";
+    var adDesc = ad.desc || ad.description || "";
+    var webLink = (ad.webLink || "").trim();
+    var url = webLink ? (webLink.startsWith("http") ? webLink : "https://" + webLink) : "www.easyadpromotion.com";
+    var shortMsg = "🎬 " + adTitle + "\n💰 Earn by watching video ads on EAP!\n👉 " + url;
+    var fullMsg = "🎬 " + adTitle + "\n\n" + adDesc + "\n\n💰 Earn money watching video ads on EAP!\n👉 " + url;
+    closeAllModals();
+
+    function doCopy(text, msg) { var ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand("copy"); showToast(msg || "Copied ✅"); } catch (e) { showToast("Please copy manually"); } document.body.removeChild(ta); }
+    function openViaLink(href) { var a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); }
+
+    var urls = { whatsapp: "https://api.whatsapp.com/send?text=" + encodeURIComponent(fullMsg), telegram: "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent("🎬 " + adTitle), facebook: "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url), twitter: "https://twitter.com/intent/tweet?text=" + encodeURIComponent("🎬 " + adTitle + " " + url), instagram: "https://www.instagram.com/", sms: "sms:?body=" + encodeURIComponent(shortMsg), email: "mailto:?subject=" + encodeURIComponent("Check this ad: " + adTitle) + "&body=" + encodeURIComponent(fullMsg) };
+    if (platform === "copy") { doCopy(shortMsg, "Link Copied! 🔗"); return; }
+    if (platform === "sms") { openViaLink(urls.sms); showToast("Opening SMS… 📱"); return; }
+    if (platform === "email") { openViaLink(urls.email); showToast("Opening Email… 📧"); return; }
+    doCopy(fullMsg, ""); showSharePopup(platform, urls[platform], adTitle, fullMsg);
   }
+
+  function showSharePopup(platform, shareUrl, adTitle, message) {
+    var old = document.getElementById("_sp"); if (old) old.remove();
+    var meta = { whatsapp: { icon: "💬", name: "WhatsApp", color: "#25D366", bg: "#dcf8c6" }, telegram: { icon: "✈️", name: "Telegram", color: "#0088cc", bg: "#d9efff" }, facebook: { icon: "👍", name: "Facebook", color: "#1877F2", bg: "#e7eeff" }, twitter: { icon: "🐦", name: "Twitter/X", color: "#1DA1F2", bg: "#e0f7fa" }, instagram: { icon: "📸", name: "Instagram", color: "#E1306C", bg: "#fce4ec" } };
+    var m = meta[platform] || { icon: "📤", name: platform, color: "#e53935", bg: "#ffebee" };
+    var div = document.createElement("div"); div.id = "_sp";
+    div.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.72);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;";
+    div.innerHTML = '<div style="background:white;border-radius:22px;width:100%;max-width:310px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">'
+      + '<div style="background:' + m.bg + ';padding:20px;text-align:center;"><div style="font-size:44px;">' + m.icon + '</div><div style="font-size:16px;font-weight:800;color:#333;margin-top:6px;">Share on ' + m.name + '</div></div>'
+      + '<div style="padding:14px 18px 0;"><div style="font-size:11px;color:#555;line-height:1.9;background:#f8f8f8;border-radius:12px;padding:10px 14px;">✅ Message copied to clipboard<br>👇 Tap <b>Open ' + m.name + '</b> below<br>📋 Paste the message &amp; send</div></div>'
+      + '<div style="padding:10px 18px 0;"><div style="font-size:9px;font-weight:700;color:#aaa;margin-bottom:4px;text-transform:uppercase;">Copied Message Preview</div><div style="background:#f0f0f0;border-radius:10px;padding:8px 12px;font-size:10px;color:#666;line-height:1.5;max-height:60px;overflow:hidden;">' + message.substring(0, 130) + '…</div></div>'
+      + '<div style="padding:14px 18px 20px;display:flex;flex-direction:column;gap:8px;"><a href="' + shareUrl + '" target="_blank" rel="noopener" style="display:block;background:' + m.color + ';color:white;padding:13px;border-radius:20px;font-weight:800;font-size:14px;text-decoration:none;text-align:center;" onclick="document.getElementById(\'_sp\').remove()">Open ' + m.name + ' ↗</a><button onclick="document.getElementById(\'_sp\').remove()" style="background:#f5f5f5;color:#888;border:none;padding:10px;border-radius:16px;font-weight:700;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button></div>'
+      + '</div>';
+    document.querySelector(".mobile-screen").appendChild(div);
+  }
+
+  function openRefer(adId, code) { _shareAdId = adId; _referCode = code; document.getElementById("referCodeDisplay").innerText = code; openSheet("referSheet"); }
+  function copyReferCode() { var msg = "Join EAP!\nReferral Code: " + _referCode + "\nSign up & earn now!"; var ta = document.createElement("textarea"); ta.value = msg; ta.style.cssText = "position:fixed;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand("copy"); showToast("Referral code copied! 🎁"); } catch (e) {} document.body.removeChild(ta); closeAllModals(); }
+  function shareReferWhatsApp() { var msg = "🎉 Join EAP!\nEarn money by watching video ads.\n\n🔑 Referral Code: *" + _referCode + "*\n\n👉 Sign up & start earning now!"; var a = document.createElement("a"); a.href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(msg); a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); closeAllModals(); }
+
+  function openComments(adId) { _commentAdId = adId; renderComments(adId); openSheet("commentSheet"); }
+  function renderComments(adId) {
+    var comments = JSON.parse(localStorage.getItem("adComments_" + adId)) || [];
+    var list = document.getElementById("commentList");
+    if (!comments.length) { list.innerHTML = '<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>'; return; }
+    list.innerHTML = "";
+    comments.forEach(function (c) { list.innerHTML += '<div class="comment-item"><div class="c-avatar">' + (c.name || "U").charAt(0).toUpperCase() + '</div><div class="c-body"><div class="c-name">' + c.name + '<span class="c-time">' + c.time + '</span></div><div class="c-text">' + c.text + '</div></div></div>'; });
+    list.scrollTop = list.scrollHeight;
+  }
+  function postComment() {
+    var input = document.getElementById("commentInput"); var text = (input.value || "").trim(); if (!text) return;
+    var key = "adComments_" + _commentAdId; var comments = JSON.parse(localStorage.getItem(key)) || [];
+    var name = user.name || ("User " + String(activeMobile || "").slice(-4));
+    var now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    comments.push({ name: name, text: text, time: now }); localStorage.setItem(key, JSON.stringify(comments));
+    var vk = "vendorComments_" + _commentAdId; var vc = JSON.parse(localStorage.getItem(vk)) || [];
+    vc.push({ name: name, text: text, time: now, date: new Date().toLocaleDateString() }); localStorage.setItem(vk, JSON.stringify(vc));
+    input.value = ""; renderComments(_commentAdId); showToast("Comment posted ✅");
+  }
+  document.getElementById("commentInput").addEventListener("keydown", function (e) { if (e.key === "Enter") postComment(); });
+
+  function openWeb(enc) { var url = decodeURIComponent(enc); if (!url.startsWith("http")) url = "https://" + url; var a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); }
+
+  // Official Maps Embed API key — same one already restricted to this domain in frame-ads.html.
+  var EMBED_API_KEY = "AIzaSyB_RipP0Lg8bgfYkOmZTMMKJQP__azFMm0";
+
+  function openLocation(enc) {
+    var loc = decodeURIComponent(enc).trim(); var body = document.getElementById("locBody");
+    if (!loc) { body.innerHTML = '<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this ad yet.</div></div>'; }
+    else {
+      var isUrl = loc.startsWith("http");
+      var mapsUrl = isUrl ? loc : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(loc);
+      var embedUrl = isUrl ? "" : "https://www.google.com/maps/embed/v1/place?key=" + EMBED_API_KEY + "&q=" + encodeURIComponent(loc);
+      body.innerHTML = (embedUrl ? '<iframe class="loc-map-frame" src="' + embedUrl + '" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>' : '')
+        + '<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">' + loc + '</div></div>'
+        + '<button class="open-maps-btn" onclick="openViaA(\'' + mapsUrl + '\')">🗺️ Open in Google Maps</button>';
+    }
+    openSheet("locationSheet");
+  }
+  function openViaA(url) { var a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); }
+
+  function openSheet(id) { document.getElementById("backdrop").classList.add("open"); document.getElementById(id).classList.add("open"); }
+  function closeAllModals() { document.getElementById("backdrop").classList.remove("open"); ["shareSheet", "referSheet", "commentSheet", "locationSheet"].forEach(function (id) { document.getElementById(id).classList.remove("open"); }); }
+  function showToast(msg) { var t = document.getElementById("toast"); t.innerText = msg; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2500); }
+  function getAds() { return window._videoAds || []; }
 </script>
 </body>
 </html>
