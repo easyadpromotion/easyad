@@ -5,79 +5,274 @@
   <title>Surveys</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script>
-    const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  </script>
   <style>
-    body { font-family: 'Poppins', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; min-height: 100vh; }
-    .mobile-screen { background: #ffffff; width: 100%; max-width: 380px; min-height: 100vh; position: relative; display: flex; flex-direction: column; box-shadow: 0 0 30px rgba(0,0,0,0.1); border-radius: 30px; overflow: hidden; }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: #f0f2f5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+    .mobile-screen {
+      background: #fff;
+      width: 100%;
+      max-width: 380px;
+      height: 100vh;
+      max-height: 850px;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 30px rgba(0,0,0,0.1);
+      border-radius: 30px;
+      overflow: hidden;
+    }
+
     /* HEADER (Blue for Survey) */
-    .header { background: #03a9f4; padding: 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(3, 169, 244, 0.3); z-index: 10; }
-    .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 10px; }
-    .page-title { font-size: 16px; font-weight: 700; }
+    .header { background: #03a9f4; padding: 18px 20px; color: white; display: flex; align-items: center; justify-content: space-between; border-radius: 0 0 20px 20px; box-shadow: 0 5px 15px rgba(3,169,244,0.25); z-index: 10; flex-shrink: 0; }
+    .back-btn { font-size: 22px; text-decoration: none; color: white; margin-right: 10px; }
+    .page-title { font-size: 15px; font-weight: 700; }
     .wallet-pill { background: rgba(255,255,255,0.2); padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 700; }
 
     /* LIST */
-    .list { padding: 20px; overflow-y: auto; padding-bottom: 80px; flex: 1; }
-    .card { background: white; padding: 15px; border-radius: 12px; margin-bottom: 12px; border-left: 5px solid #03a9f4; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
-    
-    .s-title { font-weight: 700; font-size: 14px; margin-bottom: 5px; }
-    .s-desc { font-size: 11px; color: #666; margin-bottom: 10px; }
-    .start-btn { background: #03a9f4; color: white; border: none; padding: 8px 20px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; float: right; }
-    .start-btn.completed { background: #eee; color: #888; cursor: default; }
+    .list { padding: 15px; overflow-y: auto; padding-bottom: 90px; flex: 1; }
+    .card { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 16px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; }
+    .card-body { padding: 15px 15px 10px; border-left: 5px solid #03a9f4; }
+    .s-title { font-weight: 700; font-size: 14px; margin-bottom: 4px; color: #222; }
+    .s-desc { font-size: 11px; color: #666; margin-bottom: 8px; }
+    .badges-row { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+    .reward-tag { background: #e1f5fe; color: #0277bd; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; }
+    .claimed-tag { background: #f3f3f3; color: #999; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; border: 1px solid #e0e0e0; }
+    .qcount-tag { background: #f3e5f5; color: #7b1fa2; padding: 2px 8px; border-radius: 6px; font-size: 9px; font-weight: 700; }
+    .action-row-flex { display: flex; justify-content: flex-end; }
+    .start-btn { background: #03a9f4; color: white; border: none; padding: 8px 18px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 11px; font-family: 'Poppins', sans-serif; box-shadow: 0 3px 10px rgba(3,169,244,0.3); }
+    .start-btn.disabled { background: #eee; color: #999; cursor: default; box-shadow: none; }
+    .view-again-btn { background: #e1f5fe; color: #0277bd; border: 1px solid #b3e5fc; padding: 7px 13px; border-radius: 20px; font-weight: 700; cursor: pointer; font-size: 10px; font-family: 'Poppins', sans-serif; }
 
-    /* MODAL */
-    .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; }
-    .modal-box { background: white; width: 85%; padding: 20px; border-radius: 15px; }
-    .q-text { font-weight: 700; font-size: 14px; margin-bottom: 15px; }
-    .opt { padding: 10px; border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; font-size: 12px; cursor: pointer; }
-    .opt.sel { background: #e1f5fe; border-color: #03a9f4; color: #0277bd; font-weight: bold; }
-    .submit-btn { width: 100%; background: #03a9f4; color: white; padding: 12px; border: none; border-radius: 10px; font-weight: 700; margin-top: 10px; cursor: pointer; }
+    /* ENGAGE ROW */
+    .engage-row { display: flex; align-items: center; justify-content: space-around; padding: 8px 10px 12px; border-top: 1px solid #f5f5f5; gap: 2px; }
+    .eng-btn { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; flex: 1; background: none; border: none; font-family: 'Poppins', sans-serif; transition: transform 0.15s; padding: 0; }
+    .eng-btn:active { transform: scale(0.88); }
+    .eng-btn.disabled { opacity: 0.32; pointer-events: none; }
+    .eng-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+    .eng-label { font-size: 8px; font-weight: 700; color: #666; }
+    .eng-share   .eng-icon { background: #e3f2fd; }
+    .eng-refer   .eng-icon { background: #f3e5f5; }
+    .eng-comment .eng-icon { background: #fff8e1; }
+    .eng-web     .eng-icon { background: #e8f5e9; }
+    .eng-map     .eng-icon { background: #fce4ec; }
 
-    /* BOTTOM NAV */
+    /* FULL SCREEN SURVEY OVERLAY */
+    .ad-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 100; display: none; flex-direction: column; overflow: hidden; }
+
+    .ov-topbar { position: relative; background: #01579b; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10; }
+    .ov-topbar-title { font-size: 12px; font-weight: 700; color: white; flex: 1; margin-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ov-close-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+    .ov-content { flex: 1; background: white; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    .ov-title-area { padding: 12px 16px 8px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
+    .ov-title { font-size: 14px; font-weight: 800; color: #1a1a1a; line-height: 1.4; margin-bottom: 5px; word-break: break-word; }
+    .ov-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .ov-category { font-size: 10px; color: #03a9f4; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+    .ov-dot { color: #ddd; font-size: 10px; }
+    .ov-verified { font-size: 10px; color: #aaa; }
+    .ov-already-tag { background: #e1f5fe; color: #0277bd; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #b3e5fc; }
+
+    .ov-questions-area { flex: 1; overflow-y: auto; padding: 14px 16px 10px; min-height: 0; }
+    .q-block { margin-bottom: 22px; }
+    .q-block:last-child { margin-bottom: 6px; }
+    .q-num { font-size: 9px; font-weight: 700; color: #03a9f4; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+    .q-text { font-weight: 700; font-size: 13px; color: #222; margin-bottom: 10px; line-height: 1.4; }
+    .opt { padding: 11px 14px; border: 1.5px solid #eee; border-radius: 10px; margin-bottom: 8px; font-size: 12px; cursor: pointer; color: #444; transition: all 0.15s; }
+    .opt.sel { background: #e1f5fe; border-color: #03a9f4; color: #0277bd; font-weight: 700; }
+    .opt.readonly { cursor: default; }
+    .q-text-input { width: 100%; padding: 10px 12px; border: 1.5px solid #eee; border-radius: 10px; font-family: 'Poppins', sans-serif; font-size: 12px; outline: none; resize: vertical; min-height: 60px; }
+    .q-text-input:focus { border-color: #03a9f4; }
+    .empty-q-msg { text-align: center; color: #aaa; font-size: 12px; line-height: 1.8; margin-top: 30px; }
+
+    .ov-earn-zone { background: white; border-top: 1px solid #f0f0f0; padding: 12px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+    .submit-btn { background: linear-gradient(135deg, #03a9f4, #0277bd); color: white; padding: 12px 0; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; font-size: 14px; width: 100%; box-shadow: 0 4px 16px rgba(3,169,244,0.35); font-family: 'Poppins', sans-serif; }
+    .submit-btn:disabled { background: #ddd; box-shadow: none; cursor: not-allowed; }
+    .close-ov-btn { background: #f5f5f5; color: #666; padding: 11px 0; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 13px; width: 100%; display: none; font-family: 'Poppins', sans-serif; }
+
+    /* BACKDROP */
+    .modal-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 150; display: none; }
+    .modal-backdrop.open { display: block; }
+
+    /* BOTTOM SHEET */
+    .bottom-sheet { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-radius: 24px 24px 0 0; z-index: 200; box-shadow: 0 -10px 40px rgba(0,0,0,0.15); display: none; flex-direction: column; }
+    .bottom-sheet.open { display: flex; }
+    .sheet-handle { width: 40px; height: 4px; background: #e0e0e0; border-radius: 2px; margin: 14px auto 4px; flex-shrink: 0; }
+    .sheet-header { display: flex; justify-content: space-between; align-items: center; padding: 10px 18px; flex-shrink: 0; }
+    .sheet-title { font-size: 15px; font-weight: 800; color: #333; }
+    .sheet-close { background: #f0f0f0; border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center; }
+
+    .share-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 14px; padding: 6px 16px 28px; }
+    .share-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: transform 0.15s; }
+    .share-item:active { transform: scale(0.88); }
+    .share-ico { width: 50px; height: 50px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+    .share-lbl { font-size: 9px; font-weight: 700; color: #555; text-align: center; }
+
+    .refer-body { padding: 10px 20px 30px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+    .refer-code-box { background: #e1f5fe; border: 2px dashed #03a9f4; border-radius: 14px; padding: 12px 24px; text-align: center; width: 100%; }
+    .refer-code { font-size: 24px; font-weight: 800; color: #0277bd; letter-spacing: 3px; }
+    .full-btn { width: 100%; padding: 12px 0; border-radius: 25px; border: none; font-family: 'Poppins', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-blue { background: #03a9f4; color: white; }
+    .btn-wa   { background: #25D366; color: white; }
+
+    .comment-body { display: flex; flex-direction: column; overflow: hidden; padding: 0 16px; }
+    .comment-list { overflow-y: auto; display: flex; flex-direction: column; gap: 10px; min-height: 120px; max-height: 260px; padding: 8px 0; }
+    .comment-item { display: flex; gap: 8px; align-items: flex-start; }
+    .c-avatar { width: 30px; height: 30px; border-radius: 50%; background: #03a9f4; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; font-weight: 700; flex-shrink: 0; }
+    .c-body { background: #f8f8f8; border-radius: 12px; padding: 7px 10px; flex: 1; }
+    .c-name { font-size: 10px; font-weight: 700; color: #333; }
+    .c-time { color: #bbb; font-weight: 400; font-size: 9px; margin-left: 4px; }
+    .c-text { font-size: 11px; color: #555; margin-top: 2px; line-height: 1.4; }
+    .comment-input-row { display: flex; gap: 8px; align-items: center; border-top: 1px solid #f0f0f0; padding: 10px 0 20px; flex-shrink: 0; }
+    .comment-input { flex: 1; padding: 9px 14px; border-radius: 20px; border: 1px solid #e0e0e0; font-family: 'Poppins', sans-serif; font-size: 12px; outline: none; }
+    .comment-input:focus { border-color: #03a9f4; }
+    .send-btn { background: #03a9f4; border: none; color: white; width: 38px; height: 38px; border-radius: 50%; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+    .loc-body { padding: 10px 20px 30px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+    .loc-map-frame { width: 100%; height: 200px; border-radius: 16px; border: none; }
+    .loc-address { background: #fce4ec; border-radius: 12px; padding: 12px 16px; width: 100%; display: flex; align-items: center; gap: 10px; }
+    .loc-address-text { font-size: 12px; color: #333; font-weight: 600; line-height: 1.4; }
+    .open-maps-btn { background: #fce4ec; color: #e53935; border: none; padding: 10px 0; border-radius: 20px; width: 100%; font-family: 'Poppins', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+    .loc-not-provided { text-align: center; padding: 20px 10px; }
+    .loc-not-icon { font-size: 48px; margin-bottom: 10px; }
+    .loc-not-title { font-size: 15px; font-weight: 800; color: #555; margin-bottom: 6px; }
+    .loc-not-sub { font-size: 11px; color: #aaa; line-height: 1.5; }
+
+    .toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 9px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; z-index: 999; white-space: nowrap; box-shadow: 0 4px 12px rgba(0,0,0,0.25); pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+    .toast.show { opacity: 1; }
+
     .bottom-nav { position: absolute; bottom: 0; left: 0; width: 100%; background: white; border-top: 1px solid #eee; display: flex; justify-content: space-around; padding: 10px 0; z-index: 50; }
     .nav-item { text-decoration: none; display: flex; flex-direction: column; align-items: center; color: #999; flex: 1; }
     .nav-icon { font-size: 20px; margin-bottom: 2px; }
     .nav-text { font-size: 9px; font-weight: 600; }
     .nav-item.active { color: #03a9f4; }
-
+    .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
   </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
+
 <body onload="loadSurveys()">
 <div class="mobile-screen">
+
   <div class="header">
-    <div style="display:flex; align-items:center;">
+    <div style="display:flex;align-items:center;">
       <a href="home.html" class="back-btn">←</a>
       <div class="page-title">Surveys</div>
     </div>
-    <div class="wallet-pill">💰 <span id="headerBalance">0.00</span></div>
+    <div class="wallet-pill">💰 ₹<span id="headerBalance">0.00</span></div>
   </div>
 
   <div class="list" id="surveyContainer"></div>
 
-  <!-- ⚠️ NOTE: this modal always shows the same hardcoded question,
-       regardless of which survey/ad was clicked. It does NOT read the
-       real questions/options a vendor entered via post_survey_ad.html
-       (those are saved in Supabase tables "survey_questions" and
-       "survey_options", keyed by campaign_id — never wired up here).
-       This was true before this fix too; I only fixed the ad LISTING
-       (why surveys weren't appearing at all). Making this modal show
-       each survey's real questions is a separate, bigger follow-up —
-       say the word if you want that built next. -->
-  <div class="modal" id="surveyModal">
-    <div class="modal-box">
-        <div class="q-text">How satisfied are you with this service?</div>
-        <div class="opt" onclick="sel(this)">Very Satisfied</div>
-        <div class="opt" onclick="sel(this)">Satisfied</div>
-        <div class="opt" onclick="sel(this)">Neutral</div>
-        <button class="submit-btn" onclick="submitSurvey()">Submit & Earn</button>
-        <div style="text-align:center; margin-top:10px; font-size:11px; color:#888; cursor:pointer;" onclick="closeModal()">Cancel</div>
+  <!-- FULL SCREEN SURVEY OVERLAY — renders each survey's real questions/options -->
+  <div class="ad-overlay" id="surveyOverlay">
+    <div class="ov-topbar">
+      <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
+      <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
+    </div>
+
+    <div class="ov-content">
+      <div class="ov-title-area">
+        <div class="ov-title" id="ovTitle">Loading…</div>
+        <div class="ov-meta">
+          <span class="ov-category" id="ovCatLabel">General</span>
+          <span class="ov-dot">•</span>
+          <span class="ov-verified">Verified Survey</span>
+          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ Already Completed</span>
+        </div>
+      </div>
+
+      <div class="ov-questions-area" id="questionsArea"></div>
+    </div>
+
+    <div class="ov-earn-zone">
+      <button class="submit-btn" id="submitBtn" onclick="submitSurvey()" disabled>Submit & Earn ₹3.00</button>
+      <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()">Close</button>
     </div>
   </div>
+
+  <!-- BACKDROP -->
+  <div class="modal-backdrop" id="backdrop" onclick="closeAllModals()"></div>
+
+  <!-- SHARE SHEET -->
+  <div class="bottom-sheet" id="shareSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🔗 Share This Survey</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="share-grid">
+      <div class="share-item" onclick="doShare('whatsapp')"><div class="share-ico" style="background:#dcf8c6;">💬</div><div class="share-lbl">WhatsApp</div></div>
+      <div class="share-item" onclick="doShare('telegram')"><div class="share-ico" style="background:#d9efff;">✈️</div><div class="share-lbl">Telegram</div></div>
+      <div class="share-item" onclick="doShare('facebook')"><div class="share-ico" style="background:#e7eeff;">👍</div><div class="share-lbl">Facebook</div></div>
+      <div class="share-item" onclick="doShare('twitter')"><div class="share-ico" style="background:#e0f7fa;">🐦</div><div class="share-lbl">Twitter / X</div></div>
+      <div class="share-item" onclick="doShare('instagram')"><div class="share-ico" style="background:#fce4ec;">📸</div><div class="share-lbl">Instagram</div></div>
+      <div class="share-item" onclick="doShare('copy')"><div class="share-ico" style="background:#f3e5f5;">🔗</div><div class="share-lbl">Copy Link</div></div>
+      <div class="share-item" onclick="doShare('sms')"><div class="share-ico" style="background:#fff8e1;">📱</div><div class="share-lbl">SMS</div></div>
+      <div class="share-item" onclick="doShare('email')"><div class="share-ico" style="background:#f1f8e9;">📧</div><div class="share-lbl">Email</div></div>
+    </div>
+  </div>
+
+  <!-- REFER SHEET -->
+  <div class="bottom-sheet" id="referSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">🎁 Refer & Earn</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="refer-body">
+      <div style="font-size:42px;">🎁</div>
+      <div style="font-size:12px;color:#888;text-align:center;line-height:1.5;">Share this code with friends.<br>Earn bonus when they join EAP!</div>
+      <div class="refer-code-box">
+        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;">REFERRAL CODE</div>
+        <div class="refer-code" id="referCodeDisplay">EAP0000</div>
+      </div>
+      <button class="full-btn btn-blue" onclick="copyReferCode()">📋 Copy Code</button>
+      <button class="full-btn btn-wa" onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
+    </div>
+  </div>
+
+  <!-- COMMENT SHEET -->
+  <div class="bottom-sheet" id="commentSheet" style="max-height:70%;">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">💬 Comments</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="comment-body">
+      <div class="comment-list" id="commentList"></div>
+      <div class="comment-input-row">
+        <input type="text" class="comment-input" id="commentInput" placeholder="Write a comment…" maxlength="120">
+        <button class="send-btn" onclick="postComment()">➤</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOCATION SHEET -->
+  <div class="bottom-sheet" id="locationSheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <div class="sheet-title">📍 Vendor Location</div>
+      <button class="sheet-close" onclick="closeAllModals()">✕</button>
+    </div>
+    <div class="loc-body" id="locBody"></div>
+  </div>
+
+  <!-- TOAST -->
+  <div class="toast" id="toast"></div>
 
   <div class="bottom-nav">
       <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
@@ -88,25 +283,28 @@
 </div>
 
 <script>
-  let activeAdId = null;
-  let activeAdName = "";
-  const activeMobile = localStorage.getItem("activeUser");
-  let user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
+  var REWARD_AMOUNT = 3.00;
 
-  // ── Records a real view event in Supabase — see the identical
-  // helper in frame-ads.html for full explanation.
-  async function recordAdView(campaignId){
-    try{
-      const profile = JSON.parse(localStorage.getItem("userProfile_"+activeMobile)) || {};
+  var activeAdId = null, activeAdObj = null, canEarn = false;
+  var activeQuestions = [];      // [{id, text, options:[{id,text}]}]
+  var activeAnswers = {};        // {questionId: optionId | textValue}
+  var _shareAdId = null, _referCode = null, _commentAdId = null;
+  var activeMobile = localStorage.getItem("activeUser");
+  var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
+
+  // ── Records a real view event in Supabase — identical helper to frame-ads.html.
+  async function recordAdView(campaignId) {
+    try {
+      const profile = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || {};
       let firstName = profile.firstName || "";
-      let lastName  = profile.lastName  || "";
-      if(!firstName && !lastName && profile.name){
+      let lastName = profile.lastName || "";
+      if (!firstName && !lastName && profile.name) {
         const parts = profile.name.trim().split(/\s+/);
         firstName = parts[0] || "";
-        lastName  = parts.slice(1).join(" ") || "";
+        lastName = parts.slice(1).join(" ") || "";
       }
       let loc = null;
-      try{ loc = JSON.parse(localStorage.getItem("eap_user_location")); }catch(e){}
+      try { loc = JSON.parse(localStorage.getItem("eap_user_location")); } catch (e) {}
 
       await supabaseClient.from('ad_views').insert({
         campaign_id: campaignId,
@@ -118,12 +316,37 @@
         viewer_lng: (loc && loc.lng != null) ? loc.lng : null
       });
       await supabaseClient.rpc('increment_campaign_views', { p_campaign_id: campaignId });
-    }catch(e){ console.error('recordAdView error:', e); }
+    } catch (e) { console.error('recordAdView error:', e); }
   }
 
-  // ── Supabase-backed loadSurveys() — replaces localStorage("vendorCampaigns") ──
+  // ── Best-effort write of each answer to survey_responses. Wrapped so that
+  // if this table/columns don't exist yet, it fails silently and never
+  // blocks the reward flow — same fire-and-forget pattern as recordAdView.
+  async function recordSurveyResponses(campaignId, questions, answers) {
+    try {
+      const rows = questions.map(function (q) {
+        var ans = answers[q.id];
+        var isOption = q.options && q.options.length > 0;
+        return {
+          campaign_id: campaignId,
+          question_id: q.id,
+          selected_option_id: isOption ? ans : null,
+          answer_text: isOption ? null : (ans || null),
+          viewer_mobile: activeMobile || null
+        };
+      });
+      await supabaseClient.from('survey_responses').insert(rows);
+    } catch (e) { console.error('recordSurveyResponses error (non-blocking):', e); }
+  }
+
+  function getQuestionText(q) { return q.question_text || q.question || q.text || q.title || ""; }
+  function getOptionText(o) { return o.option_text || o.text || o.label || o.value || ""; }
+
+  // ── Supabase-backed loadSurveys() ── type=Survey, status=Active.
+  // Also pulls a question-count per campaign in one extra query, so cards
+  // can show "X Questions" and disable Start for surveys with none set up yet.
   async function loadSurveys() {
-    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
+    document.getElementById("headerBalance").innerText = parseFloat(user.wallet || 0).toFixed(2);
     const container = document.getElementById("surveyContainer");
 
     const { data, error } = await supabaseClient
@@ -135,70 +358,325 @@
 
     if (error) {
       console.error('Supabase loadSurveys error:', error);
-      container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>⚠️ Couldn't load surveys right now. Please try again shortly.</div>";
+      container.innerHTML = "<div class='empty-msg'>⚠️ Couldn't load surveys right now.<br>Please try again shortly.</div>";
       return;
     }
 
     const surveys = (data || []).map(function (row) {
-      return { id: row.id, name: row.title, category: row.category };
+      return {
+        id: row.id,
+        title: row.title,
+        name: row.title,
+        desc: row.description,
+        description: row.description,
+        category: row.category,
+        webLink: row.website || null,
+        mapLink: row.location || null,
+        location: row.location
+      };
     });
-    const viewedList = user.viewedAds || [];
 
-    if(surveys.length === 0) { container.innerHTML = "<div style='text-align:center; margin-top:50px; color:#aaa; font-size:12px;'>No surveys available.</div>"; return; }
+    if (!surveys.length) {
+      container.innerHTML = "<div class='empty-msg'>📭 No active surveys found.<br>Check back soon!</div>";
+      return;
+    }
+    window._surveys = surveys;
+
+    // question counts, one query for the whole list
+    var qCounts = {};
+    try {
+      const ids = surveys.map(function (s) { return s.id; });
+      const { data: qRows, error: qErr } = await supabaseClient
+        .from('survey_questions')
+        .select('id, campaign_id')
+        .in('campaign_id', ids);
+      if (!qErr && qRows) {
+        qRows.forEach(function (q) { qCounts[q.campaign_id] = (qCounts[q.campaign_id] || 0) + 1; });
+      }
+    } catch (e) { console.error('question count fetch error:', e); }
+    window._surveyQCounts = qCounts;
+
     container.innerHTML = "";
+    var viewed = user.viewedAds || [];
 
-    surveys.forEach((ad) => {
-      const isViewed = viewedList.includes(ad.id);
-      const btnText = isViewed ? "Completed" : "Start (+₹3.00)";
-      const btnClass = isViewed ? "start-btn completed" : "start-btn";
-      
-      const html = `
-        <div class="card">
-          <div class="s-title">${ad.name}</div>
-          <div class="s-desc">Give feedback about ${ad.category}</div>
-          <div style="overflow:hidden;">
-             <button class="${btnClass}" onclick="openSurvey('${ad.id}', '${ad.name}', ${isViewed})">${btnText}</button>
-          </div>
-        </div>`;
-      container.innerHTML += html;
+    surveys.forEach(function (ad) {
+      var isClaimed = viewed.indexOf(ad.id) !== -1;
+      var title = ad.title || ad.name || "Untitled Survey";
+      var category = ad.category || "General";
+      var webLink = ad.webLink || "";
+      var mapLink = ad.mapLink || "";
+      var refCode = "EAP" + String(ad.id).slice(-4).toUpperCase();
+      var qCount = qCounts[ad.id] || 0;
+
+      var badgesHtml = isClaimed
+        ? '<span class="claimed-tag">✔ Completed</span>'
+        : '<span class="reward-tag">+₹' + REWARD_AMOUNT.toFixed(2) + '</span>';
+      badgesHtml += ' <span class="qcount-tag">' + qCount + ' Question' + (qCount === 1 ? '' : 's') + '</span>';
+
+      var btnHtml;
+      if (isClaimed) {
+        btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>';
+      } else if (qCount === 0) {
+        btnHtml = '<button class="start-btn disabled" disabled>Not Ready Yet</button>';
+      } else {
+        btnHtml = '<button class="start-btn" onclick="openSurvey(\'' + ad.id + '\')">Start (+₹' + REWARD_AMOUNT.toFixed(2) + ')</button>';
+      }
+
+      var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
+      var webClick = webLink ? 'onclick="openWeb(\'' + encodeURIComponent(webLink) + '\')"' : "";
+
+      container.innerHTML +=
+        '<div class="card" id="card_' + ad.id + '">'
+          + '<div class="card-body">'
+            + '<div class="s-title">' + title + '</div>'
+            + '<div class="s-desc">Give feedback about ' + category + '</div>'
+            + '<div class="badges-row">' + badgesHtml + '</div>'
+            + '<div class="action-row-flex">' + btnHtml + '</div>'
+          + '</div>'
+          + '<div class="engage-row">'
+            + '<button class="eng-btn eng-share" onclick="openShare(\'' + ad.id + '\')"><div class="eng-icon">🔗</div><span class="eng-label">Share</span></button>'
+            + '<button class="eng-btn eng-refer" onclick="openRefer(\'' + ad.id + '\',\'' + refCode + '\')"><div class="eng-icon">🎁</div><span class="eng-label">Refer</span></button>'
+            + '<button class="eng-btn eng-comment" onclick="openComments(\'' + ad.id + '\')"><div class="eng-icon">💬</div><span class="eng-label">Comments</span></button>'
+            + '<button class="' + webClass + '" ' + webClick + '><div class="eng-icon">🌐</div><span class="eng-label">Website</span></button>'
+            + '<button class="eng-btn eng-map" onclick="openLocation(\'' + encodeURIComponent(mapLink) + '\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
+          + '</div>'
+        + '</div>';
     });
   }
 
-  function openSurvey(id, name, isViewed) {
-    if(isViewed) return;
-    activeAdId = id; activeAdName = name;
-    document.getElementById("surveyModal").style.display = "flex";
+  // ── Fetches the REAL questions + options for one campaign_id.
+  async function fetchSurveyQuestions(campaignId) {
+    const { data: qRows, error: qErr } = await supabaseClient
+      .from('survey_questions')
+      .select('*')
+      .eq('campaign_id', campaignId)
+      .order('id', { ascending: true });
+    if (qErr || !qRows || !qRows.length) return [];
+
+    const qIds = qRows.map(function (q) { return q.id; });
+    const { data: oRows, error: oErr } = await supabaseClient
+      .from('survey_options')
+      .select('*')
+      .in('question_id', qIds)
+      .order('id', { ascending: true });
+
+    const optionsByQ = {};
+    if (!oErr && oRows) {
+      oRows.forEach(function (o) {
+        if (!optionsByQ[o.question_id]) optionsByQ[o.question_id] = [];
+        optionsByQ[o.question_id].push({ id: o.id, text: getOptionText(o) });
+      });
+    }
+
+    return qRows.map(function (q) {
+      return { id: q.id, text: getQuestionText(q), options: optionsByQ[q.id] || [] };
+    });
   }
 
-  function sel(el) {
-    document.querySelectorAll('.opt').forEach(o => o.classList.remove('sel'));
+  function renderQuestions(questions, readonly) {
+    var area = document.getElementById("questionsArea");
+    if (!questions.length) {
+      area.innerHTML = '<div class="empty-q-msg">📭 No questions found for this survey.</div>';
+      return;
+    }
+    area.innerHTML = "";
+    questions.forEach(function (q, idx) {
+      var block = document.createElement("div");
+      block.className = "q-block";
+      var numHtml = '<div class="q-num">Question ' + (idx + 1) + ' of ' + questions.length + '</div>';
+      var textHtml = '<div class="q-text">' + q.text + '</div>';
+      var bodyHtml = "";
+
+      if (q.options && q.options.length) {
+        q.options.forEach(function (o) {
+          var savedSel = activeAnswers[q.id] === o.id ? " sel" : "";
+          bodyHtml += '<div class="opt' + savedSel + (readonly ? ' readonly' : '') + '" '
+            + (readonly ? "" : 'onclick="selectOption(\'' + q.id + '\',\'' + o.id + '\',this)"')
+            + '>' + o.text + '</div>';
+        });
+      } else {
+        bodyHtml = readonly
+          ? '<div class="opt readonly">' + (activeAnswers[q.id] || "No answer recorded") + '</div>'
+          : '<textarea class="q-text-input" placeholder="Type your answer…" onInput="setTextAnswer(\'' + q.id + '\', this.value)"></textarea>';
+      }
+
+      block.innerHTML = numHtml + textHtml + bodyHtml;
+      area.appendChild(block);
+    });
+  }
+
+  function selectOption(qId, oId, el) {
+    activeAnswers[qId] = oId;
+    var siblings = el.parentElement.querySelectorAll('.opt');
+    siblings.forEach(function (s) { s.classList.remove('sel'); });
     el.classList.add('sel');
+    updateSubmitState();
+  }
+
+  function setTextAnswer(qId, val) {
+    activeAnswers[qId] = val.trim();
+    updateSubmitState();
+  }
+
+  function updateSubmitState() {
+    var allAnswered = activeQuestions.every(function (q) {
+      var a = activeAnswers[q.id];
+      return a !== undefined && a !== null && a !== "";
+    });
+    document.getElementById("submitBtn").disabled = !allAnswered;
+  }
+
+  async function openSurvey(id) {
+    var ad = getSurveys().find(function (a) { return a.id === id; });
+    if (!ad) return;
+    activeAdId = id; activeAdObj = ad; canEarn = true; activeAnswers = {};
+
+    document.getElementById("ovTopTitle").innerText = ad.title || ad.name || "Survey";
+    document.getElementById("ovTitle").innerText = ad.title || ad.name || "Survey";
+    document.getElementById("ovCatLabel").innerText = ad.category || "General";
+    document.getElementById("ovBadge").style.display = "none";
+    document.getElementById("submitBtn").style.display = "block";
+    document.getElementById("submitBtn").disabled = true;
+    document.getElementById("closeBtn").style.display = "none";
+    document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">Loading questions…</div>';
+    document.getElementById("surveyOverlay").style.display = "flex";
+
+    activeQuestions = await fetchSurveyQuestions(id);
+    renderQuestions(activeQuestions, false);
+    updateSubmitState();
+  }
+
+  async function openViewAgain(id) {
+    var ad = getSurveys().find(function (a) { return a.id === id; });
+    if (!ad) return;
+    activeAdId = id; activeAdObj = ad; canEarn = false;
+
+    document.getElementById("ovTopTitle").innerText = ad.title || ad.name || "Survey";
+    document.getElementById("ovTitle").innerText = ad.title || ad.name || "Survey";
+    document.getElementById("ovCatLabel").innerText = ad.category || "General";
+    document.getElementById("ovBadge").style.display = "inline-block";
+    document.getElementById("submitBtn").style.display = "none";
+    document.getElementById("closeBtn").style.display = "block";
+    document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">Loading questions…</div>';
+    document.getElementById("surveyOverlay").style.display = "flex";
+
+    activeQuestions = await fetchSurveyQuestions(id);
+    renderQuestions(activeQuestions, true);
+  }
+
+  function closeOverlay() {
+    document.getElementById("surveyOverlay").style.display = "none";
   }
 
   function submitSurvey() {
-    user.wallet = parseFloat(user.wallet) + 3.00;
-    
-    if(!user.adHistory) user.adHistory = [];
-    user.adHistory.push({
-        id: activeAdId,
-        name: activeAdName,
-        type: 'Survey',
-        amount: 3.00,
-        date: new Date().toLocaleDateString(),
-        time: new Date().toLocaleTimeString()
+    if (!canEarn) return;
+    var allAnswered = activeQuestions.every(function (q) {
+      var a = activeAnswers[q.id];
+      return a !== undefined && a !== null && a !== "";
     });
+    if (!allAnswered) return;
+    canEarn = false;
 
-    if(!user.viewedAds) user.viewedAds = [];
-    user.viewedAds.push(activeAdId);
-    
+    user.wallet = parseFloat(user.wallet || 0) + REWARD_AMOUNT;
+    user.adHistory = user.adHistory || [];
+    user.adHistory.push({ id: activeAdId, name: activeAdObj ? (activeAdObj.title || activeAdObj.name) : activeAdId, type: "Survey", amount: REWARD_AMOUNT, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
+    user.viewedAds = user.viewedAds || [];
+    if (user.viewedAds.indexOf(activeAdId) === -1) user.viewedAds.push(activeAdId);
     localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
-    closeModal();
-    loadSurveys();
-    alert("Survey Submitted! ₹3.00 Added.");
-    recordAdView(activeAdId); // fire-and-forget
+
+    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
+    var qSnapshot = activeQuestions, aSnapshot = Object.assign({}, activeAnswers), idSnapshot = activeAdId;
+    closeOverlay(); loadSurveys(); showToast("Survey Submitted! ₹" + REWARD_AMOUNT.toFixed(2) + " Added.");
+    recordAdView(idSnapshot);
+    recordSurveyResponses(idSnapshot, qSnapshot, aSnapshot);
   }
 
-  function closeModal() { document.getElementById("surveyModal").style.display = "none"; }
+  function openShare(adId) { _shareAdId = adId; openSheet("shareSheet"); }
+
+  function doShare(platform) {
+    var ad = getSurveys().find(function (a) { return a.id === _shareAdId; }) || {};
+    var adTitle = ad.title || ad.name || "EAP Survey";
+    var adDesc = ad.desc || ad.description || "";
+    var webLink = (ad.webLink || "").trim();
+    var url = webLink ? (webLink.startsWith("http") ? webLink : "https://" + webLink) : "www.easyadpromotion.com";
+    var shortMsg = "📝 " + adTitle + "\n💰 Earn by taking surveys on EAP!\n👉 " + url;
+    var fullMsg = "📝 " + adTitle + "\n\n" + adDesc + "\n\n💰 Earn money taking surveys on EAP!\n👉 " + url;
+    closeAllModals();
+
+    function doCopy(text, msg) { var ta = document.createElement("textarea"); ta.value = text; ta.style.cssText = "position:fixed;top:0;left:0;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand("copy"); showToast(msg || "Copied ✅"); } catch (e) { showToast("Please copy manually"); } document.body.removeChild(ta); }
+    function openViaLink(href) { var a = document.createElement("a"); a.href = href; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); }
+
+    var urls = { whatsapp: "https://api.whatsapp.com/send?text=" + encodeURIComponent(fullMsg), telegram: "https://t.me/share/url?url=" + encodeURIComponent(url) + "&text=" + encodeURIComponent("📝 " + adTitle), facebook: "https://www.facebook.com/sharer/sharer.php?u=" + encodeURIComponent(url), twitter: "https://twitter.com/intent/tweet?text=" + encodeURIComponent("📝 " + adTitle + " " + url), instagram: "https://www.instagram.com/", sms: "sms:?body=" + encodeURIComponent(shortMsg), email: "mailto:?subject=" + encodeURIComponent("Check this survey: " + adTitle) + "&body=" + encodeURIComponent(fullMsg) };
+    if (platform === "copy") { doCopy(shortMsg, "Link Copied! 🔗"); return; }
+    if (platform === "sms") { openViaLink(urls.sms); showToast("Opening SMS… 📱"); return; }
+    if (platform === "email") { openViaLink(urls.email); showToast("Opening Email… 📧"); return; }
+    doCopy(fullMsg, ""); showSharePopup(platform, urls[platform], adTitle, fullMsg);
+  }
+
+  function showSharePopup(platform, shareUrl, adTitle, message) {
+    var old = document.getElementById("_sp"); if (old) old.remove();
+    var meta = { whatsapp: { icon: "💬", name: "WhatsApp", color: "#25D366", bg: "#dcf8c6" }, telegram: { icon: "✈️", name: "Telegram", color: "#0088cc", bg: "#d9efff" }, facebook: { icon: "👍", name: "Facebook", color: "#1877F2", bg: "#e7eeff" }, twitter: { icon: "🐦", name: "Twitter/X", color: "#1DA1F2", bg: "#e0f7fa" }, instagram: { icon: "📸", name: "Instagram", color: "#E1306C", bg: "#fce4ec" } };
+    var m = meta[platform] || { icon: "📤", name: platform, color: "#03a9f4", bg: "#e1f5fe" };
+    var div = document.createElement("div"); div.id = "_sp";
+    div.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.72);z-index:900;display:flex;align-items:center;justify-content:center;padding:20px;box-sizing:border-box;";
+    div.innerHTML = '<div style="background:white;border-radius:22px;width:100%;max-width:310px;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.35);">'
+      + '<div style="background:' + m.bg + ';padding:20px;text-align:center;"><div style="font-size:44px;">' + m.icon + '</div><div style="font-size:16px;font-weight:800;color:#333;margin-top:6px;">Share on ' + m.name + '</div></div>'
+      + '<div style="padding:14px 18px 0;"><div style="font-size:11px;color:#555;line-height:1.9;background:#f8f8f8;border-radius:12px;padding:10px 14px;">✅ Message copied to clipboard<br>👇 Tap <b>Open ' + m.name + '</b> below<br>📋 Paste the message &amp; send</div></div>'
+      + '<div style="padding:10px 18px 0;"><div style="font-size:9px;font-weight:700;color:#aaa;margin-bottom:4px;text-transform:uppercase;">Copied Message Preview</div><div style="background:#f0f0f0;border-radius:10px;padding:8px 12px;font-size:10px;color:#666;line-height:1.5;max-height:60px;overflow:hidden;">' + message.substring(0, 130) + '…</div></div>'
+      + '<div style="padding:14px 18px 20px;display:flex;flex-direction:column;gap:8px;"><a href="' + shareUrl + '" target="_blank" rel="noopener" style="display:block;background:' + m.color + ';color:white;padding:13px;border-radius:20px;font-weight:800;font-size:14px;text-decoration:none;text-align:center;" onclick="document.getElementById(\'_sp\').remove()">Open ' + m.name + ' ↗</a><button onclick="document.getElementById(\'_sp\').remove()" style="background:#f5f5f5;color:#888;border:none;padding:10px;border-radius:16px;font-weight:700;font-size:12px;cursor:pointer;font-family:Poppins,sans-serif;">Cancel</button></div>'
+      + '</div>';
+    document.querySelector(".mobile-screen").appendChild(div);
+  }
+
+  function openRefer(adId, code) { _shareAdId = adId; _referCode = code; document.getElementById("referCodeDisplay").innerText = code; openSheet("referSheet"); }
+  function copyReferCode() { var msg = "Join EAP!\nReferral Code: " + _referCode + "\nSign up & earn now!"; var ta = document.createElement("textarea"); ta.value = msg; ta.style.cssText = "position:fixed;opacity:0;"; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand("copy"); showToast("Referral code copied! 🎁"); } catch (e) {} document.body.removeChild(ta); closeAllModals(); }
+  function shareReferWhatsApp() { var msg = "🎉 Join EAP!\nEarn money by taking surveys.\n\n🔑 Referral Code: *" + _referCode + "*\n\n👉 Sign up & start earning now!"; var a = document.createElement("a"); a.href = "https://api.whatsapp.com/send?text=" + encodeURIComponent(msg); a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); closeAllModals(); }
+
+  function openComments(adId) { _commentAdId = adId; renderComments(adId); openSheet("commentSheet"); }
+  function renderComments(adId) {
+    var comments = JSON.parse(localStorage.getItem("adComments_" + adId)) || [];
+    var list = document.getElementById("commentList");
+    if (!comments.length) { list.innerHTML = '<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>'; return; }
+    list.innerHTML = "";
+    comments.forEach(function (c) { list.innerHTML += '<div class="comment-item"><div class="c-avatar">' + (c.name || "U").charAt(0).toUpperCase() + '</div><div class="c-body"><div class="c-name">' + c.name + '<span class="c-time">' + c.time + '</span></div><div class="c-text">' + c.text + '</div></div></div>'; });
+    list.scrollTop = list.scrollHeight;
+  }
+  function postComment() {
+    var input = document.getElementById("commentInput"); var text = (input.value || "").trim(); if (!text) return;
+    var key = "adComments_" + _commentAdId; var comments = JSON.parse(localStorage.getItem(key)) || [];
+    var name = user.name || ("User " + String(activeMobile || "").slice(-4));
+    var now = new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+    comments.push({ name: name, text: text, time: now }); localStorage.setItem(key, JSON.stringify(comments));
+    var vk = "vendorComments_" + _commentAdId; var vc = JSON.parse(localStorage.getItem(vk)) || [];
+    vc.push({ name: name, text: text, time: now, date: new Date().toLocaleDateString() }); localStorage.setItem(vk, JSON.stringify(vc));
+    input.value = ""; renderComments(_commentAdId); showToast("Comment posted ✅");
+  }
+  document.getElementById("commentInput").addEventListener("keydown", function (e) { if (e.key === "Enter") postComment(); });
+
+  function openWeb(enc) { var url = decodeURIComponent(enc); if (!url.startsWith("http")) url = "https://" + url; var a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); }
+
+  // Official Maps Embed API key — same one already restricted to this domain in frame-ads.html.
+  var EMBED_API_KEY = "AIzaSyB_RipP0Lg8bgfYkOmZTMMKJQP__azFMm0";
+
+  function openLocation(enc) {
+    var loc = decodeURIComponent(enc).trim(); var body = document.getElementById("locBody");
+    if (!loc) { body.innerHTML = '<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this survey yet.</div></div>'; }
+    else {
+      var isUrl = loc.startsWith("http");
+      var mapsUrl = isUrl ? loc : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(loc);
+      var embedUrl = isUrl ? "" : "https://www.google.com/maps/embed/v1/place?key=" + EMBED_API_KEY + "&q=" + encodeURIComponent(loc);
+      body.innerHTML = (embedUrl ? '<iframe class="loc-map-frame" src="' + embedUrl + '" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>' : '')
+        + '<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">' + loc + '</div></div>'
+        + '<button class="open-maps-btn" onclick="openViaA(\'' + mapsUrl + '\')">🗺️ Open in Google Maps</button>';
+    }
+    openSheet("locationSheet");
+  }
+  function openViaA(url) { var a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); }
+
+  function openSheet(id) { document.getElementById("backdrop").classList.add("open"); document.getElementById(id).classList.add("open"); }
+  function closeAllModals() { document.getElementById("backdrop").classList.remove("open"); ["shareSheet", "referSheet", "commentSheet", "locationSheet"].forEach(function (id) { document.getElementById(id).classList.remove("open"); }); }
+  function showToast(msg) { var t = document.getElementById("toast"); t.innerText = msg; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2500); }
+  function getSurveys() { return window._surveys || []; }
 </script>
 </body>
 </html>
