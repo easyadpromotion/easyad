@@ -96,6 +96,25 @@
         }
         .tab.active { background: #009688; color: white; }
 
+        /* UPLOAD BOX */
+        .upload-box {
+            border: 2px dashed #b2dfdb; border-radius: 12px; padding: 20px 14px;
+            text-align: center; background: #f0faf9; cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .upload-box:hover { border-color: #009688; }
+        .upload-box.has-file { border-style: solid; border-color: #009688; background: #e0f2f1; }
+        .upload-icon { font-size: 30px; margin-bottom: 6px; }
+        .upload-text { font-size: 12px; color: #666; font-weight: 600; }
+        .upload-sub { font-size: 10px; color: #aaa; margin-top: 4px; }
+        .upload-filename { font-size: 12px; color: #00796b; font-weight: 700; margin-top: 8px; word-break: break-all; }
+        #videoFile { display: none; }
+        .upload-progress-wrap { margin-top: 12px; background: #e0f2f1; border-radius: 8px; height: 8px; overflow: hidden; display: none; }
+        .upload-progress-wrap.show { display: block; }
+        .upload-progress-bar { height: 100%; width: 0%; background: #009688; transition: width 0.2s; }
+        .upload-status-text { font-size: 10px; color: #00796b; margin-top: 6px; text-align: center; display: none; }
+        .upload-status-text.show { display: block; }
+
         /* COST BOX */
         .cost-box { 
             background: #e0f2f1; padding: 15px; border-radius: 10px; 
@@ -116,6 +135,7 @@
             transition: 0.2s;
         }
         .btn-submit:active { transform: scale(0.98); }
+        .btn-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
         /* ── LOCATION PICKER + MAP (ported from frame-ads.html) ───────── */
         .loc-outer { position: relative; margin-bottom: 6px; }
@@ -319,10 +339,20 @@
             </div>
 
             <div id="input-link">
-                <input type="text" id="videoLink" placeholder="Paste YouTube Link" style="margin-bottom: 20px;">
+                <input type="text" id="videoLink" placeholder="Paste YouTube / Instagram Link" style="margin-bottom: 20px;">
             </div>
-            <div id="input-upload" style="display: none;">
-                <input type="file" style="background: #fafafa;">
+            <div id="input-upload" style="display: none; margin-bottom: 15px;">
+                <input type="file" id="videoFile" accept="video/*" onchange="onVideoFileChosen(event)">
+                <div class="upload-box" id="uploadBox" onclick="document.getElementById('videoFile').click()">
+                    <div class="upload-icon">🎬</div>
+                    <div class="upload-text" id="uploadBoxText">Tap to choose a video file</div>
+                    <div class="upload-sub">MP4, WebM or MOV — up to 100MB</div>
+                    <div class="upload-filename" id="uploadFilename" style="display:none;"></div>
+                </div>
+                <div class="upload-progress-wrap" id="uploadProgressWrap">
+                    <div class="upload-progress-bar" id="uploadProgressBar"></div>
+                </div>
+                <div class="upload-status-text" id="uploadStatusText"></div>
             </div>
         </div>
 
@@ -360,7 +390,9 @@
 
 <script>
     // ── TABS ──────────────────────────────────────────────
+    var activeVideoTab = 'link';
     function switchTab(type) {
+        activeVideoTab = type;
         document.getElementById('tab-link').className = 'tab';
         document.getElementById('tab-upload').className = 'tab';
         document.getElementById('input-link').style.display = 'none';
@@ -368,6 +400,69 @@
 
         document.getElementById('tab-' + type).className = 'tab active';
         document.getElementById('input-' + type).style.display = 'block';
+    }
+
+    // ── FILE PICKER (Upload Video tab) ──────────────────────
+    var chosenVideoFile = null;
+    var MAX_VIDEO_MB = 100;
+
+    function onVideoFileChosen(e) {
+        var file = e.target.files && e.target.files[0];
+        if (!file) { chosenVideoFile = null; return; }
+
+        if (!file.type.startsWith('video/')) {
+            alert("Please choose a video file (MP4, WebM, MOV, etc.)");
+            e.target.value = "";
+            chosenVideoFile = null;
+            return;
+        }
+        var sizeMB = file.size / (1024 * 1024);
+        if (sizeMB > MAX_VIDEO_MB) {
+            alert("That file is " + sizeMB.toFixed(1) + "MB — please choose a video under " + MAX_VIDEO_MB + "MB.");
+            e.target.value = "";
+            chosenVideoFile = null;
+            return;
+        }
+
+        chosenVideoFile = file;
+        document.getElementById('uploadBox').classList.add('has-file');
+        document.getElementById('uploadBoxText').innerText = "Video selected ✓ (tap to change)";
+        var fnEl = document.getElementById('uploadFilename');
+        fnEl.style.display = 'block';
+        fnEl.innerText = file.name + " (" + sizeMB.toFixed(1) + "MB)";
+    }
+
+    // Uploads the chosen file to the 'ad-videos' Supabase Storage bucket
+    // and returns its public URL. Throws on failure so the caller can
+    // stop the publish flow and show an error instead of saving a
+    // campaign with a broken/missing video_url.
+    async function uploadVideoFile(file, vendorMobile) {
+        var ext = (file.name.split('.').pop() || 'mp4').toLowerCase();
+        var safeExt = ext.replace(/[^a-z0-9]/g, '') || 'mp4';
+        var path = (vendorMobile || 'unknown') + '/' + Date.now() + '_' + Math.random().toString(36).slice(2, 8) + '.' + safeExt;
+
+        var statusEl = document.getElementById('uploadStatusText');
+        var wrapEl = document.getElementById('uploadProgressWrap');
+        var barEl = document.getElementById('uploadProgressBar');
+        statusEl.classList.add('show');
+        statusEl.innerText = "Uploading video…";
+        wrapEl.classList.add('show');
+        barEl.style.width = "40%"; // supabase-js v2 storage upload has no native progress callback
+
+        const { error: upErr } = await supabaseClient.storage
+            .from('ad-videos')
+            .upload(path, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+
+        if (upErr) {
+            statusEl.innerText = "Upload failed: " + upErr.message;
+            throw upErr;
+        }
+
+        barEl.style.width = "100%";
+        statusEl.innerText = "Upload complete ✓";
+
+        const { data: pub } = supabaseClient.storage.from('ad-videos').getPublicUrl(path);
+        return pub.publicUrl;
     }
 
     // ── COST CALC ─────────────────────────────────────────
@@ -405,8 +500,34 @@
         if (!name) { alert("Please enter Campaign Name"); return; }
         if (!loc) { alert("Please search and select a Target Location"); return; }
 
+        if (activeVideoTab === 'link' && !videoLink) {
+            alert("Please paste a video link, or switch to 'Upload Video' and choose a file.");
+            return;
+        }
+        if (activeVideoTab === 'upload' && !chosenVideoFile) {
+            alert("Please choose a video file to upload, or switch to 'Paste Link'.");
+            return;
+        }
+
         const submitBtn = document.querySelector('.btn-submit');
         submitBtn.disabled = true;
+        submitBtn.innerText = "Submitting...";
+
+        let finalVideoUrl = videoLink || null;
+
+        if (activeVideoTab === 'upload' && chosenVideoFile) {
+            try {
+                submitBtn.innerText = "Uploading Video...";
+                finalVideoUrl = await uploadVideoFile(chosenVideoFile, mobile);
+            } catch (upErr) {
+                console.error('Video upload error:', upErr);
+                alert("❌ Video upload failed: " + (upErr.message || "please try again.") );
+                submitBtn.disabled = false;
+                submitBtn.innerText = "PAY & PUBLISH AD";
+                return;
+            }
+        }
+
         submitBtn.innerText = "Submitting...";
 
         const { error } = await supabaseClient.from('campaigns').insert({
@@ -414,7 +535,7 @@
             type: "Video",
             title: name,
             category: category,
-            video_url: videoLink || null,
+            video_url: finalVideoUrl,
             target_views: parseInt(views) || null,
             budget: parseCurrency(totalCost),
             status: "Pending",
