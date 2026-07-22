@@ -134,6 +134,12 @@
         .success-msg { color: #388e3c; }
 
     </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 <body>
 
@@ -273,15 +279,51 @@
             });
     }
 
-    function finalizeLogin() {
-        const userKey = "userProfile_" + mobileNumber;
-        const existingProfile = localStorage.getItem(userKey);
-        
-        if(existingProfile) {
+    // ── Existing-account check now goes to Supabase, not just this
+    // device's localStorage. Previously this only checked
+    // localStorage("userProfile_"+mobile), so an already-registered user
+    // logging in from a NEW device/browser found nothing locally and got
+    // bounced back to registration.html every time — and if registration
+    // then created a brand-new local-only profile, it silently split their
+    // account into two disconnected wallets. Checking the cloud `users`
+    // table instead means the same account is recognized everywhere.
+    async function finalizeLogin() {
+        const btn = document.getElementById("verifyBtn");
+
+        const { data: cloudUser, error } = await supabaseClient
+            .from('users')
+            .select('mobile')
+            .eq('mobile', mobileNumber)
+            .maybeSingle();
+
+        if (error) {
+            console.error('finalizeLogin cloud check error:', error);
+            // Fall back to the old local-only check rather than blocking login entirely.
+            const userKey = "userProfile_" + mobileNumber;
+            const existingProfile = localStorage.getItem(userKey);
+            if (existingProfile) {
+                localStorage.setItem("activeUser", mobileNumber);
+                window.location.href = "home.html";
+            } else {
+                window.location.href = "registration.html?mobile=" + mobileNumber;
+            }
+            return;
+        }
+
+        if (cloudUser) {
             localStorage.setItem("activeUser", mobileNumber);
-            window.location.href = "home.html"; 
+            window.location.href = "home.html";
         } else {
-            window.location.href = "registration.html?mobile=" + mobileNumber;
+            // Also check this device's local cache, in case Supabase sync
+            // hasn't caught up yet for some edge case — but the cloud table
+            // is now the primary source of truth.
+            const existingProfile = localStorage.getItem("userProfile_" + mobileNumber);
+            if (existingProfile) {
+                localStorage.setItem("activeUser", mobileNumber);
+                window.location.href = "home.html";
+            } else {
+                window.location.href = "registration.html?mobile=" + mobileNumber;
+            }
         }
     }
 </script>
