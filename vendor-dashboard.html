@@ -23,13 +23,22 @@
     .dash-header {
       background: #009688; padding: 30px 25px 25px 25px;
       color: white; border-radius: 0 0 25px 25px;
-      display: flex; justify-content: space-between; align-items: center;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
       box-shadow: 0 10px 20px rgba(0, 150, 136, 0.2);
     }
-    .user-info h3 { margin: 0; font-size: 20px; font-weight: 700; }
+    .user-info { min-width: 0; }
+    .user-info h3 { margin: 0; font-size: 20px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .user-info span { font-size: 11px; opacity: 0.9; display: block; margin-top: 2px; }
+
+    /* EAP logo, centered between vendor name and the notification/profile icons */
+    .dash-logo-box {
+      background: white; width: 42px; height: 42px; border-radius: 13px;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 5px 14px rgba(0,0,0,0.15); flex-shrink: 0;
+    }
+    .dash-logo-img { width: 28px; height: auto; object-fit: contain; display: block; }
     
-    .header-icons { display: flex; gap: 15px; align-items: center; }
+    .header-icons { display: flex; gap: 15px; align-items: center; flex-shrink: 0; }
     .icon-btn { font-size: 22px; cursor: pointer; position: relative; }
     .badge { 
       position: absolute; top: -2px; right: -2px; 
@@ -102,6 +111,27 @@
   const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
   const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 </script>
+<script>
+  // ══════════════════════════════════════════════════════════════
+  // ── AUTH GUARD ──────────────────────────────────────────────
+  // Runs before the rest of the page even paints. Without this, a
+  // vendor who logged out and then tapped the browser's BACK button
+  // could land right back on this dashboard showing their real data —
+  // the browser can restore the page from its back/forward cache
+  // (bfcache) without re-running onload, so a plain "check on load"
+  // isn't enough on its own. The pageshow listener below specifically
+  // catches that bfcache-restore case.
+  // ══════════════════════════════════════════════════════════════
+  function enforceVendorAuth() {
+    if (!localStorage.getItem("activeVendor")) {
+      window.location.replace("vendor-login.html");
+    }
+  }
+  enforceVendorAuth();
+  window.addEventListener("pageshow", function (e) {
+    if (e.persisted) enforceVendorAuth();
+  });
+</script>
 </head>
 <body>
 
@@ -112,8 +142,11 @@
       <h3 id="vendorName">Vendor</h3>
       <span>ID: #VEN8829</span>
     </div>
+    <div class="dash-logo-box">
+      <img src="EAP-LOGO.jpg" class="dash-logo-img" alt="EAP" onerror="this.src='https://via.placeholder.com/28'">
+    </div>
     <div class="header-icons">
-      <div class="icon-btn">🔔<span class="badge">3</span></div>
+      <div class="icon-btn" onclick="window.location.href='vendor-notifications.html'" style="position:relative;">🔔<span class="badge">3</span></div>
       <div class="icon-btn" onclick="window.location.href='vendor-profile.html'">👤</div>
     </div>
   </div>
