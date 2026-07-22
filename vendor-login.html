@@ -128,7 +128,7 @@
         ✅ OTP Sent Successfully!
       </div>
 
-      <input type="number" id="otpInput" class="inp" placeholder="Enter 4-Digit OTP">
+      <input type="number" id="otpInput" class="inp" placeholder="Enter 6-Digit OTP" maxlength="6">
       <button class="btn-main" onclick="verifyOtp()" id="verifyBtn">Verify & Login</button>
       
       <div style="margin-top:20px; font-size:13px; color:#777; cursor:pointer; text-align: center; text-decoration: underline;" onclick="location.reload()">
@@ -180,7 +180,9 @@
         const otp = document.getElementById("otpInput").value.trim();
         const btn = document.getElementById("verifyBtn");
 
-        if(otp.length < 4) { alert("Enter valid OTP"); return; }
+        // 2Factor's AUTOGEN flow sends a 6-digit OTP, not 4 — this was
+        // rejecting valid OTPs by only requiring 4 digits' worth of input.
+        if(otp.length !== 6) { alert("Enter the 6-digit OTP sent to your phone"); return; }
         btn.innerText = "Verifying..."; btn.disabled = true;
 
         const url = `https://2factor.in/API/V1/${API_KEY}/SMS/VERIFY/${sessionId}/${otp}`;
