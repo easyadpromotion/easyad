@@ -223,6 +223,33 @@
         const viewedAds = (historyRows || []).map(function (r) { return r.campaign_id; });
 
         var local = JSON.parse(localStorage.getItem("userProfile_" + mobile)) || {};
+
+        // ── One-time migration of pre-Supabase local claims ──────────
+        // Ads claimed before this account had a cloud history record only
+        // exist in this browser's localStorage — the cloud has no idea
+        // they happened, so they'd wrongly reappear as claimable. Push just
+        // the CLAIM RECORD (amount 0, not a wallet credit — we can't safely
+        // tell whether the current cloud balance already reflects these
+        // old local earnings, so we never auto-credit them) so they're
+        // correctly hidden everywhere from now on. Self-limiting: once an
+        // id is migrated it shows up in the cloud next time and is skipped.
+        var localAdHistory = local.adHistory || [];
+        var cloudIdSet = {};
+        viewedAds.forEach(function (id) { cloudIdSet[id] = true; });
+        var toMigrate = localAdHistory.filter(function (tx) { return tx.id && !cloudIdSet[tx.id]; });
+        if (toMigrate.length) {
+            try {
+                var migrateRows = toMigrate.map(function (tx) {
+                    return { user_mobile: mobile, campaign_id: tx.id, ad_name: tx.name || null, ad_type: tx.type || null, amount: 0 };
+                });
+                await supabaseClient.from('user_ad_history').insert(migrateRows);
+                toMigrate.forEach(function (tx) {
+                    adHistory.unshift({ id: tx.id, name: tx.name, type: tx.type, amount: 0, date: tx.date, time: tx.time });
+                    viewedAds.push(tx.id);
+                });
+            } catch (e) { console.error('local history migration error (non-blocking):', e); }
+        }
+
         var merged = Object.assign({}, local, {
             wallet: userRow ? (userRow.wallet || 0) : (local.wallet || 0),
             city: (userRow && userRow.city) || local.city,
