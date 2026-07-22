@@ -317,7 +317,21 @@
 </div>
 
 <script>
-  var REWARD_AMOUNT = 1.50;
+  // ── REWARD MODEL ─────────────────────────────────────────────────────
+  // Directly-hosted videos (mp4/webm/etc.) are billed on real watched time:
+  //   reward = secondsActuallyWatched * RATE_PER_SECOND (capped at full duration)
+  // YouTube / Instagram / other external embeds can't be time-tracked from
+  // here (no access to their internal playhead), so those keep the old
+  // fixed-timer + flat-reward flow as a fallback.
+  var RATE_PER_SECOND   = 0.07;   // ₹ earned per second of video actually watched
+  var FALLBACK_REWARD   = 1.50;   // flat reward for YouTube/Instagram/external links
+  var FALLBACK_MIN_SECONDS = 10;  // fixed countdown used only for the fallback flow
+  var MIN_CLAIM_SECONDS = 3;      // must accumulate at least this many watched seconds to claim anything
+
+  function calcReward(seconds) {
+    var s = Math.max(seconds || 0, 0);
+    return Math.round(s * RATE_PER_SECOND * 100) / 100;
+  }
 
   // ── Classifies a saved video_url so we render it the right way.
   // Vendors can either upload a real file (stored in the 'ad-videos'
@@ -347,7 +361,12 @@
     return { type: "external", watchUrl: u };
   }
 
-  var activeAdId = null, activeAdObj = null, canEarn = false, watchTimer = null, watchElapsed = 0, MIN_WATCH_SECONDS = 10;
+  var activeAdId = null, activeAdObj = null, canEarn = false;
+  var watchTimer = null;      // fallback interval (YouTube/Instagram/external only)
+  var watchElapsed = 0;       // fallback seconds counter (YouTube/Instagram/external only)
+  var watchedSeconds = 0;     // real accumulated watched seconds (file-type videos)
+  var lastVideoTime = 0;      // last seen video.currentTime, used to detect seeks/jumps
+  var activeDuration = 0;     // known duration (seconds) of the current file-type video
   var _shareAdId = null, _referCode = null, _commentAdId = null;
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
@@ -424,6 +443,18 @@
     } catch (e) { console.error('recordAdView error:', e); }
   }
 
+  // ── Updates the reward figure shown on a list card once we know the
+  // video's real duration (called from the thumbnail's loadedmetadata, or
+  // from inside the overlay once the full video's metadata is read). ──
+  function updateCardRewardText(adId, amount) {
+    var card = document.getElementById('card_' + adId);
+    if (!card) return;
+    var badge = card.querySelector('.reward-tag');
+    if (badge) badge.innerText = '₹' + amount.toFixed(2) + ' Reward';
+    var btn = card.querySelector('.earn-btn');
+    if (btn && !btn.disabled) btn.innerText = 'Watch & Earn ₹' + amount.toFixed(2);
+  }
+
   // ── Supabase-backed loadAds() ── type=Video, status=Active only.
   // NOTE: assumes campaigns has a `video_url` column holding the uploaded
   // video file (1080x1920 / 9:16). `image_url` is used as the poster/thumb.
@@ -483,9 +514,19 @@
       var refCode = "EAP" + String(ad.id).slice(-4).toUpperCase();
 
       var vc = classifyVideoUrl(ad.video);
+
+      // Reward text: for file-type videos we don't know the real duration
+      // until the browser reads it (below), so show a placeholder until then.
+      var rewardText;
+      if (vc.type === "file") {
+        rewardText = ad.duration ? ('₹' + calcReward(ad.duration).toFixed(2)) : '₹—';
+      } else {
+        rewardText = '₹' + FALLBACK_REWARD.toFixed(2);
+      }
+
       var thumbHtml;
       if (vc.type === "file") {
-        thumbHtml = '<video class="thumb-video" preload="metadata" muted playsinline'
+        thumbHtml = '<video id="thumbvid_' + ad.id + '" class="thumb-video" preload="metadata" muted playsinline'
           + (ad.poster ? ' poster="' + ad.poster + '"' : '')
           + '><source src="' + vc.src + '#t=0.1"></video>'
           + '<div class="play-icon">▶</div>';
@@ -504,14 +545,14 @@
         thumbHtml = '<div class="thumb-placeholder">🎬<span>No video uploaded</span></div>';
       }
 
-      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">₹' + REWARD_AMOUNT.toFixed(2) + ' Reward</span>';
+      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">' + rewardText + ' Reward</span>';
       var btnHtml;
       if (isClaimed) {
         btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>';
       } else if (vc.type === "none") {
         btnHtml = '<button class="earn-btn" style="background:#ccc;box-shadow:none;cursor:default;" disabled>Video Not Ready</button>';
       } else {
-        btnHtml = '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ₹' + REWARD_AMOUNT.toFixed(2) + '</button>';
+        btnHtml = '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ' + rewardText + '</button>';
       }
 
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
@@ -533,6 +574,21 @@
             + '<button class="' + mapClass + '" onclick="openLocation(\'' + encodeURIComponent(mapLink) + '\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
           + '</div>'
         + '</div>';
+    });
+
+    // Once each list-view thumbnail reads its own metadata, fill in the
+    // real ₹ figure instead of the '₹—' placeholder.
+    videoAds.forEach(function (ad) {
+      var vc = classifyVideoUrl(ad.video);
+      if (vc.type !== 'file') return;
+      var tvid = document.getElementById('thumbvid_' + ad.id);
+      if (!tvid) return;
+      tvid.addEventListener('loadedmetadata', function () {
+        if (isFinite(tvid.duration) && tvid.duration > 0) {
+          ad.duration = tvid.duration;
+          updateCardRewardText(ad.id, calcReward(tvid.duration));
+        }
+      });
     });
   }
 
@@ -592,42 +648,102 @@
     watchTimer = null;
     var v = document.getElementById("overlayVideo");
     v.onended = null;
+    v.ontimeupdate = null;
+    v.onloadedmetadata = null;
+  }
+
+  // ── Live-updates the countdown + earned-so-far amount for file-type
+  // videos, and reveals the Claim button once MIN_CLAIM_SECONDS is reached. ──
+  function updateEarnUI() {
+    if (activeVideoClass.type !== "file") return;
+    var capped = activeDuration ? Math.min(watchedSeconds, activeDuration) : watchedSeconds;
+    var amount = calcReward(capped);
+    var remaining = activeDuration ? Math.max(Math.ceil(activeDuration - capped), 0) : "--";
+    var isFull = activeDuration > 0 && capped >= activeDuration;
+
+    document.getElementById("timerDisplay").innerText = remaining;
+    document.getElementById("timerLabel").innerText = "Earned so far: ₹" + amount.toFixed(2);
+
+    var btn = document.getElementById("claimBtn");
+    if (capped >= MIN_CLAIM_SECONDS || isFull) {
+      btn.style.display = "block";
+      btn.innerText = isFull ? ("🎉 Claim ₹" + amount.toFixed(2) + " (Full)") : ("Claim ₹" + amount.toFixed(2) + " so far");
+    } else {
+      btn.style.display = "none";
+    }
+
+    if (isFull) {
+      document.getElementById("timerWrap").style.display = "none";
+    }
   }
 
   function openAd(id) {
     var ad = getAds().find(function (a) { return a.id === id; });
     if (!ad) return;
-    if (classifyVideoUrl(ad.video).type === "none") { showToast("Video not uploaded yet for this ad."); return; }
-    activeAdId = id; activeAdObj = ad; canEarn = true; watchElapsed = 0;
+    var vc = classifyVideoUrl(ad.video);
+    if (vc.type === "none") { showToast("Video not uploaded yet for this ad."); return; }
+
+    activeAdId = id; activeAdObj = ad; canEarn = true;
+    watchElapsed = 0; watchedSeconds = 0; lastVideoTime = 0; activeDuration = ad.duration || 0;
+
     fillOverlay(ad);
     document.getElementById("ovBadge").style.display = "none";
     document.getElementById("timerWrap").style.display = "flex";
     document.getElementById("claimBtn").style.display = "none";
     document.getElementById("closeBtn").style.display = "none";
-    document.getElementById("timerLabel").innerText = "Watch to earn ₹" + REWARD_AMOUNT.toFixed(2);
-    document.getElementById("timerDisplay").innerText = MIN_WATCH_SECONDS;
-    document.getElementById("adOverlay").style.display = "flex";
-
-    var v = document.getElementById("overlayVideo");
-    if (activeVideoClass.type === "file") {
-      v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
-      // unlock the moment the (shorter) uploaded video finishes playing
-      v.onended = function () { unlockClaim(); };
-    }
 
     stopWatchTracking();
-    watchTimer = setInterval(function () {
-      watchElapsed++;
-      var remaining = Math.max(MIN_WATCH_SECONDS - watchElapsed, 0);
-      document.getElementById("timerDisplay").innerText = remaining;
-      if (remaining <= 0) unlockClaim();
-    }, 1000);
+    var v = document.getElementById("overlayVideo");
+
+    if (vc.type === "file") {
+      document.getElementById("timerLabel").innerText = "Earned so far: ₹0.00";
+      document.getElementById("timerDisplay").innerText = activeDuration ? Math.ceil(activeDuration) : "--";
+
+      v.onloadedmetadata = function () {
+        if (isFinite(v.duration) && v.duration > 0) {
+          activeDuration = v.duration;
+          ad.duration = v.duration; // cache so the list view also shows the real amount
+          updateCardRewardText(ad.id, calcReward(v.duration));
+          if (!watchedSeconds) document.getElementById("timerDisplay").innerText = Math.ceil(v.duration);
+        }
+      };
+
+      v.ontimeupdate = function () {
+        var t = v.currentTime;
+        var delta = t - lastVideoTime;
+        // Only count small forward increments as "watched" — this stops
+        // someone from dragging the scrubber to the end to farm the reward.
+        if (delta > 0 && delta < 1.5) watchedSeconds += delta;
+        lastVideoTime = t;
+        updateEarnUI();
+      };
+
+      v.onended = function () {
+        if (activeDuration) watchedSeconds = activeDuration;
+        updateEarnUI();
+      };
+
+      v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
+    } else {
+      // Non-file media (YouTube/Instagram/external) — can't measure real
+      // watch time, so fall back to the old fixed countdown + flat reward.
+      document.getElementById("timerLabel").innerText = "Watch to earn ₹" + FALLBACK_REWARD.toFixed(2);
+      document.getElementById("timerDisplay").innerText = FALLBACK_MIN_SECONDS;
+      watchTimer = setInterval(function () {
+        watchElapsed++;
+        var remaining = Math.max(FALLBACK_MIN_SECONDS - watchElapsed, 0);
+        document.getElementById("timerDisplay").innerText = remaining;
+        if (remaining <= 0) unlockFallbackClaim();
+      }, 1000);
+    }
   }
 
-  function unlockClaim() {
+  function unlockFallbackClaim() {
     stopWatchTracking();
     document.getElementById("timerWrap").style.display = "none";
-    document.getElementById("claimBtn").style.display = "block";
+    var btn = document.getElementById("claimBtn");
+    btn.style.display = "block";
+    btn.innerText = "🎉 Claim ₹" + FALLBACK_REWARD.toFixed(2) + " Reward";
   }
 
   function openViewAgain(id) {
@@ -655,7 +771,21 @@
   }
 
   async function claimReward() {
-    if (!canEarn) return; canEarn = false;
+    if (!canEarn) return;
+    var vc = activeVideoClass;
+
+    // Compute the amount to credit based on real watched time (file videos)
+    // or the flat fallback (YouTube/Instagram/external).
+    var amount;
+    if (vc.type === "file") {
+      var capped = activeDuration ? Math.min(watchedSeconds, activeDuration) : watchedSeconds;
+      amount = calcReward(capped);
+    } else {
+      amount = FALLBACK_REWARD;
+    }
+    if (!amount || amount <= 0) { showToast("Watch at least a few seconds first."); return; }
+
+    canEarn = false;
     var claimedAdId = activeAdId, claimedAdObj = activeAdObj;
     var adName = claimedAdObj ? (claimedAdObj.title || claimedAdObj.name) : claimedAdId;
 
@@ -664,22 +794,22 @@
 
     try {
       const { error: insErr } = await supabaseClient.from('user_ad_history').insert({
-        user_mobile: activeMobile, campaign_id: claimedAdId, ad_name: adName, ad_type: "Video", amount: REWARD_AMOUNT
+        user_mobile: activeMobile, campaign_id: claimedAdId, ad_name: adName, ad_type: "Video", amount: amount
       });
       if (insErr) throw insErr;
 
-      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: REWARD_AMOUNT });
+      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: amount });
       if (rpcErr) throw rpcErr;
 
       user.wallet = newBalance;
       user.adHistory = user.adHistory || [];
-      user.adHistory.push({ id: claimedAdId, name: adName, type: "Video", amount: REWARD_AMOUNT, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
+      user.adHistory.push({ id: claimedAdId, name: adName, type: "Video", amount: amount, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
       user.viewedAds = user.viewedAds || [];
       if (user.viewedAds.indexOf(claimedAdId) === -1) user.viewedAds.push(claimedAdId);
       localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
       document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
       loadAds();
-      showToast("₹" + REWARD_AMOUNT.toFixed(2) + " Credited! 🎉");
+      showToast("₹" + amount.toFixed(2) + " Credited! 🎉");
       recordAdView(claimedAdId); // fire-and-forget — doesn't block the reward UX
     } catch (e) {
       console.error('claimReward cloud error:', e);
