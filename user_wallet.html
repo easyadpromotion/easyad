@@ -171,6 +171,12 @@
     .toast { position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%); background: #222; color: white; padding: 9px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; z-index: 999; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; }
   </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+  const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</script>
 </head>
 
 <body onload="loadWallet()">
@@ -194,7 +200,7 @@
   <div class="content-area">
     <div class="section-title">Recent Transactions</div>
     <div id="txList">
-      <div style="text-align:center;color:#aaa;font-size:12px;margin-top:30px;">No transactions yet</div>
+      <div style="text-align:center;color:#aaa;font-size:12px;margin-top:30px;">Loading transactions…</div>
     </div>
   </div>
 
@@ -298,10 +304,50 @@
   var selectedFY    = null;
   var activeTab     = "range";
 
+  // ── CLOUD SYNC ──────────────────────────────────────────────
+  // Balance and ad-earning history are read from Supabase (users +
+  // user_ad_history), same source used by home.html / video-ads.html /
+  // surveys.html / frame-ads.html — so this page shows the same numbers
+  // no matter which device the person is on. Withdrawal requests are a
+  // separate, not-yet-migrated system (still localStorage "withdrawalRequests")
+  // and are unaffected by this change.
+  async function syncUserFromCloud(mobile) {
+    const { data: userRow, error: userErr } = await supabaseClient
+      .from('users').select('*').eq('mobile', mobile).maybeSingle();
+    if (userErr) { console.error('syncUserFromCloud user error:', userErr); return null; }
+
+    const { data: historyRows, error: histErr } = await supabaseClient
+      .from('user_ad_history').select('*').eq('user_mobile', mobile).order('created_at', { ascending: false });
+    if (histErr) { console.error('syncUserFromCloud history error:', histErr); }
+
+    const adHistory = (historyRows || []).map(function (r) {
+      return { id: r.campaign_id, name: r.ad_name, type: r.ad_type, amount: r.amount, date: new Date(r.created_at).toLocaleDateString(), time: new Date(r.created_at).toLocaleTimeString() };
+    });
+
+    var local = JSON.parse(localStorage.getItem("userProfile_" + mobile)) || {};
+    var merged = Object.assign({}, local, {
+      wallet: userRow ? (userRow.wallet || 0) : (local.wallet || 0),
+      name: (userRow && (userRow.first_name || userRow.last_name)) ? [userRow.first_name, userRow.last_name].filter(Boolean).join(" ") : local.name,
+      adHistory: adHistory,
+      viewedAds: (historyRows || []).map(function (r) { return r.campaign_id; })
+    });
+    localStorage.setItem("userProfile_" + mobile, JSON.stringify(merged));
+    return merged;
+  }
+
   // ── LOAD WALLET ─────────────────────────────────────────────
-  function loadWallet(){
+  async function loadWallet(){
+    // instant paint from cache
     document.getElementById("dispBal").innerText = "₹ " + parseFloat(user.wallet||0).toFixed(2);
     renderTransactions();
+
+    // then reconcile against the cloud
+    var cloud = await syncUserFromCloud(activeMobile);
+    if (cloud) {
+      user = cloud;
+      document.getElementById("dispBal").innerText = "₹ " + parseFloat(user.wallet||0).toFixed(2);
+      renderTransactions();
+    }
   }
 
   var STATUS_LABEL = { not_paid: "Not Paid", hold: "On Hold", paid: "Paid" };
@@ -358,18 +404,35 @@
   function openModal()  { document.getElementById("withdrawModal").classList.add("open"); }
   function closeModal() { document.getElementById("withdrawModal").classList.remove("open"); }
 
-  function submitWithdraw(){
+  async function submitWithdraw(){
     var amt = parseFloat(document.getElementById("wAmt").value);
     var upi = document.getElementById("wUpi").value.trim();
     if(!amt||!upi){ showToast("Please enter amount and UPI ID"); return; }
     if(amt>parseFloat(user.wallet||0)){ showToast("Insufficient Balance!"); return; }
     if(amt<100){ showToast("Minimum withdrawal is ₹100"); return; }
 
-    user.wallet = (parseFloat(user.wallet)-amt).toFixed(2);
+    // Debit the cloud wallet first (source of truth) — if this fails, don't
+    // touch the local balance or record a request either.
+    var newBalance;
+    try {
+      const { data, error } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: -amt });
+      if (error) throw error;
+      newBalance = data;
+    } catch (e) {
+      console.error('Withdrawal wallet debit failed:', e);
+      showToast("Couldn't process withdrawal — please try again.");
+      return;
+    }
+
+    user.wallet = newBalance;
     localStorage.setItem("userProfile_"+activeMobile,JSON.stringify(user));
 
     // NOTE: this shape must match what admin_withdrawals.html / withdrawal_detail.html
     // expect, or requests submitted here won't show up correctly on the admin side.
+    // ⚠️ This withdrawal-request queue itself is still localStorage-only (not yet
+    // migrated to Supabase), so admins reviewing on a different device/browser
+    // than the one this request was submitted from won't see it. The wallet
+    // DEBIT above is already safely in the cloud regardless.
     var req = {
       id: "WID" + Math.floor(Math.random()*99999),
       userName: user.name || activeMobile,
@@ -392,7 +455,8 @@
     closeModal();
     document.getElementById("wAmt").value="";
     document.getElementById("wUpi").value="";
-    loadWallet();
+    document.getElementById("dispBal").innerText = "₹ " + parseFloat(user.wallet).toFixed(2);
+    renderTransactions();
     showToast("Withdrawal request of ₹"+amt+" sent! ✅");
   }
 
