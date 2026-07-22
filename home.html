@@ -192,6 +192,50 @@
 </div>
 
 <script>
+    // ══════════════════════════════════════════════════════════════
+    // ── CLOUD USER SYNC ──────────────────────────────────────────
+    // Wallet balance + which ads have been claimed now live in Supabase
+    // ("users" + "user_ad_history" tables), keyed by mobile number — NOT
+    // just this browser's localStorage. This is what makes the balance
+    // and "already viewed" state consistent across devices for the same
+    // account. localStorage is still written as an instant-paint cache
+    // so the UI isn't blank while the network call is in flight, but
+    // Supabase is the source of truth and this sync runs on every load.
+    // ══════════════════════════════════════════════════════════════
+    async function syncUserFromCloud(mobile) {
+        const { data: userRow, error: userErr } = await supabaseClient
+            .from('users')
+            .select('*')
+            .eq('mobile', mobile)
+            .maybeSingle();
+        if (userErr) { console.error('syncUserFromCloud user error:', userErr); return null; }
+
+        const { data: historyRows, error: histErr } = await supabaseClient
+            .from('user_ad_history')
+            .select('*')
+            .eq('user_mobile', mobile)
+            .order('created_at', { ascending: false });
+        if (histErr) { console.error('syncUserFromCloud history error:', histErr); }
+
+        const adHistory = (historyRows || []).map(function (r) {
+            return { id: r.campaign_id, name: r.ad_name, type: r.ad_type, amount: r.amount, date: new Date(r.created_at).toLocaleDateString(), time: new Date(r.created_at).toLocaleTimeString() };
+        });
+        const viewedAds = (historyRows || []).map(function (r) { return r.campaign_id; });
+
+        var local = JSON.parse(localStorage.getItem("userProfile_" + mobile)) || {};
+        var merged = Object.assign({}, local, {
+            wallet: userRow ? (userRow.wallet || 0) : (local.wallet || 0),
+            city: (userRow && userRow.city) || local.city,
+            lat: (userRow && userRow.lat != null) ? userRow.lat : local.lat,
+            lng: (userRow && userRow.lng != null) ? userRow.lng : local.lng,
+            name: (userRow && (userRow.first_name || userRow.last_name)) ? [userRow.first_name, userRow.last_name].filter(Boolean).join(" ") : local.name,
+            adHistory: adHistory,
+            viewedAds: viewedAds
+        });
+        localStorage.setItem("userProfile_" + mobile, JSON.stringify(merged));
+        return merged;
+    }
+
     // ── State ──────────────────────────────────────────────────
     var userLat = null, userLng = null;
     var mapInstance = null, markerInstance = null;
@@ -200,17 +244,24 @@
     var activeMobile = null, userProfile = null;
 
     // ── Page Load ──────────────────────────────────────────────
-    function loadHome() {
+    async function loadHome() {
         activeMobile = localStorage.getItem("activeUser");
         if (!activeMobile) { window.location.href = "user_login.html"; return; }
 
         userProfile = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [] };
 
-        // Balance
+        // Paint instantly from whatever's cached locally...
         document.getElementById("dispBal").innerText = "₹ " + parseFloat(userProfile.wallet || 0).toFixed(2);
-
-        // Show saved city instantly if available
         if (userProfile.city) setCity(userProfile.city);
+
+        // ...then reconcile against the cloud, which is authoritative.
+        var cloud = await syncUserFromCloud(activeMobile);
+        if (cloud) {
+            userProfile = cloud;
+            document.getElementById("dispBal").innerText = "₹ " + parseFloat(userProfile.wallet || 0).toFixed(2);
+            if (userProfile.city) setCity(userProfile.city);
+            loadTasks(); // re-render now that viewedAds reflects the cloud
+        }
 
         // Start GPS
         startLocationDetect();
@@ -219,7 +270,7 @@
         updateNotifBadge();
         checkForNewAds();
 
-        // Tasks
+        // Tasks (first paint from local cache; re-rendered above once cloud sync lands)
         loadTasks();
     }
 
@@ -271,16 +322,24 @@
         });
     }
 
-    function finishLocationUpdate(city, fullAddr, lat, lng) {
+    async function finishLocationUpdate(city, fullAddr, lat, lng) {
         setCity(city);
         document.getElementById("mapCity").innerText    = city;
         document.getElementById("mapAddress").innerText = fullAddr;
 
-        // Persist to this user's profile
+        // Persist to this user's local cache
         userProfile.city = city;
         userProfile.lat  = lat;
         userProfile.lng  = lng;
         localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(userProfile));
+
+        // ...and to the cloud, so the city/location is also consistent
+        // across devices (not just this browser). Best-effort — a failed
+        // write here shouldn't block anything else on the page.
+        try {
+            await supabaseClient.rpc('ensure_user_exists', { p_mobile: activeMobile, p_city: city });
+            await supabaseClient.from('users').update({ lat: lat, lng: lng, city: city }).eq('mobile', activeMobile);
+        } catch (e) { console.error('Cloud location sync failed (non-blocking):', e); }
 
         // Also share it with the app-wide location cache that notifications.html
         // reads, so "new ad nearby" distance-matching stays in sync everywhere.
