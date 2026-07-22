@@ -292,6 +292,31 @@
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
 
+  // ── CLOUD USER SYNC ── same helper as home.html/video-ads.html/user_wallet.html
+  async function syncUserFromCloud(mobile) {
+    const { data: userRow, error: userErr } = await supabaseClient
+      .from('users').select('*').eq('mobile', mobile).maybeSingle();
+    if (userErr) { console.error('syncUserFromCloud user error:', userErr); return null; }
+
+    const { data: historyRows, error: histErr } = await supabaseClient
+      .from('user_ad_history').select('*').eq('user_mobile', mobile).order('created_at', { ascending: false });
+    if (histErr) { console.error('syncUserFromCloud history error:', histErr); }
+
+    const adHistory = (historyRows || []).map(function (r) {
+      return { id: r.campaign_id, name: r.ad_name, type: r.ad_type, amount: r.amount, date: new Date(r.created_at).toLocaleDateString(), time: new Date(r.created_at).toLocaleTimeString() };
+    });
+
+    var local = JSON.parse(localStorage.getItem("userProfile_" + mobile)) || {};
+    var merged = Object.assign({}, local, {
+      wallet: userRow ? (userRow.wallet || 0) : (local.wallet || 0),
+      name: (userRow && (userRow.first_name || userRow.last_name)) ? [userRow.first_name, userRow.last_name].filter(Boolean).join(" ") : local.name,
+      adHistory: adHistory,
+      viewedAds: (historyRows || []).map(function (r) { return r.campaign_id; })
+    });
+    localStorage.setItem("userProfile_" + mobile, JSON.stringify(merged));
+    return merged;
+  }
+
   // ── Records a real view event in Supabase — identical helper to frame-ads.html.
   async function recordAdView(campaignId) {
     try {
@@ -347,6 +372,11 @@
   // can show "X Questions" and disable Start for surveys with none set up yet.
   async function loadSurveys() {
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet || 0).toFixed(2);
+    var cloud = await syncUserFromCloud(activeMobile);
+    if (cloud) {
+      user = cloud;
+      document.getElementById("headerBalance").innerText = parseFloat(user.wallet || 0).toFixed(2);
+    }
     const container = document.getElementById("surveyContainer");
 
     const { data, error } = await supabaseClient
@@ -568,7 +598,7 @@
     document.getElementById("surveyOverlay").style.display = "none";
   }
 
-  function submitSurvey() {
+  async function submitSurvey() {
     if (!canEarn) return;
     var allAnswered = activeQuestions.every(function (q) {
       var a = activeAnswers[q.id];
@@ -577,18 +607,37 @@
     if (!allAnswered) return;
     canEarn = false;
 
-    user.wallet = parseFloat(user.wallet || 0) + REWARD_AMOUNT;
-    user.adHistory = user.adHistory || [];
-    user.adHistory.push({ id: activeAdId, name: activeAdObj ? (activeAdObj.title || activeAdObj.name) : activeAdId, type: "Survey", amount: REWARD_AMOUNT, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
-    user.viewedAds = user.viewedAds || [];
-    if (user.viewedAds.indexOf(activeAdId) === -1) user.viewedAds.push(activeAdId);
-    localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
-
-    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
     var qSnapshot = activeQuestions, aSnapshot = Object.assign({}, activeAnswers), idSnapshot = activeAdId;
-    closeOverlay(); loadSurveys(); showToast("Survey Submitted! ₹" + REWARD_AMOUNT.toFixed(2) + " Added.");
-    recordAdView(idSnapshot);
-    recordSurveyResponses(idSnapshot, qSnapshot, aSnapshot);
+    var adName = activeAdObj ? (activeAdObj.title || activeAdObj.name) : idSnapshot;
+
+    closeOverlay();
+    showToast("Crediting reward…");
+
+    try {
+      const { error: insErr } = await supabaseClient.from('user_ad_history').insert({
+        user_mobile: activeMobile, campaign_id: idSnapshot, ad_name: adName, ad_type: "Survey", amount: REWARD_AMOUNT
+      });
+      if (insErr) throw insErr;
+
+      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: REWARD_AMOUNT });
+      if (rpcErr) throw rpcErr;
+
+      user.wallet = newBalance;
+      user.adHistory = user.adHistory || [];
+      user.adHistory.push({ id: idSnapshot, name: adName, type: "Survey", amount: REWARD_AMOUNT, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
+      user.viewedAds = user.viewedAds || [];
+      if (user.viewedAds.indexOf(idSnapshot) === -1) user.viewedAds.push(idSnapshot);
+      localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
+
+      document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
+      loadSurveys(); showToast("Survey Submitted! ₹" + REWARD_AMOUNT.toFixed(2) + " Added.");
+      recordAdView(idSnapshot);
+      recordSurveyResponses(idSnapshot, qSnapshot, aSnapshot);
+    } catch (e) {
+      console.error('submitSurvey cloud error:', e);
+      showToast("Couldn't submit — check connection and try again.");
+      canEarn = true;
+    }
   }
 
   function openShare(adId) { _shareAdId = adId; openSheet("shareSheet"); }
