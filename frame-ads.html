@@ -43,7 +43,7 @@
     /* AD CARD */
     .ad-card { background: white; border-radius: 16px; overflow: hidden; margin-bottom: 18px; box-shadow: 0 4px 14px rgba(0,0,0,0.08); border: 1px solid #f0f0f0; }
     .ad-img-box { width: 100%; height: 190px; position: relative; background: #f5f5f5; }
-    .ad-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .ad-img { width: 100%; height: 100%; object-fit: contain; display: block; }
     .img-placeholder { width:100%; height:100%; display:flex; align-items:center; justify-content:center; color:#bbb; font-size:13px; flex-direction:column; gap:6px; }
     .black-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.88), transparent); padding: 35px 12px 10px; color: white; }
     .overlay-desc { font-size: 12px; font-weight: 600; margin-bottom: 2px; line-height: 1.3; }
@@ -106,21 +106,21 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* ✅ IMAGE — 16:9 ratio, below topbar, never overlaps text */
+    /* ✅ IMAGE — flexible height so both landscape AND portrait ad images
+       render as large as possible without cropping. A fixed 16:9 box was
+       fine for landscape banners but forced very tall/portrait images
+       (e.g. phone-screenshot style ads) to shrink dramatically to avoid
+       cropping, leaving big empty bars either way. This range lets the
+       box grow taller on its own for that content instead. */
     .ov-img-section {
       width: 100%;
-      aspect-ratio: 16 / 9;
+      height: 42vh;
+      min-height: 220px;
+      max-height: 360px;
       position: relative;
       background: #000;
       flex-shrink: 0;
       overflow: hidden;
-    }
-    @supports not (aspect-ratio: 16/9) {
-      .ov-img-section {
-        padding-bottom: 56.25%;
-        height: 0;
-        position: relative;
-      }
     }
     .ov-img-bg {
       position: absolute; top: -15%; left: -15%;
@@ -132,11 +132,11 @@
       position: absolute; top: 0; left: 0;
       width: 100%; height: 100%;
       /* ✅ FIX: was object-fit: cover, which crops the image to fill this
-         16:9 box and slices off content near the top/edges whenever the
-         source image's own aspect ratio is taller/narrower than 16:9
-         (exactly what was cutting off ad headlines). "contain" always
-         shows the FULL image untouched, letterboxed on the blurred
-         background layer behind it instead of cropping anything. */
+         box and slices off content near the top/edges whenever the
+         source image's own aspect ratio doesn't match the box (exactly
+         what was cutting off ad headlines). "contain" always shows the
+         FULL image untouched, letterboxed on the blurred background
+         layer behind it instead of cropping anything. */
       object-fit: contain;
       object-position: center;
       z-index: 2; display: block;
