@@ -42,6 +42,7 @@
       border-radius: 25px; font-weight: 700; cursor: pointer; font-size: 13px;
       box-shadow: 0 4px 10px rgba(0,0,0,0.1); font-family:'Poppins',sans-serif;
     }
+    .withdraw-note { font-size: 10px; color: rgba(255,255,255,0.85); margin-top: 8px; }
 
     /* CONTENT */
     .content-area { flex: 1; padding: 20px; overflow-y: auto; padding-bottom: 90px; }
@@ -193,6 +194,7 @@
       <div class="bal-label">Total Balance</div>
       <div class="bal-amount" id="dispBal">₹ 0.00</div>
       <button class="withdraw-btn" onclick="openModal()">⬇ Request Withdrawal</button>
+      <div class="withdraw-note">Min ₹30 • 1 request per hour</div>
     </div>
   </div>
 
@@ -208,7 +210,7 @@
   <div id="withdrawModal" class="modal">
     <div class="modal-box">
       <h3>Request Payout</h3>
-      <div class="modal-sub">Minimum withdrawal is ₹ 100.00</div>
+      <div class="modal-sub">Minimum withdrawal is ₹ 30.00</div>
       <input type="number" id="wAmt" class="inp-field" placeholder="Enter Amount (₹)">
       <input type="text"   id="wUpi" class="inp-field" placeholder="UPI ID (e.g. name@upi)">
       <button class="modal-btn btn-confirm" onclick="submitWithdraw()">Submit Request</button>
@@ -303,6 +305,10 @@
   var selectedRange = "30";
   var selectedFY    = null;
   var activeTab     = "range";
+
+  // ── WITHDRAWAL RULES ────────────────────────────────────────
+  var MIN_WITHDRAWAL     = 30;                 // ₹ minimum per request
+  var WITHDRAWAL_GAP_MS  = 60 * 60 * 1000;      // 1 hour between requests
 
   // ── CLOUD SYNC ──────────────────────────────────────────────
   // Balance and ad-earning history are read from Supabase (users +
@@ -417,8 +423,42 @@
     return "💰";
   }
 
+  // ── WITHDRAWAL GATING ───────────────────────────────────────
+  // Returns the user's most recent withdrawal request that has a real
+  // timestamp (requestedAt). Requests submitted before this update won't
+  // have one and are ignored for the cooldown check.
+  function getLastWithdrawalRequest(mobile){
+    var reqs = JSON.parse(localStorage.getItem("withdrawalRequests")) || [];
+    var mine = reqs.filter(function(r){ return r.userPhone === mobile && r.requestedAt; });
+    if(!mine.length) return null;
+    mine.sort(function(a,b){ return new Date(b.requestedAt) - new Date(a.requestedAt); });
+    return mine[0];
+  }
+
+  // Milliseconds remaining before another withdrawal request is allowed (0 if none).
+  function msUntilNextWithdrawalAllowed(mobile){
+    var last = getLastWithdrawalRequest(mobile);
+    if(!last) return 0;
+    var elapsed = Date.now() - new Date(last.requestedAt).getTime();
+    var remaining = WITHDRAWAL_GAP_MS - elapsed;
+    return remaining > 0 ? remaining : 0;
+  }
+
   // ── WITHDRAW ────────────────────────────────────────────────
-  function openModal()  { document.getElementById("withdrawModal").classList.add("open"); }
+  function openModal(){
+    var balance = parseFloat(user.wallet || 0);
+
+    if(balance < MIN_WITHDRAWAL){
+      showToast("Note: Minimum Withdraw amount is Rs " + MIN_WITHDRAWAL + "/-");
+      return;
+    }
+    if(msUntilNextWithdrawalAllowed(activeMobile) > 0){
+      showToast("Note: After 1 hour You can do next Transaction");
+      return;
+    }
+
+    document.getElementById("withdrawModal").classList.add("open");
+  }
   function closeModal() { document.getElementById("withdrawModal").classList.remove("open"); }
 
   async function submitWithdraw(){
@@ -426,7 +466,8 @@
     var upi = document.getElementById("wUpi").value.trim();
     if(!amt||!upi){ showToast("Please enter amount and UPI ID"); return; }
     if(amt>parseFloat(user.wallet||0)){ showToast("Insufficient Balance!"); return; }
-    if(amt<100){ showToast("Minimum withdrawal is ₹100"); return; }
+    if(amt<MIN_WITHDRAWAL){ showToast("Note: Minimum Withdraw amount is Rs " + MIN_WITHDRAWAL + "/-"); return; }
+    if(msUntilNextWithdrawalAllowed(activeMobile) > 0){ showToast("Note: After 1 hour You can do next Transaction"); return; }
 
     // Debit the cloud wallet first (source of truth) — if this fails, don't
     // touch the local balance or record a request either.
@@ -446,6 +487,8 @@
 
     // NOTE: this shape must match what admin_withdrawals.html / withdrawal_detail.html
     // expect, or requests submitted here won't show up correctly on the admin side.
+    // requestedAt is a new, additive field (ISO timestamp) used only for this
+    // page's 1-hour cooldown check — existing admin fields are unchanged.
     // ⚠️ This withdrawal-request queue itself is still localStorage-only (not yet
     // migrated to Supabase), so admins reviewing on a different device/browser
     // than the one this request was submitted from won't see it. The wallet
@@ -460,6 +503,7 @@
       bankAccount: "",
       ifsc: "",
       requestedDate: new Date().toLocaleDateString(),
+      requestedAt: new Date().toISOString(),
       status: "not_paid",     // admin's vocabulary: "not_paid" | "hold" | "paid"
       holdReason: "",
       referenceId: "",
