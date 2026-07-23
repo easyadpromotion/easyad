@@ -106,40 +106,33 @@
       display: flex; align-items: center; justify-content: center;
     }
 
-    /* ✅ IMAGE — flexible height so both landscape AND portrait ad images
-       render as large as possible without cropping. A fixed 16:9 box was
-       fine for landscape banners but forced very tall/portrait images
-       (e.g. phone-screenshot style ads) to shrink dramatically to avoid
-       cropping, leaving big empty bars either way. This range lets the
-       box grow taller on its own for that content instead. */
+    /* ✅ IMAGE — box auto-sizes to the image's OWN aspect ratio (full
+       width, height follows naturally) so there's no leftover black/blurred
+       space to letterbox at all — this is what actually eliminates the
+       black bars, rather than trying to pick a "good enough" fixed box.
+       max-height is only a safety net for unusually tall images; ordinary
+       ads never hit it. */
     .ov-img-section {
       width: 100%;
-      height: 42vh;
-      min-height: 220px;
-      max-height: 360px;
+      max-height: 55vh;
+      overflow: hidden;
       position: relative;
       background: #000;
       flex-shrink: 0;
-      overflow: hidden;
-    }
-    .ov-img-bg {
-      position: absolute; top: -15%; left: -15%;
-      width: 130%; height: 130%;
-      background-size: cover; background-position: center;
-      filter: blur(20px) brightness(0.4);
+      display: flex;
+      justify-content: center;
     }
     .full-img {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      /* ✅ FIX: was object-fit: cover, which crops the image to fill this
-         box and slices off content near the top/edges whenever the
-         source image's own aspect ratio doesn't match the box (exactly
-         what was cutting off ad headlines). "contain" always shows the
-         FULL image untouched, letterboxed on the blurred background
-         layer behind it instead of cropping anything. */
+      width: 100%;
+      height: auto;
+      max-height: 55vh;
+      /* object-fit only matters once max-height actually kicks in on an
+         unusually tall image — otherwise height:auto already renders the
+         image at its exact natural ratio with zero cropping. */
       object-fit: contain;
-      object-position: center;
-      z-index: 2; display: block;
+      display: block;
+      position: relative;
+      z-index: 2;
     }
     /* Category badge over image */
     .ov-cat-badge {
@@ -179,6 +172,11 @@
     /* ✅ Description — scrollable, never clips title */
     .ov-desc-area { flex: 1; overflow-y: auto; padding: 10px 16px 6px; min-height: 0; }
     .ov-desc { font-size: 12px; color: #555; line-height: 1.7; word-break: break-word; }
+    /* The description's first line often IS the ad's tagline/headline
+       (e.g. "🔥 Good Food. Good Price. Every Day! 🌯") — render it as a
+       real heading instead of blending into the paragraph below it. */
+    .ov-tagline { font-size: 16px; font-weight: 800; color: #e65100; line-height: 1.35; margin-bottom: 8px; word-break: break-word; }
+    .ov-desc-body { font-size: 12px; color: #555; line-height: 1.7; word-break: break-word; }
 
     /* ✅ Earn zone — always at bottom */
     .ov-earn-zone {
@@ -303,7 +301,6 @@
 
     <!-- ✅ IMAGE: 16:9 ratio, below top bar -->
     <div class="ov-img-section">
-      <div class="ov-img-bg" id="overlayBg"></div>
       <img src="" class="full-img" id="overlayImg" alt="">
       <div class="ov-cat-badge" id="ovCat">General</div>
     </div>
@@ -556,7 +553,15 @@
   // ✅ Set both image and blurred bg
   function setOverlayImage(imgSrc){
     document.getElementById("overlayImg").src = imgSrc||"";
-    document.getElementById("overlayBg").style.backgroundImage = imgSrc ? "url('"+imgSrc+"')" : "none";
+  }
+
+  function escapeHtml(str){
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   }
 
   // ✅ Fill ALL overlay fields including top bar title
@@ -566,7 +571,19 @@
     setOverlayImage(ad.image||"");
     document.getElementById("ovTopTitle").innerText  = title;  // top bar
     document.getElementById("ovTitle").innerText     = title;  // content area
-    document.getElementById("ovDesc").innerText      = ad.desc||ad.description||"";
+
+    // The first line of the description is usually the ad's tagline
+    // (e.g. "🔥 Good Food. Good Price. Every Day! 🌯") — style it as a
+    // highlighted heading, with the rest of the description below it.
+    var fullDesc = ad.desc||ad.description||"";
+    var lines = fullDesc.split(/\r?\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+    var tagline = lines.length ? lines[0] : "";
+    var rest = lines.slice(1).join("\n");
+    var descHtml = "";
+    if (tagline) descHtml += '<div class="ov-tagline">'+escapeHtml(tagline)+'</div>';
+    if (rest) descHtml += '<div class="ov-desc-body">'+escapeHtml(rest).replace(/\n/g,'<br>')+'</div>';
+    document.getElementById("ovDesc").innerHTML = descHtml || '<div class="ov-desc-body">No description.</div>';
+
     document.getElementById("ovCat").innerText       = cat;
     document.getElementById("ovCatLabel").innerText  = cat;
   }
