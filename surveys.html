@@ -82,8 +82,7 @@
     .ov-already-tag { background: #e1f5fe; color: #0277bd; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #b3e5fc; }
 
     .ov-questions-area { flex: 1; overflow-y: auto; padding: 14px 16px 10px; min-height: 0; }
-    .q-block { margin-bottom: 22px; }
-    .q-block:last-child { margin-bottom: 6px; }
+    .q-block { margin-bottom: 6px; }
     .q-num { font-size: 9px; font-weight: 700; color: #03a9f4; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
     .q-text { font-weight: 700; font-size: 13px; color: #222; margin-bottom: 10px; line-height: 1.4; }
     .opt { padding: 11px 14px; border: 1.5px solid #eee; border-radius: 10px; margin-bottom: 8px; font-size: 12px; cursor: pointer; color: #444; transition: all 0.15s; }
@@ -96,7 +95,7 @@
     .ov-earn-zone { background: white; border-top: 1px solid #f0f0f0; padding: 12px 16px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
     .submit-btn { background: linear-gradient(135deg, #03a9f4, #0277bd); color: white; padding: 12px 0; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; font-size: 14px; width: 100%; box-shadow: 0 4px 16px rgba(3,169,244,0.35); font-family: 'Poppins', sans-serif; }
     .submit-btn:disabled { background: #ddd; box-shadow: none; cursor: not-allowed; }
-    .close-ov-btn { background: #f5f5f5; color: #666; padding: 11px 0; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 13px; width: 100%; display: none; font-family: 'Poppins', sans-serif; }
+    .close-ov-btn { background: #f5f5f5; color: #666; padding: 11px 0; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; font-size: 13px; width: 100%; font-family: 'Poppins', sans-serif; }
 
     /* BACKDROP */
     .modal-backdrop { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.45); z-index: 150; display: none; }
@@ -177,7 +176,7 @@
 
   <div class="list" id="surveyContainer"></div>
 
-  <!-- FULL SCREEN SURVEY OVERLAY — renders each survey's real questions/options -->
+  <!-- FULL SCREEN SURVEY OVERLAY — renders one real question at a time -->
   <div class="ad-overlay" id="surveyOverlay">
     <div class="ov-topbar">
       <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
@@ -198,9 +197,11 @@
       <div class="ov-questions-area" id="questionsArea"></div>
     </div>
 
+    <!-- Single dynamic action button: "Next Question →" while mid-survey,
+         "Claim ₹X.XX" on the last question of an active attempt, or
+         "Close" on the last question of a View Again (readonly) pass. -->
     <div class="ov-earn-zone">
-      <button class="submit-btn" id="submitBtn" onclick="submitSurvey()" disabled>Submit & Earn ₹3.00</button>
-      <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()">Close</button>
+      <button class="submit-btn" id="ovActionBtn" onclick="handleActionClick()" disabled>Next Question →</button>
     </div>
   </div>
 
@@ -283,11 +284,19 @@
 </div>
 
 <script>
-  var REWARD_AMOUNT = 3.00;
+  // ── REWARD MODEL ─────────────────────────────────────────────────────
+  // reward = number of questions in the survey * REWARD_PER_QUESTION
+  // Ex: 3 questions -> ₹2.10, 4 questions -> ₹2.80
+  var REWARD_PER_QUESTION = 0.70;
+  function calcSurveyReward(qCount) {
+    return Math.round((qCount || 0) * REWARD_PER_QUESTION * 100) / 100;
+  }
 
   var activeAdId = null, activeAdObj = null, canEarn = false;
   var activeQuestions = [];      // [{id, text, options:[{id,text}]}]
   var activeAnswers = {};        // {questionId: optionId | textValue}
+  var currentQIndex = 0;         // which question is currently on screen
+  var activeReadonly = false;    // true when opened via "View Again"
   var _shareAdId = null, _referCode = null, _commentAdId = null;
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
@@ -386,7 +395,8 @@
 
   // ── Supabase-backed loadSurveys() ── type=Survey, status=Active.
   // Also pulls a question-count per campaign in one extra query, so cards
-  // can show "X Questions" and disable Start for surveys with none set up yet.
+  // can show "X Questions" and the ₹ reward (questions * 0.70), and disable
+  // Start for surveys with no questions set up yet.
   async function loadSurveys() {
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet || 0).toFixed(2);
     var cloud = await syncUserFromCloud(activeMobile);
@@ -454,10 +464,11 @@
       var mapLink = ad.mapLink || "";
       var refCode = "EAP" + String(ad.id).slice(-4).toUpperCase();
       var qCount = qCounts[ad.id] || 0;
+      var reward = calcSurveyReward(qCount);
 
       var badgesHtml = isClaimed
         ? '<span class="claimed-tag">✔ Completed</span>'
-        : '<span class="reward-tag">+₹' + REWARD_AMOUNT.toFixed(2) + '</span>';
+        : '<span class="reward-tag">+₹' + reward.toFixed(2) + '</span>';
       badgesHtml += ' <span class="qcount-tag">' + qCount + ' Question' + (qCount === 1 ? '' : 's') + '</span>';
 
       var btnHtml;
@@ -466,7 +477,7 @@
       } else if (qCount === 0) {
         btnHtml = '<button class="start-btn disabled" disabled>Not Ready Yet</button>';
       } else {
-        btnHtml = '<button class="start-btn" onclick="openSurvey(\'' + ad.id + '\')">Start (+₹' + REWARD_AMOUNT.toFixed(2) + ')</button>';
+        btnHtml = '<button class="start-btn" onclick="openSurvey(\'' + ad.id + '\')">Start (+₹' + reward.toFixed(2) + ')</button>';
       }
 
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
@@ -520,36 +531,74 @@
     });
   }
 
-  function renderQuestions(questions, readonly) {
+  function isAnswered(qId) {
+    var a = activeAnswers[qId];
+    return a !== undefined && a !== null && a !== "";
+  }
+
+  // ── Renders ONLY the current question (one-at-a-time flow). ──
+  function renderCurrentQuestion() {
     var area = document.getElementById("questionsArea");
-    if (!questions.length) {
+    var total = activeQuestions.length;
+
+    if (!total) {
       area.innerHTML = '<div class="empty-q-msg">📭 No questions found for this survey.</div>';
       return;
     }
-    area.innerHTML = "";
-    questions.forEach(function (q, idx) {
-      var block = document.createElement("div");
-      block.className = "q-block";
-      var numHtml = '<div class="q-num">Question ' + (idx + 1) + ' of ' + questions.length + '</div>';
-      var textHtml = '<div class="q-text">' + q.text + '</div>';
-      var bodyHtml = "";
 
-      if (q.options && q.options.length) {
-        q.options.forEach(function (o) {
-          var savedSel = activeAnswers[q.id] === o.id ? " sel" : "";
-          bodyHtml += '<div class="opt' + savedSel + (readonly ? ' readonly' : '') + '" '
-            + (readonly ? "" : 'onclick="selectOption(\'' + q.id + '\',\'' + o.id + '\',this)"')
-            + '>' + o.text + '</div>';
-        });
-      } else {
-        bodyHtml = readonly
-          ? '<div class="opt readonly">' + (activeAnswers[q.id] || "No answer recorded") + '</div>'
-          : '<textarea class="q-text-input" placeholder="Type your answer…" onInput="setTextAnswer(\'' + q.id + '\', this.value)"></textarea>';
-      }
+    var q = activeQuestions[currentQIndex];
+    var numHtml = '<div class="q-num">Question ' + (currentQIndex + 1) + ' of ' + total + '</div>';
+    var textHtml = '<div class="q-text">' + q.text + '</div>';
+    var bodyHtml = "";
 
-      block.innerHTML = numHtml + textHtml + bodyHtml;
-      area.appendChild(block);
-    });
+    if (q.options && q.options.length) {
+      q.options.forEach(function (o) {
+        var sel = activeAnswers[q.id] === o.id ? " sel" : "";
+        bodyHtml += '<div class="opt' + sel + (activeReadonly ? ' readonly' : '') + '" '
+          + (activeReadonly ? "" : 'onclick="selectOption(\'' + q.id + '\',\'' + o.id + '\',this)"')
+          + '>' + o.text + '</div>';
+      });
+    } else {
+      bodyHtml = activeReadonly
+        ? '<div class="opt readonly">' + (activeAnswers[q.id] || "No answer recorded") + '</div>'
+        : '<textarea class="q-text-input" placeholder="Type your answer…" onInput="setTextAnswer(\'' + q.id + '\', this.value)">' + (activeAnswers[q.id] || '') + '</textarea>';
+    }
+
+    area.innerHTML = '<div class="q-block">' + numHtml + textHtml + bodyHtml + '</div>';
+    refreshActionBtn();
+  }
+
+  // ── Updates the single bottom action button to match the current step:
+  //   active + not-last  -> "Next Question →" (disabled until answered)
+  //   active + last       -> "Claim ₹X.XX"     (disabled until answered)
+  //   readonly + not-last -> "Next Question →" (always enabled)
+  //   readonly + last      -> "Close"           (always enabled)
+  function refreshActionBtn() {
+    var btn = document.getElementById("ovActionBtn");
+    var total = activeQuestions.length;
+    if (!total) { btn.style.display = "none"; return; }
+    btn.style.display = "block";
+
+    var q = activeQuestions[currentQIndex];
+    var isLast = currentQIndex === total - 1;
+    var reward = calcSurveyReward(total);
+
+    if (activeReadonly) {
+      btn.className = "close-ov-btn";
+      btn.disabled = false;
+      btn.innerText = isLast ? "Close" : "Next Question →";
+      btn.onclick = isLast ? closeOverlay : goNextReadonly;
+    } else {
+      btn.className = "submit-btn";
+      btn.innerText = isLast ? ("Claim ₹" + reward.toFixed(2)) : "Next Question →";
+      btn.onclick = isLast ? submitSurvey : goNextActive;
+      btn.disabled = !isAnswered(q.id);
+    }
+  }
+
+  function handleActionClick() {
+    var btn = document.getElementById("ovActionBtn");
+    if (typeof btn.onclick === "function") btn.onclick();
   }
 
   function selectOption(qId, oId, el) {
@@ -557,58 +606,60 @@
     var siblings = el.parentElement.querySelectorAll('.opt');
     siblings.forEach(function (s) { s.classList.remove('sel'); });
     el.classList.add('sel');
-    updateSubmitState();
+    refreshActionBtn();
   }
 
   function setTextAnswer(qId, val) {
     activeAnswers[qId] = val.trim();
-    updateSubmitState();
+    refreshActionBtn();
   }
 
-  function updateSubmitState() {
-    var allAnswered = activeQuestions.every(function (q) {
-      var a = activeAnswers[q.id];
-      return a !== undefined && a !== null && a !== "";
-    });
-    document.getElementById("submitBtn").disabled = !allAnswered;
+  function goNextActive() {
+    var q = activeQuestions[currentQIndex];
+    if (!isAnswered(q.id)) return;
+    currentQIndex++;
+    renderCurrentQuestion();
+  }
+
+  function goNextReadonly() {
+    currentQIndex++;
+    renderCurrentQuestion();
   }
 
   async function openSurvey(id) {
     var ad = getSurveys().find(function (a) { return a.id === id; });
     if (!ad) return;
     activeAdId = id; activeAdObj = ad; canEarn = true; activeAnswers = {};
+    currentQIndex = 0; activeReadonly = false;
 
     document.getElementById("ovTopTitle").innerText = ad.title || ad.name || "Survey";
     document.getElementById("ovTitle").innerText = ad.title || ad.name || "Survey";
     document.getElementById("ovCatLabel").innerText = ad.category || "General";
     document.getElementById("ovBadge").style.display = "none";
-    document.getElementById("submitBtn").style.display = "block";
-    document.getElementById("submitBtn").disabled = true;
-    document.getElementById("closeBtn").style.display = "none";
     document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">Loading questions…</div>';
+    document.getElementById("ovActionBtn").style.display = "none";
     document.getElementById("surveyOverlay").style.display = "flex";
 
     activeQuestions = await fetchSurveyQuestions(id);
-    renderQuestions(activeQuestions, false);
-    updateSubmitState();
+    renderCurrentQuestion();
   }
 
   async function openViewAgain(id) {
     var ad = getSurveys().find(function (a) { return a.id === id; });
     if (!ad) return;
     activeAdId = id; activeAdObj = ad; canEarn = false;
+    currentQIndex = 0; activeReadonly = true; activeAnswers = {};
 
     document.getElementById("ovTopTitle").innerText = ad.title || ad.name || "Survey";
     document.getElementById("ovTitle").innerText = ad.title || ad.name || "Survey";
     document.getElementById("ovCatLabel").innerText = ad.category || "General";
     document.getElementById("ovBadge").style.display = "inline-block";
-    document.getElementById("submitBtn").style.display = "none";
-    document.getElementById("closeBtn").style.display = "block";
     document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">Loading questions…</div>';
+    document.getElementById("ovActionBtn").style.display = "none";
     document.getElementById("surveyOverlay").style.display = "flex";
 
     activeQuestions = await fetchSurveyQuestions(id);
-    renderQuestions(activeQuestions, true);
+    renderCurrentQuestion();
   }
 
   function closeOverlay() {
@@ -617,37 +668,35 @@
 
   async function submitSurvey() {
     if (!canEarn) return;
-    var allAnswered = activeQuestions.every(function (q) {
-      var a = activeAnswers[q.id];
-      return a !== undefined && a !== null && a !== "";
-    });
+    var allAnswered = activeQuestions.every(function (q) { return isAnswered(q.id); });
     if (!allAnswered) return;
     canEarn = false;
 
     var qSnapshot = activeQuestions, aSnapshot = Object.assign({}, activeAnswers), idSnapshot = activeAdId;
     var adName = activeAdObj ? (activeAdObj.title || activeAdObj.name) : idSnapshot;
+    var reward = calcSurveyReward(qSnapshot.length);
 
     closeOverlay();
     showToast("Crediting reward…");
 
     try {
       const { error: insErr } = await supabaseClient.from('user_ad_history').insert({
-        user_mobile: activeMobile, campaign_id: idSnapshot, ad_name: adName, ad_type: "Survey", amount: REWARD_AMOUNT
+        user_mobile: activeMobile, campaign_id: idSnapshot, ad_name: adName, ad_type: "Survey", amount: reward
       });
       if (insErr) throw insErr;
 
-      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: REWARD_AMOUNT });
+      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: reward });
       if (rpcErr) throw rpcErr;
 
       user.wallet = newBalance;
       user.adHistory = user.adHistory || [];
-      user.adHistory.push({ id: idSnapshot, name: adName, type: "Survey", amount: REWARD_AMOUNT, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
+      user.adHistory.push({ id: idSnapshot, name: adName, type: "Survey", amount: reward, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
       user.viewedAds = user.viewedAds || [];
       if (user.viewedAds.indexOf(idSnapshot) === -1) user.viewedAds.push(idSnapshot);
       localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
 
       document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
-      loadSurveys(); showToast("Survey Submitted! ₹" + REWARD_AMOUNT.toFixed(2) + " Added.");
+      loadSurveys(); showToast("Survey Submitted! ₹" + reward.toFixed(2) + " Added.");
       recordAdView(idSnapshot);
       recordSurveyResponses(idSnapshot, qSnapshot, aSnapshot);
     } catch (e) {
