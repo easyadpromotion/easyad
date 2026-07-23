@@ -73,24 +73,30 @@
     .eng-map     .eng-icon { background: #fce4ec; }
 
     /* FULL SCREEN VIDEO OVERLAY */
-    .ad-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 100; display: none; flex-direction: column; overflow: hidden; }
+    .ad-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; z-index: 100; display: none; flex-direction: column; overflow-y: auto; }
 
-    .ov-topbar { position: relative; background: #1a1a1a; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 10; }
+    .ov-topbar { position: sticky; top: 0; background: #1a1a1a; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; z-index: 20; }
     .ov-topbar-title { font-size: 12px; font-weight: 700; color: white; flex: 1; margin-right: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .ov-close-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; width: 28px; height: 28px; border-radius: 50%; font-size: 14px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
 
     /* True 9:16 / 1080x1920 video stage — never stretched, never cropped oddly */
-    .ov-video-section { width: 100%; aspect-ratio: 9 / 16; max-height: 62vh; position: relative; background: #000; flex-shrink: 0; overflow: hidden; }
-    @supports not (aspect-ratio: 9/16) { .ov-video-section { height: 60vh; } }
-    .ov-video-bg { position: absolute; top: -15%; left: -15%; width: 130%; height: 130%; background-size: cover; background-position: center; filter: blur(20px) brightness(0.35); }
-    .full-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: transparent; z-index: 2; display: block; }
+    /* Real uploaded video files auto-fit their own natural size — same
+       approach as frame-ads.html images: full width, height follows
+       naturally, so there's no cropping and no leftover black bars. */
+    .ov-video-section { width: 100%; min-height: 200px; position: relative; background: #000; flex-shrink: 0; }
+    .full-video { width: 100%; height: auto; display: block; }
+    /* YouTube/Instagram iframes have no intrinsic size of their own, so
+       they still need a fixed-ratio wrapper (unlike real video files). */
+    .ov-iframe-wrap { width: 100%; aspect-ratio: 16 / 9; position: relative; }
+    @supports not (aspect-ratio: 16/9) { .ov-iframe-wrap { height: 56vw; } }
+    .ov-iframe-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
     .ov-cat-badge { position: absolute; bottom: 10px; left: 12px; background: rgba(229,57,53,0.92); color: white; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px; z-index: 10; text-transform: uppercase; letter-spacing: 0.5px; }
     .ov-external-note { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0 24px; }
     .ov-external-btn { background: #e53935; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 12px; font-family: 'Poppins', sans-serif; }
     .thumb-embed-badge { position: absolute; top: 8px; left: 8px; background: rgba(0,0,0,0.65); color: white; font-size: 9px; font-weight: 700; padding: 3px 8px; border-radius: 8px; z-index: 5; }
     .thumb-poster-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-    .ov-content { flex: 1; background: white; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+    .ov-content { background: white; }
     .ov-title-area { padding: 12px 16px 8px; border-bottom: 1px solid #f0f0f0; flex-shrink: 0; }
     .ov-title { font-size: 14px; font-weight: 800; color: #1a1a1a; line-height: 1.4; margin-bottom: 5px; word-break: break-word; }
     .ov-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -99,10 +105,14 @@
     .ov-verified { font-size: 10px; color: #aaa; }
     .ov-already-tag { background: #ffebee; color: #e53935; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; border: 1px solid #ffcdd2; }
 
-    .ov-desc-area { flex: 1; overflow-y: auto; padding: 10px 16px 6px; min-height: 0; }
+    .ov-desc-area { padding: 10px 16px 6px; }
     .ov-desc { font-size: 12px; color: #555; line-height: 1.7; word-break: break-word; }
+    .ov-tagline { font-size: 16px; font-weight: 800; color: #c62828; line-height: 1.35; margin-bottom: 8px; word-break: break-word; }
+    .ov-desc-body { font-size: 12px; color: #555; line-height: 1.7; word-break: break-word; }
 
-    .ov-earn-zone { background: white; border-top: 1px solid #f0f0f0; padding: 10px 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; }
+    /* Sticky to the bottom of the viewport, so the claim button is always
+       reachable even when a tall video pushes everything else down. */
+    .ov-earn-zone { position: sticky; bottom: 0; background: white; border-top: 1px solid #f0f0f0; padding: 10px 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; flex-shrink: 0; z-index: 20; }
     .timer-ring { width: 50px; height: 50px; border-radius: 50%; border: 4px solid #e53935; background: #ffebee; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #e53935; font-size: 18px; box-shadow: 0 0 0 4px rgba(229,57,53,0.12); }
     .timer-label { font-size: 10px; color: #aaa; font-weight: 600; text-align: center; margin-top: -4px; }
     .claim-btn { background: linear-gradient(135deg, #4caf50, #388e3c); color: white; padding: 12px 0; border-radius: 14px; border: none; font-weight: 800; cursor: pointer; font-size: 14px; width: 100%; box-shadow: 0 4px 16px rgba(76,175,80,0.35); display: none; font-family: 'Poppins', sans-serif; }
@@ -197,11 +207,14 @@
       <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
     </div>
 
-    <!-- True 9:16 (1080x1920) video stage -->
+    <!-- Auto-fits: real video files size to their own natural ratio;
+         YouTube/Instagram get a 16:9 wrapper since iframes have no
+         intrinsic size of their own. -->
     <div class="ov-video-section">
-      <div class="ov-video-bg" id="overlayBg"></div>
       <video class="full-video" id="overlayVideo" playsinline webkit-playsinline controls></video>
-      <iframe class="full-video" id="overlayIframe" style="display:none;border:0;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      <div class="ov-iframe-wrap" id="ovIframeWrap" style="display:none;">
+        <iframe id="overlayIframe" style="display:none;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+      </div>
       <div class="ov-external-note" id="ovExternalNote" style="display:none;">
         <div style="font-size:34px;margin-bottom:8px;">🔗</div>
         <div style="font-size:12px;font-weight:700;margin-bottom:10px;" id="ovExternalText">This video is hosted externally.</div>
@@ -317,21 +330,7 @@
 </div>
 
 <script>
-  // ── REWARD MODEL ─────────────────────────────────────────────────────
-  // Directly-hosted videos (mp4/webm/etc.) are billed on real watched time:
-  //   reward = secondsActuallyWatched * RATE_PER_SECOND (capped at full duration)
-  // YouTube / Instagram / other external embeds can't be time-tracked from
-  // here (no access to their internal playhead), so those keep the old
-  // fixed-timer + flat-reward flow as a fallback.
-  var RATE_PER_SECOND   = 0.07;   // ₹ earned per second of video actually watched
-  var FALLBACK_REWARD   = 1.50;   // flat reward for YouTube/Instagram/external links
-  var FALLBACK_MIN_SECONDS = 10;  // fixed countdown used only for the fallback flow
-  var MIN_CLAIM_SECONDS = 3;      // must accumulate at least this many watched seconds to claim anything
-
-  function calcReward(seconds) {
-    var s = Math.max(seconds || 0, 0);
-    return Math.round(s * RATE_PER_SECOND * 100) / 100;
-  }
+  var REWARD_AMOUNT = 1.50;
 
   // ── Classifies a saved video_url so we render it the right way.
   // Vendors can either upload a real file (stored in the 'ad-videos'
@@ -361,12 +360,7 @@
     return { type: "external", watchUrl: u };
   }
 
-  var activeAdId = null, activeAdObj = null, canEarn = false;
-  var watchTimer = null;      // fallback interval (YouTube/Instagram/external only)
-  var watchElapsed = 0;       // fallback seconds counter (YouTube/Instagram/external only)
-  var watchedSeconds = 0;     // real accumulated watched seconds (file-type videos)
-  var lastVideoTime = 0;      // last seen video.currentTime, used to detect seeks/jumps
-  var activeDuration = 0;     // known duration (seconds) of the current file-type video
+  var activeAdId = null, activeAdObj = null, canEarn = false, watchTimer = null, watchElapsed = 0, MIN_WATCH_SECONDS = 10;
   var _shareAdId = null, _referCode = null, _commentAdId = null;
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
@@ -443,18 +437,6 @@
     } catch (e) { console.error('recordAdView error:', e); }
   }
 
-  // ── Updates the reward figure shown on a list card once we know the
-  // video's real duration (called from the thumbnail's loadedmetadata, or
-  // from inside the overlay once the full video's metadata is read). ──
-  function updateCardRewardText(adId, amount) {
-    var card = document.getElementById('card_' + adId);
-    if (!card) return;
-    var badge = card.querySelector('.reward-tag');
-    if (badge) badge.innerText = '₹' + amount.toFixed(2) + ' Reward';
-    var btn = card.querySelector('.earn-btn');
-    if (btn && !btn.disabled) btn.innerText = 'Watch & Earn ₹' + amount.toFixed(2);
-  }
-
   // ── Supabase-backed loadAds() ── type=Video, status=Active only.
   // NOTE: assumes campaigns has a `video_url` column holding the uploaded
   // video file (1080x1920 / 9:16). `image_url` is used as the poster/thumb.
@@ -514,19 +496,9 @@
       var refCode = "EAP" + String(ad.id).slice(-4).toUpperCase();
 
       var vc = classifyVideoUrl(ad.video);
-
-      // Reward text: for file-type videos we don't know the real duration
-      // until the browser reads it (below), so show a placeholder until then.
-      var rewardText;
-      if (vc.type === "file") {
-        rewardText = ad.duration ? ('₹' + calcReward(ad.duration).toFixed(2)) : '₹—';
-      } else {
-        rewardText = '₹' + FALLBACK_REWARD.toFixed(2);
-      }
-
       var thumbHtml;
       if (vc.type === "file") {
-        thumbHtml = '<video id="thumbvid_' + ad.id + '" class="thumb-video" preload="metadata" muted playsinline'
+        thumbHtml = '<video class="thumb-video" preload="metadata" muted playsinline'
           + (ad.poster ? ' poster="' + ad.poster + '"' : '')
           + '><source src="' + vc.src + '#t=0.1"></video>'
           + '<div class="play-icon">▶</div>';
@@ -545,14 +517,14 @@
         thumbHtml = '<div class="thumb-placeholder">🎬<span>No video uploaded</span></div>';
       }
 
-      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">' + rewardText + ' Reward</span>';
+      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">₹' + REWARD_AMOUNT.toFixed(2) + ' Reward</span>';
       var btnHtml;
       if (isClaimed) {
         btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>';
       } else if (vc.type === "none") {
         btnHtml = '<button class="earn-btn" style="background:#ccc;box-shadow:none;cursor:default;" disabled>Video Not Ready</button>';
       } else {
-        btnHtml = '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ' + rewardText + '</button>';
+        btnHtml = '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ₹' + REWARD_AMOUNT.toFixed(2) + '</button>';
       }
 
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
@@ -575,21 +547,6 @@
           + '</div>'
         + '</div>';
     });
-
-    // Once each list-view thumbnail reads its own metadata, fill in the
-    // real ₹ figure instead of the '₹—' placeholder.
-    videoAds.forEach(function (ad) {
-      var vc = classifyVideoUrl(ad.video);
-      if (vc.type !== 'file') return;
-      var tvid = document.getElementById('thumbvid_' + ad.id);
-      if (!tvid) return;
-      tvid.addEventListener('loadedmetadata', function () {
-        if (isFinite(tvid.duration) && tvid.duration > 0) {
-          ad.duration = tvid.duration;
-          updateCardRewardText(ad.id, calcReward(tvid.duration));
-        }
-      });
-    });
   }
 
   var activeVideoClass = { type: "none" };
@@ -597,22 +554,22 @@
   function setOverlayMedia(ad) {
     var v = document.getElementById("overlayVideo");
     var f = document.getElementById("overlayIframe");
+    var fWrap = document.getElementById("ovIframeWrap");
     var note = document.getElementById("ovExternalNote");
-    var bg = document.getElementById("overlayBg");
 
     v.pause(); v.removeAttribute("src"); v.load(); v.style.display = "none";
-    f.src = "about:blank"; f.style.display = "none";
+    f.src = "about:blank"; f.style.display = "none"; fWrap.style.display = "none";
     note.style.display = "none";
 
     var vc = classifyVideoUrl(ad.video);
     activeVideoClass = vc;
-    bg.style.backgroundImage = ad.poster ? "url('" + ad.poster + "')" : "none";
 
     if (vc.type === "file") {
       v.style.display = "block";
       if (ad.poster) v.poster = ad.poster;
       v.src = vc.src;
     } else if (vc.type === "youtube" || vc.type === "instagram") {
+      fWrap.style.display = "block";
       f.style.display = "block";
       f.src = vc.embedUrl;
     } else if (vc.type === "external") {
@@ -632,13 +589,30 @@
     document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300);
   }
 
+  function escapeHtml(str) {
+    return String(str)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
   function fillOverlay(ad) {
     var title = ad.title || ad.name || "Ad";
     var cat = ad.category || "General";
     setOverlayMedia(ad);
     document.getElementById("ovTopTitle").innerText = title;
     document.getElementById("ovTitle").innerText = title;
-    document.getElementById("ovDesc").innerText = ad.desc || ad.description || "";
+
+    // First line of the description is usually the ad's tagline — style
+    // it as a heading, same treatment as frame-ads.html.
+    var fullDesc = ad.desc || ad.description || "";
+    var lines = fullDesc.split(/\r?\n+/).map(function (l) { return l.trim(); }).filter(Boolean);
+    var tagline = lines.length ? lines[0] : "";
+    var rest = lines.slice(1).join("\n");
+    var descHtml = "";
+    if (tagline) descHtml += '<div class="ov-tagline">' + escapeHtml(tagline) + '</div>';
+    if (rest) descHtml += '<div class="ov-desc-body">' + escapeHtml(rest).replace(/\n/g, '<br>') + '</div>';
+    document.getElementById("ovDesc").innerHTML = descHtml || '<div class="ov-desc-body">No description.</div>';
+
     document.getElementById("ovCat").innerText = cat;
     document.getElementById("ovCatLabel").innerText = cat;
   }
@@ -648,102 +622,42 @@
     watchTimer = null;
     var v = document.getElementById("overlayVideo");
     v.onended = null;
-    v.ontimeupdate = null;
-    v.onloadedmetadata = null;
-  }
-
-  // ── Live-updates the countdown + earned-so-far amount for file-type
-  // videos, and reveals the Claim button once MIN_CLAIM_SECONDS is reached. ──
-  function updateEarnUI() {
-    if (activeVideoClass.type !== "file") return;
-    var capped = activeDuration ? Math.min(watchedSeconds, activeDuration) : watchedSeconds;
-    var amount = calcReward(capped);
-    var remaining = activeDuration ? Math.max(Math.ceil(activeDuration - capped), 0) : "--";
-    var isFull = activeDuration > 0 && capped >= activeDuration;
-
-    document.getElementById("timerDisplay").innerText = remaining;
-    document.getElementById("timerLabel").innerText = "Earned so far: ₹" + amount.toFixed(2);
-
-    var btn = document.getElementById("claimBtn");
-    if (capped >= MIN_CLAIM_SECONDS || isFull) {
-      btn.style.display = "block";
-      btn.innerText = isFull ? ("🎉 Claim ₹" + amount.toFixed(2) + " (Full)") : ("Claim ₹" + amount.toFixed(2) + " so far");
-    } else {
-      btn.style.display = "none";
-    }
-
-    if (isFull) {
-      document.getElementById("timerWrap").style.display = "none";
-    }
   }
 
   function openAd(id) {
     var ad = getAds().find(function (a) { return a.id === id; });
     if (!ad) return;
-    var vc = classifyVideoUrl(ad.video);
-    if (vc.type === "none") { showToast("Video not uploaded yet for this ad."); return; }
-
-    activeAdId = id; activeAdObj = ad; canEarn = true;
-    watchElapsed = 0; watchedSeconds = 0; lastVideoTime = 0; activeDuration = ad.duration || 0;
-
+    if (classifyVideoUrl(ad.video).type === "none") { showToast("Video not uploaded yet for this ad."); return; }
+    activeAdId = id; activeAdObj = ad; canEarn = true; watchElapsed = 0;
     fillOverlay(ad);
     document.getElementById("ovBadge").style.display = "none";
     document.getElementById("timerWrap").style.display = "flex";
     document.getElementById("claimBtn").style.display = "none";
     document.getElementById("closeBtn").style.display = "none";
+    document.getElementById("timerLabel").innerText = "Watch to earn ₹" + REWARD_AMOUNT.toFixed(2);
+    document.getElementById("timerDisplay").innerText = MIN_WATCH_SECONDS;
+    document.getElementById("adOverlay").style.display = "flex";
+
+    var v = document.getElementById("overlayVideo");
+    if (activeVideoClass.type === "file") {
+      v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
+      // unlock the moment the (shorter) uploaded video finishes playing
+      v.onended = function () { unlockClaim(); };
+    }
 
     stopWatchTracking();
-    var v = document.getElementById("overlayVideo");
-
-    if (vc.type === "file") {
-      document.getElementById("timerLabel").innerText = "Earned so far: ₹0.00";
-      document.getElementById("timerDisplay").innerText = activeDuration ? Math.ceil(activeDuration) : "--";
-
-      v.onloadedmetadata = function () {
-        if (isFinite(v.duration) && v.duration > 0) {
-          activeDuration = v.duration;
-          ad.duration = v.duration; // cache so the list view also shows the real amount
-          updateCardRewardText(ad.id, calcReward(v.duration));
-          if (!watchedSeconds) document.getElementById("timerDisplay").innerText = Math.ceil(v.duration);
-        }
-      };
-
-      v.ontimeupdate = function () {
-        var t = v.currentTime;
-        var delta = t - lastVideoTime;
-        // Only count small forward increments as "watched" — this stops
-        // someone from dragging the scrubber to the end to farm the reward.
-        if (delta > 0 && delta < 1.5) watchedSeconds += delta;
-        lastVideoTime = t;
-        updateEarnUI();
-      };
-
-      v.onended = function () {
-        if (activeDuration) watchedSeconds = activeDuration;
-        updateEarnUI();
-      };
-
-      v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
-    } else {
-      // Non-file media (YouTube/Instagram/external) — can't measure real
-      // watch time, so fall back to the old fixed countdown + flat reward.
-      document.getElementById("timerLabel").innerText = "Watch to earn ₹" + FALLBACK_REWARD.toFixed(2);
-      document.getElementById("timerDisplay").innerText = FALLBACK_MIN_SECONDS;
-      watchTimer = setInterval(function () {
-        watchElapsed++;
-        var remaining = Math.max(FALLBACK_MIN_SECONDS - watchElapsed, 0);
-        document.getElementById("timerDisplay").innerText = remaining;
-        if (remaining <= 0) unlockFallbackClaim();
-      }, 1000);
-    }
+    watchTimer = setInterval(function () {
+      watchElapsed++;
+      var remaining = Math.max(MIN_WATCH_SECONDS - watchElapsed, 0);
+      document.getElementById("timerDisplay").innerText = remaining;
+      if (remaining <= 0) unlockClaim();
+    }, 1000);
   }
 
-  function unlockFallbackClaim() {
+  function unlockClaim() {
     stopWatchTracking();
     document.getElementById("timerWrap").style.display = "none";
-    var btn = document.getElementById("claimBtn");
-    btn.style.display = "block";
-    btn.innerText = "🎉 Claim ₹" + FALLBACK_REWARD.toFixed(2) + " Reward";
+    document.getElementById("claimBtn").style.display = "block";
   }
 
   function openViewAgain(id) {
@@ -771,21 +685,7 @@
   }
 
   async function claimReward() {
-    if (!canEarn) return;
-    var vc = activeVideoClass;
-
-    // Compute the amount to credit based on real watched time (file videos)
-    // or the flat fallback (YouTube/Instagram/external).
-    var amount;
-    if (vc.type === "file") {
-      var capped = activeDuration ? Math.min(watchedSeconds, activeDuration) : watchedSeconds;
-      amount = calcReward(capped);
-    } else {
-      amount = FALLBACK_REWARD;
-    }
-    if (!amount || amount <= 0) { showToast("Watch at least a few seconds first."); return; }
-
-    canEarn = false;
+    if (!canEarn) return; canEarn = false;
     var claimedAdId = activeAdId, claimedAdObj = activeAdObj;
     var adName = claimedAdObj ? (claimedAdObj.title || claimedAdObj.name) : claimedAdId;
 
@@ -794,22 +694,22 @@
 
     try {
       const { error: insErr } = await supabaseClient.from('user_ad_history').insert({
-        user_mobile: activeMobile, campaign_id: claimedAdId, ad_name: adName, ad_type: "Video", amount: amount
+        user_mobile: activeMobile, campaign_id: claimedAdId, ad_name: adName, ad_type: "Video", amount: REWARD_AMOUNT
       });
       if (insErr) throw insErr;
 
-      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: amount });
+      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: REWARD_AMOUNT });
       if (rpcErr) throw rpcErr;
 
       user.wallet = newBalance;
       user.adHistory = user.adHistory || [];
-      user.adHistory.push({ id: claimedAdId, name: adName, type: "Video", amount: amount, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
+      user.adHistory.push({ id: claimedAdId, name: adName, type: "Video", amount: REWARD_AMOUNT, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
       user.viewedAds = user.viewedAds || [];
       if (user.viewedAds.indexOf(claimedAdId) === -1) user.viewedAds.push(claimedAdId);
       localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
       document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
       loadAds();
-      showToast("₹" + amount.toFixed(2) + " Credited! 🎉");
+      showToast("₹" + REWARD_AMOUNT.toFixed(2) + " Credited! 🎉");
       recordAdView(claimedAdId); // fire-and-forget — doesn't block the reward UX
     } catch (e) {
       console.error('claimReward cloud error:', e);
