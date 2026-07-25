@@ -550,6 +550,7 @@ let currentPeriod = "Month";
 const periodRow = document.getElementById("periodRow");
 const dateRangeRow = document.getElementById("dateRangeRow");
 const IS_REVENUE_TYPE = (type === "vendor" || type === "company");
+const IS_USER_TYPE = (type === "user");
 
 /* ============================================================
    REAL VENDOR / COMPANY REVENUE TABLES
@@ -684,6 +685,53 @@ function renderCompanyTable(container, rows){
 }
 
 let currentRevenueRows = [];
+let currentUserViews = [];
+
+/* ── Real "User" breakdown for one state ──────────────────────────────
+   No mock numbers here: counts real rows in `ad_views` whose
+   viewer_location matches this state (same heuristic as vendor/company —
+   see matchesState() above), then derives distinct users, total views,
+   and an estimated payout using the same ₹0.70/view rate verified
+   against your spreadsheet. Replaces the old district/urban-rural mock
+   tree, which had no real per-district user data to draw from. ── */
+async function refreshUserTable(period){
+  const treeEl = document.getElementById("districtTree");
+  document.getElementById("stateLabel").textContent = "User Activity — " + state;
+  treeEl.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:12px;">Loading…</div>';
+
+  let fromDate = periodToFromDate(period);
+  if(period === "Date Range"){
+    const df = document.getElementById("dateFrom").value;
+    fromDate = df ? new Date(df) : null;
+  }
+
+  try {
+    const { data: views, error } = await supabaseClient
+      .from('ad_views').select('viewer_mobile, viewer_location, created_at');
+    if(error) throw error;
+
+    const matched = (views || []).filter(function(v){
+      if(!matchesState(v.viewer_location, state)) return false;
+      if(fromDate && v.created_at && new Date(v.created_at) < fromDate) return false;
+      return true;
+    });
+
+    currentUserViews = matched;
+    const uniqueUsers = new Set(matched.map(function(v){ return v.viewer_mobile; }).filter(Boolean));
+    const totalViews = matched.length;
+    const estimatedEarnings = +(totalViews * 0.70).toFixed(2);
+
+    document.getElementById("stateTotal").textContent = uniqueUsers.size.toLocaleString() + " users";
+    treeEl.innerHTML =
+      '<div class="geo-row lvl-district"><span class="geo-name">Active Users</span><span class="geo-val">' + uniqueUsers.size.toLocaleString() + '</span></div>' +
+      '<div class="geo-row lvl-district"><span class="geo-name">Total Ad Views</span><span class="geo-val">' + totalViews.toLocaleString() + '</span></div>' +
+      '<div class="geo-row lvl-district"><span class="geo-name">Estimated User Earnings (views × ₹0.70)</span><span class="geo-val">₹' + estimatedEarnings.toFixed(2) + '</span></div>' +
+      '<div class="rev-note">Matched by each view\'s recorded location against ' + state + ' and its known districts — users who never shared a location, or whose location text doesn\'t match, won\'t be counted here.</div>';
+  } catch(e){
+    console.error('user table error:', e);
+    treeEl.innerHTML = '<div style="text-align:center;color:#c62828;padding:20px;font-size:12px;">Couldn\'t load data — please try again.</div>';
+  }
+}
 
 async function refreshRevenueTable(period){
   const treeEl = document.getElementById("districtTree");
@@ -735,7 +783,10 @@ function refresh(period){
   currentPeriod = period;
   if(IS_REVENUE_TYPE){
     refreshRevenueTable(period);
+  } else if(IS_USER_TYPE){
+    refreshUserTable(period);
   } else {
+    // Unknown/unexpected type — no real data source identified for this yet.
     document.getElementById("stateLabel").textContent = metricTitle + " — Districts";
     document.getElementById("stateTotal").textContent = generateStateValue(metricKey, period, state).toLocaleString();
     renderDistrictTree(document.getElementById("districtTree"), metricKey, period, state);
@@ -754,6 +805,12 @@ document.getElementById("downloadBtn").onclick = ()=>{
       return type === "vendor"
         ? [r.sno, r.vendorName, r.vendorContact, r.vendorLocation, r.posted, r.target, r.paidAmount ?? "", r.viewers, r.utilizedAmount, r.balance ?? "", r.companyProfit, r.govtTax]
         : [r.sno, r.vendorName, r.adType, r.posted, r.target, r.paidAmount ?? "", r.viewers, r.utilizedAmount, r.balance ?? "", r.userProfit, r.companyProfit, r.govtTax];
+    });
+    downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
+  } else if(IS_USER_TYPE){
+    const headers = ["Viewer Mobile","Viewer Location","Viewed At"];
+    const rows = currentUserViews.map(function(v){
+      return [v.viewer_mobile || "—", v.viewer_location || "—", v.created_at || "—"];
     });
     downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
   } else {
