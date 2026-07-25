@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
     <style>
 /* ============================================================
    SHARED STYLES — used by every page in the admin dashboard app
@@ -265,19 +271,19 @@ body{
 
     <div class="stats-grid">
         <a href="revenue_dashboard.html" class="stat-card">
-            <span class="stat-num">₹ 45.2k</span>
+            <span class="stat-num" id="statRevenue">…</span>
             <span class="stat-label">Revenue</span>
         </a>
         <a href="user_dashboard.html" class="stat-card">
-            <span class="stat-num">1,250</span>
+            <span class="stat-num" id="statUsers">…</span>
             <span class="stat-label">Users</span>
         </a>
         <a href="live_ads.html" class="stat-card">
-            <span class="stat-num">85</span>
+            <span class="stat-num" id="statLiveAds">…</span>
             <span class="stat-label">Live Ads</span>
         </a>
         <div class="stat-card">
-            <span class="stat-num" style="color:#d63031;" id="totalPending">0</span>
+            <span class="stat-num" style="color:#d63031;" id="totalPending">…</span>
             <span class="stat-label">Pending</span>
         </div>
     </div>
@@ -289,7 +295,7 @@ body{
         <a href="admin_approve_ads.html" class="action-card">
             <div class="icon-box bg-orange">⏳</div>
             <div class="ac-text">
-                <h4>Ad Approvals <span class="badge" id="badgePending">0</span></h4>
+                <h4>Ad Approvals <span class="badge" id="badgePending" style="display:none;">0</span></h4>
                 <p>Verify & Publish campaigns</p>
             </div>
             <div class="arrow">ᐳ</div>
@@ -298,7 +304,7 @@ body{
         <a href="admin_withdrawals.html" class="action-card">
             <div class="icon-box bg-blue">💸</div>
             <div class="ac-text">
-                <h4>Withdrawals <span class="badge">7</span></h4>
+                <h4>Withdrawals <span class="badge" id="badgeWithdrawals" style="display:none;">0</span></h4>
                 <p>Approve bank transfers</p>
             </div>
             <div class="arrow">ᐳ</div>
@@ -660,22 +666,73 @@ function logoSVG(size){
 <script>
     document.getElementById("logoSlot").innerHTML = logoSVG(34);
 
-    function loadStats() {
-        // Count Pending Ads from Memory
-        const ads = JSON.parse(localStorage.getItem("vendorCampaigns")) || [];
-        const pendingCount = ads.filter(ad => ad.status === "Pending").length;
+    // ── Company's cut per recorded ad view. Derived from your own
+    // Paid/Utilized-amount sheet: for every ₹1.18 collected per view,
+    // ₹0.70 goes to the viewing user, ₹0.30 to the company, ₹0.18 is GST.
+    // Change this constant if that split is ever updated. ──
+    var COMPANY_PROFIT_PER_VIEW = 0.30;
 
-        // Update UI
-        document.getElementById("totalPending").innerText = pendingCount;
+    function formatCompactRupees(n) {
+        if (n >= 100000) return "₹ " + (n / 100000).toFixed(1).replace(/\.0$/, "") + "L";
+        if (n >= 1000)   return "₹ " + (n / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+        return "₹ " + n.toFixed(2);
+    }
 
-        // Update Badge
-        const badge = document.getElementById("badgePending");
-        if(pendingCount > 0) {
-            badge.innerText = pendingCount;
-            badge.style.display = "inline-block";
-        } else {
-            badge.style.display = "none";
-        }
+    async function loadStats() {
+        // ── Users: real registered-user count from Supabase `users` ──
+        try {
+            const { count, error } = await supabaseClient
+                .from('users').select('*', { count: 'exact', head: true });
+            if (!error) document.getElementById("statUsers").innerText = (count || 0).toLocaleString();
+            else { console.error('users count error:', error); document.getElementById("statUsers").innerText = "—"; }
+        } catch (e) { console.error('users count error:', e); document.getElementById("statUsers").innerText = "—"; }
+
+        // ── Live Ads: campaigns currently Active ──
+        try {
+            const { count, error } = await supabaseClient
+                .from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'Active');
+            if (!error) document.getElementById("statLiveAds").innerText = (count || 0).toLocaleString();
+            else { console.error('live ads count error:', error); document.getElementById("statLiveAds").innerText = "—"; }
+        } catch (e) { console.error('live ads count error:', e); document.getElementById("statLiveAds").innerText = "—"; }
+
+        // ── Pending: campaigns awaiting approval (was localStorage, now Supabase) ──
+        try {
+            const { count, error } = await supabaseClient
+                .from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
+            if (!error) {
+                const n = count || 0;
+                document.getElementById("totalPending").innerText = n;
+                const badge = document.getElementById("badgePending");
+                if (n > 0) { badge.innerText = n; badge.style.display = "inline-block"; }
+                else { badge.style.display = "none"; }
+            } else {
+                console.error('pending count error:', error);
+                document.getElementById("totalPending").innerText = "—";
+            }
+        } catch (e) { console.error('pending count error:', e); document.getElementById("totalPending").innerText = "—"; }
+
+        // ── Revenue: total company profit = (total ad views recorded) × ₹0.30 ──
+        try {
+            const { count, error } = await supabaseClient
+                .from('ad_views').select('*', { count: 'exact', head: true });
+            if (!error) {
+                const revenue = (count || 0) * COMPANY_PROFIT_PER_VIEW;
+                document.getElementById("statRevenue").innerText = formatCompactRupees(revenue);
+            } else {
+                console.error('revenue calc error:', error);
+                document.getElementById("statRevenue").innerText = "—";
+            }
+        } catch (e) { console.error('revenue calc error:', e); document.getElementById("statRevenue").innerText = "—"; }
+
+        // ── Withdrawals badge: still localStorage-only (not yet migrated to
+        // Supabase — same limitation noted in user_wallet.html) ──
+        try {
+            var reqs = JSON.parse(localStorage.getItem("withdrawalRequests")) || [];
+            var pendingWithdrawals = reqs.filter(function (r) { return r.status === "not_paid" || r.status === "hold"; }).length;
+            var wBadge = document.getElementById("badgeWithdrawals");
+            if (pendingWithdrawals > 0) { wBadge.innerText = pendingWithdrawals; wBadge.style.display = "inline-block"; }
+            else { wBadge.style.display = "none"; }
+        } catch (e) { console.error('withdrawals badge error:', e); }
     }
 </script>
 
