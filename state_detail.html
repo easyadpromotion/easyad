@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>State Detail</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
     <style>
 /* ============================================================
    SHARED STYLES — used by every page in the admin dashboard app
@@ -245,6 +251,16 @@ body{
   .mobile-screen{ border-radius:0; border:none; min-height:100vh; }
 }
 
+/* ── REVENUE TABLE (real vendor/company campaign data) ──────────────── */
+.rev-table-wrap{ overflow-x:auto; margin:0 -14px; padding:0 14px; -webkit-overflow-scrolling:touch; }
+table.rev-table{ border-collapse:collapse; width:100%; min-width:760px; font-size:10px; }
+table.rev-table th, table.rev-table td{ padding:7px 8px; text-align:left; white-space:nowrap; border-bottom:1px solid #f0f0f0; }
+table.rev-table thead th{ background:var(--dark); color:#fff; font-size:9.5px; text-transform:uppercase; letter-spacing:0.3px; position:sticky; top:0; }
+table.rev-table tbody tr:nth-child(even){ background:#fafafa; }
+table.rev-table td.num{ text-align:right; font-weight:600; }
+table.rev-table td.profit{ color:var(--purple); font-weight:700; }
+.rev-note{ font-size:10px; color:var(--muted); margin-top:8px; line-height:1.5; }
+
 </style>
 </head>
 <body>
@@ -445,48 +461,6 @@ function flattenStateForCSV(metricTitle, key, period, state){
   return rows;
 }
 
-/* ---- CSV rows for the whole country for one metric, plus an All-India total
-   row (computed as the sum of the state rows, so it always matches). ---- */
-function flattenIndiaForCSV(metricTitle, key, period){
-  let rows = [];
-  let indiaTotal = 0;
-  INDIA_STATE_NAMES.forEach(state=>{
-    rows = rows.concat(flattenStateForCSV(metricTitle, key, period, state));
-    indiaTotal += generateStateValue(key, period, state);
-  });
-  rows.push([metricTitle, "ALL INDIA", "", "Country Total", "All India", indiaTotal]);
-  return rows;
-}
-
-/* ---- render a Pan-India state list for one metric, with a
-   "Show All State Names" expander and a click-through link per state ---- */
-function renderStateList(container, key, title, period, linkBuilder){
-  const list = generateStateList(key, period);
-  const indiaTotal = list.reduce((a,b)=>a+b.value, 0);
-  const collapsedCount = 5;
-  let expanded = false;
-
-  function paint(){
-    const shown = expanded ? list : list.slice(0, collapsedCount);
-    container.innerHTML = `
-      <div class="metric-head"><h5>${title}</h5><span class="metric-total">${indiaTotal.toLocaleString()}</span></div>
-      <div class="state-list">
-        ${shown.map(s => `
-          <a class="state-row" href="${linkBuilder(s.state)}">
-            <span class="state-name">${s.state}</span>
-            <span class="state-val">${s.value.toLocaleString()}</span>
-            <span class="state-arrow">›</span>
-          </a>`).join("")}
-      </div>
-      ${list.length > collapsedCount ? `<button class="show-all-btn" id="toggle-${CSS.escape(key)}">${expanded ? "Show less" : `Show All State Names (${list.length})`}</button>` : ""}
-    `;
-    if(list.length > collapsedCount){
-      document.getElementById(`toggle-${CSS.escape(key)}`).onclick = ()=>{ expanded = !expanded; paint(); };
-    }
-  }
-  paint();
-}
-
 /* ---- render the district > urban/rural drill-down tree for one state ---- */
 function renderDistrictTree(container, key, period, state){
   const districts = generateDistrictBreakdown(key, period, state);
@@ -523,45 +497,6 @@ function initPeriodSelector(container, onChange, dateRangeContainer){
   return "Month"; // default selected period
 }
 
-/* ============================================================
-   DEPENDENCY-FREE TREND CHART — plain inline SVG bars, no
-   external chart library, so it always renders even when a page
-   is previewed offline or a CDN script is blocked.
-   ============================================================ */
-function renderTrendChart(containerId, seriesKeys, seriesLabels, period){
-  const container = document.getElementById(containerId);
-  if(!container) return;
-  const labels = ["1","2","3","4","5","6"];
-  const colors = ["#6c3ce9","#1565c0","#2e7d32","#e65100","#ad1457","#00796b"];
-  const series = seriesKeys.map((k)=> labels.map((_,idx)=> seededInt(k+period+idx, 5, 100)));
-  const maxV = Math.max(...series.flat(), 1);
-
-  const W = 300, H = 150, padL = 6, padB = 6, padT = 10;
-  const groupW = (W - padL) / labels.length;
-  const barGap = 3;
-  const barW = (groupW - barGap * (seriesKeys.length + 1)) / seriesKeys.length;
-
-  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:100%;">`;
-  labels.forEach((lab, li)=>{
-    seriesKeys.forEach((k, si)=>{
-      const val = series[si][li];
-      const bh = (val / maxV) * (H - padT - padB);
-      const x = padL + li*groupW + barGap + si*(barW+barGap);
-      const y = H - padB - bh;
-      svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${colors[si % colors.length]}"/>`;
-    });
-  });
-  svg += `</svg>`;
-  container.innerHTML = svg;
-
-  const legendEl = document.getElementById(containerId + "-legend");
-  if(legendEl){
-    legendEl.innerHTML = seriesLabels.map((lab, i)=>
-      `<div class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span>${lab}</div>`
-    ).join("");
-  }
-}
-
 /* ---- CSV export ---- */
 function downloadCSV(filename, headers, rows){
   let csv = headers.join(",") + "\n";
@@ -572,28 +507,6 @@ function downloadCSV(filename, headers, rows){
   a.href = url; a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-
-/* ---- mock transaction history ---- */
-const TX_TYPES = { vendor:["Ad Payout","Commission","Bonus"], user:["Referral Earning","Task Reward","Cashback"], company:["Platform Fee","Ad Revenue","Subscription"], general:["Credit","Debit","Adjustment"] };
-const TX_STATUS = ["success","pending","failed"];
-function generateHistory(key, count){
-  const rnd = mulberry32(hashStr(key + "history"));
-  const types = TX_TYPES[key] || TX_TYPES.general;
-  const rows = [];
-  for(let i=0;i<count;i++){
-    const day = Math.floor(rnd()*27)+1;
-    const month = Math.floor(rnd()*6)+1;
-    const amt = Math.floor(rnd()*9000)+150;
-    const type = types[Math.floor(rnd()*types.length)];
-    const status = TX_STATUS[Math.floor(rnd()*3)];
-    rows.push({
-      id: "TXN" + (100000 + Math.floor(rnd()*899999)),
-      date: `${String(day).padStart(2,"0")}-${String(month).padStart(2,"0")}-2026`,
-      type, amt, status
-    });
-  }
-  return rows;
 }
 
 /* ---- read a query-string param ---- */
@@ -631,26 +544,223 @@ document.getElementById("backBtn").onclick = ()=>{
 
 document.getElementById("pageTitle").textContent = state;
 document.getElementById("pageSubtitle").textContent = metricTitle;
-document.getElementById("stateLabel").textContent = metricTitle + " — Districts";
 document.title = state + " • " + metricTitle;
 
 let currentPeriod = "Month";
 const periodRow = document.getElementById("periodRow");
 const dateRangeRow = document.getElementById("dateRangeRow");
+const IS_REVENUE_TYPE = (type === "vendor" || type === "company");
+
+/* ============================================================
+   REAL VENDOR / COMPANY REVENUE TABLES
+   Replaces the mock district tree for type=vendor and type=company.
+   Pricing formulas verified against your spreadsheet — every row of
+   both sheets checks out exactly against these:
+     Paid Amount      = targetUsers * 1.18   (18% GST)
+     Utilized Amount  = viewers * 1.18
+     Balance Amount   = Paid Amount - Utilized Amount
+     User Profit      = viewers * 0.70
+     Company Profit   = viewers * 0.30
+     Govt Tax (GST)   = viewers * 0.18
+   viewers = real count of rows in `ad_views` for that campaign.
+
+   ── ASSUMPTIONS (confirm / correct these once real schema is known) ──
+   1. Vendor name / contact: tries a few likely column names on the
+      `campaigns` row (vendor_name/vendorName/owner_name/name, and
+      vendor_contact/vendor_phone/contact_number/phone). Shows "—" if
+      none of those columns exist yet.
+   2. "Post of no of users" (the paid-for target): tries post_of_users /
+      target_users / budget_users / target_views. Shows "—" if none
+      exist — Paid Amount and Balance also show "—" in that case, since
+      they depend on it (Utilized Amount, Viewers, Company Profit and
+      Govt Tax still work regardless, since those only need `ad_views`).
+   3. State matching: there is no dedicated `state` column anywhere in
+      the app so far, so this matches the campaign's free-text `location`
+      field against the state name and its known districts in INDIA_GEO.
+      This is a heuristic and WILL miss campaigns whose location is a
+      town/mandal not in that district list (e.g. "Jiyyammavalasa" won't
+      match "Andhra Pradesh"). The real fix is adding a `state` field
+      when a vendor posts an ad.
+   ============================================================ */
+
+function getVendorName(row){
+  return row.vendor_name || row.vendorName || row.owner_name || row.name || null;
+}
+function getVendorContact(row){
+  return row.vendor_contact || row.vendor_phone || row.contact_number || row.phone || null;
+}
+function getTargetUsers(row){
+  const v = row.post_of_users ?? row.target_users ?? row.budget_users ?? row.target_views ?? null;
+  return (v === null || v === undefined || v === "") ? null : Number(v);
+}
+
+function matchesState(locationText, stateName){
+  if(!locationText) return false;
+  const loc = String(locationText).toLowerCase();
+  if(loc.indexOf(stateName.toLowerCase()) !== -1) return true;
+  const districts = INDIA_GEO[stateName] || [];
+  return districts.some(function(d){
+    return loc.indexOf(d.toLowerCase().replace(/\s*\(.*?\)\s*/g, "")) !== -1;
+  });
+}
+
+function periodToFromDate(period){
+  const days = { "Day":1, "Week":7, "Month":30, "Half Yearly":182, "Yearly":365 }[period];
+  if(!days) return null; // "Date Range" handled separately by the caller
+  const d = new Date();
+  d.setDate(d.getDate() - days);
+  return d;
+}
+
+function fmtDateTime(iso){
+  if(!iso) return "—";
+  const d = new Date(iso);
+  if(isNaN(d)) return "—";
+  const pad = n => String(n).padStart(2, "0");
+  return pad(d.getDate()) + "-" + pad(d.getMonth()+1) + "-" + d.getFullYear() + " & " + pad(d.getHours()) + ":" + pad(d.getMinutes());
+}
+
+function fmtAmt(v){
+  return (v === null || v === undefined) ? "—" : "₹" + Number(v).toFixed(2);
+}
+
+/* ---- turns matched campaigns + their view counts into display rows ---- */
+function buildRevenueRows(campaigns, viewCounts){
+  return campaigns.map(function(c, idx){
+    const viewers = viewCounts[c.id] || 0;
+    const target = getTargetUsers(c);
+    const paidAmount = target !== null ? +(target * 1.18).toFixed(2) : null;
+    const utilizedAmount = +(viewers * 1.18).toFixed(2);
+    const balance = paidAmount !== null ? +(paidAmount - utilizedAmount).toFixed(2) : null;
+    return {
+      sno: idx + 1,
+      vendorName: getVendorName(c) || "—",
+      vendorContact: getVendorContact(c) || "—",
+      vendorLocation: c.location || "—",
+      adType: c.type || "—",
+      posted: fmtDateTime(c.created_at),
+      target: target !== null ? target : "—",
+      paidAmount: paidAmount,
+      viewers: viewers,
+      utilizedAmount: utilizedAmount,
+      balance: balance,
+      userProfit: +(viewers * 0.70).toFixed(2),
+      companyProfit: +(viewers * 0.30).toFixed(2),
+      govtTax: +(viewers * 0.18).toFixed(2)
+    };
+  });
+}
+
+function renderVendorTable(container, rows){
+  const head = "<tr><th>S.no</th><th>Vendor Name</th><th>Contact</th><th>Location</th><th>Ad Posted</th>"
+    + "<th>Target Users</th><th>Paid Amt (18% GST)</th><th>Viewers</th><th>Utilized Amt</th><th>Balance</th>"
+    + "<th>Company Profit (30%)</th><th>Govt Tax (GST)</th></tr>";
+  const body = rows.map(function(r){
+    return "<tr><td>" + r.sno + "</td><td>" + r.vendorName + "</td><td>" + r.vendorContact + "</td><td>" + r.vendorLocation + "</td>"
+      + "<td>" + r.posted + "</td><td class=\"num\">" + r.target + "</td><td class=\"num\">" + fmtAmt(r.paidAmount) + "</td>"
+      + "<td class=\"num\">" + r.viewers + "</td><td class=\"num\">" + fmtAmt(r.utilizedAmount) + "</td><td class=\"num\">" + fmtAmt(r.balance) + "</td>"
+      + "<td class=\"num profit\">" + fmtAmt(r.companyProfit) + "</td><td class=\"num\">" + fmtAmt(r.govtTax) + "</td></tr>";
+  }).join("");
+  container.innerHTML = '<div class="rev-table-wrap"><table class="rev-table"><thead>' + head + '</thead><tbody>'
+    + (body || '<tr><td colspan="12" style="text-align:center;color:#aaa;padding:16px;white-space:normal;">No campaigns found for this state in this period.</td></tr>')
+    + '</tbody></table></div>'
+    + '<div class="rev-note">Matched by location text against ' + state + ' and its known districts — may miss campaigns posted with a town/mandal name not in that list.</div>';
+}
+
+function renderCompanyTable(container, rows){
+  const head = "<tr><th>S.no</th><th>Vendor Name</th><th>Ad Type</th><th>Ad Posted</th>"
+    + "<th>Target Users</th><th>Paid Amt (18% GST)</th><th>Viewers</th><th>Utilized Amt</th><th>Balance</th>"
+    + "<th>User Profit (70%)</th><th>Company Profit (30%)</th><th>Govt Tax (GST)</th></tr>";
+  const body = rows.map(function(r){
+    return "<tr><td>" + r.sno + "</td><td>" + r.vendorName + "</td><td>" + r.adType + "</td><td>" + r.posted + "</td>"
+      + "<td class=\"num\">" + r.target + "</td><td class=\"num\">" + fmtAmt(r.paidAmount) + "</td>"
+      + "<td class=\"num\">" + r.viewers + "</td><td class=\"num\">" + fmtAmt(r.utilizedAmount) + "</td><td class=\"num\">" + fmtAmt(r.balance) + "</td>"
+      + "<td class=\"num\">" + fmtAmt(r.userProfit) + "</td><td class=\"num profit\">" + fmtAmt(r.companyProfit) + "</td><td class=\"num\">" + fmtAmt(r.govtTax) + "</td></tr>";
+  }).join("");
+  container.innerHTML = '<div class="rev-table-wrap"><table class="rev-table"><thead>' + head + '</thead><tbody>'
+    + (body || '<tr><td colspan="12" style="text-align:center;color:#aaa;padding:16px;white-space:normal;">No campaigns found for this state in this period.</td></tr>')
+    + '</tbody></table></div>'
+    + '<div class="rev-note">Matched by location text against ' + state + ' and its known districts — may miss campaigns posted with a town/mandal name not in that list.</div>';
+}
+
+let currentRevenueRows = [];
+
+async function refreshRevenueTable(period){
+  const treeEl = document.getElementById("districtTree");
+  document.getElementById("stateLabel").textContent = (type === "vendor" ? "Vendor Report — " : "Company Report — ") + state;
+  treeEl.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:12px;">Loading…</div>';
+
+  let fromDate = periodToFromDate(period);
+  if(period === "Date Range"){
+    const df = document.getElementById("dateFrom").value;
+    fromDate = df ? new Date(df) : null;
+  }
+
+  try {
+    const { data: campaigns, error } = await supabaseClient.from('campaigns').select('*');
+    if(error) throw error;
+
+    const matched = (campaigns || []).filter(function(c){
+      if(!matchesState(c.location, state)) return false;
+      if(fromDate && c.created_at && new Date(c.created_at) < fromDate) return false;
+      return true;
+    });
+
+    const ids = matched.map(function(c){ return c.id; });
+    const viewCounts = {};
+    if(ids.length){
+      const { data: views, error: vErr } = await supabaseClient.from('ad_views').select('campaign_id').in('campaign_id', ids);
+      if(!vErr && views){
+        views.forEach(function(v){ viewCounts[v.campaign_id] = (viewCounts[v.campaign_id] || 0) + 1; });
+      }
+    }
+
+    currentRevenueRows = buildRevenueRows(matched, viewCounts);
+
+    if(type === "company"){
+      const totalCompanyProfit = currentRevenueRows.reduce(function(s, r){ return s + r.companyProfit; }, 0);
+      document.getElementById("stateTotal").textContent = "₹" + totalCompanyProfit.toFixed(2);
+      renderCompanyTable(treeEl, currentRevenueRows);
+    } else {
+      document.getElementById("stateTotal").textContent = matched.length + " ads";
+      renderVendorTable(treeEl, currentRevenueRows);
+    }
+  } catch(e){
+    console.error('revenue table error:', e);
+    treeEl.innerHTML = '<div style="text-align:center;color:#c62828;padding:20px;font-size:12px;">Couldn\'t load data — please try again.</div>';
+  }
+}
 
 function refresh(period){
   currentPeriod = period;
-  document.getElementById("stateTotal").textContent = generateStateValue(metricKey, period, state).toLocaleString();
-  renderDistrictTree(document.getElementById("districtTree"), metricKey, period, state);
+  if(IS_REVENUE_TYPE){
+    refreshRevenueTable(period);
+  } else {
+    document.getElementById("stateLabel").textContent = metricTitle + " — Districts";
+    document.getElementById("stateTotal").textContent = generateStateValue(metricKey, period, state).toLocaleString();
+    renderDistrictTree(document.getElementById("districtTree"), metricKey, period, state);
+  }
 }
 
 initPeriodSelector(periodRow, refresh, dateRangeRow);
 refresh(currentPeriod);
 
 document.getElementById("downloadBtn").onclick = ()=>{
-  const headers = ["Metric","State","District","Level","Place","Value"];
-  const rows = flattenStateForCSV(metricTitle, metricKey, currentPeriod, state);
-  downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
+  if(IS_REVENUE_TYPE){
+    const headers = type === "vendor"
+      ? ["S.no","Vendor Name","Contact","Location","Ad Posted","Target Users","Paid Amount","Viewers","Utilized Amount","Balance","Company Profit (30%)","Govt Tax (GST)"]
+      : ["S.no","Vendor Name","Ad Type","Ad Posted","Target Users","Paid Amount","Viewers","Utilized Amount","Balance","User Profit (70%)","Company Profit (30%)","Govt Tax (GST)"];
+    const rows = currentRevenueRows.map(function(r){
+      return type === "vendor"
+        ? [r.sno, r.vendorName, r.vendorContact, r.vendorLocation, r.posted, r.target, r.paidAmount ?? "", r.viewers, r.utilizedAmount, r.balance ?? "", r.companyProfit, r.govtTax]
+        : [r.sno, r.vendorName, r.adType, r.posted, r.target, r.paidAmount ?? "", r.viewers, r.utilizedAmount, r.balance ?? "", r.userProfit, r.companyProfit, r.govtTax];
+    });
+    downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
+  } else {
+    const headers = ["Metric","State","District","Level","Place","Value"];
+    const rows = flattenStateForCSV(metricTitle, metricKey, currentPeriod, state);
+    downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
+  }
 };
 </script>
 </body>
