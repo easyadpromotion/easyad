@@ -37,6 +37,12 @@
         .toast-text b { display: block; font-size: 13px; margin-bottom: 2px; }
         .toast-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; cursor: pointer; font-size: 12px; }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
 </head>
 <body>
 <div class="mobile-screen">
@@ -92,6 +98,9 @@ const LOC_KEY = "eap_user_location";
 const POLL_MS = 4000;                    // how often we check for freshly-approved ads
 const NEARBY_RADIUS_KM = 25;             // how close an ad's target location must be to notify
 
+const VIEWED_SEEN_KEY = "eap_seen_viewed_ad_ids"; // user_ad_history row ids already turned into a notification
+const VIEW_POLL_MS = 5000;                         // how often we check for freshly-credited rewards
+
 function loadJSON(key, fallback){
   try{ const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : fallback; }
   catch(e){ return fallback; }
@@ -102,6 +111,12 @@ function adTitle(ad){ return ad.title || ad.name || "New Ad"; }
 function isLiveStatus(status){
   const s = (status || "").toLowerCase();
   return s !== "" && s !== "pending" && !s.includes("reject") && !s.includes("declin");
+}
+function typeIcon(t){
+  if(t === "Frame") return "🖼️";
+  if(t === "Video") return "▶️";
+  if(t === "Survey") return "📝";
+  return "💰";
 }
 function haversineKm(lat1, lon1, lat2, lon2){
   const R = 6371;
@@ -270,12 +285,81 @@ function checkForNewAds(){
   }
 }
 
+/* ---- "you earned a reward" notifications ----
+   Real data — reads the same Supabase `user_ad_history` table your
+   wallet page shows, for the currently logged-in user (localStorage
+   "activeUser", same key used everywhere else in the app). Every row
+   not yet turned into a notification becomes one: "✅ You earned ₹X
+   for [Frame/Video/Survey] Ad: <name>". $0 rows are skipped — those
+   are record-only entries from the old localStorage→Supabase history
+   migration (see home.html/user_wallet.html), not real payouts.
+
+   FIRST RUN SAFETY: if this is the very first time this check has
+   ever run on this device, all EXISTING history is marked as already
+   seen without generating a notification for each one — otherwise a
+   user with months of history would get flooded with dozens of
+   "you earned" cards the moment this feature ships. Only genuinely
+   new rows (credited after that point) generate a notification. ---- */
+async function checkForViewedAdRewards(){
+  const mobile = localStorage.getItem("activeUser");
+  if(!mobile) return;
+
+  try{
+    const { data: rows, error } = await supabaseClient
+      .from('user_ad_history')
+      .select('*')
+      .eq('user_mobile', mobile)
+      .order('created_at', { ascending: true });
+    if(error){ console.error('viewed-ad history fetch error:', error); return; }
+    if(!rows || !rows.length) return;
+
+    const seenRaw = localStorage.getItem(VIEWED_SEEN_KEY);
+    const isFirstRun = seenRaw === null;
+    const seen = new Set(isFirstRun ? [] : JSON.parse(seenRaw));
+    const notifs = loadJSON(NOTIF_KEY, []);
+    let addedAny = false;
+    let lastAdded = null;
+
+    rows.forEach(row=>{
+      const rowId = row.id != null ? String(row.id) : (row.campaign_id + "_" + row.created_at);
+      if(seen.has(rowId)) return;
+      seen.add(rowId);
+      if(isFirstRun) return;               // baseline pass only — no notification flood
+
+      const amount = parseFloat(row.amount || 0);
+      if(!amount) return;                  // skip $0 migration-only rows
+
+      const title = `✅ You earned ₹${amount.toFixed(2)}!`;
+      const msg = `${typeIcon(row.ad_type)} ${row.ad_type || "Ad"} reward for "${row.ad_name || "an ad"}" credited to your wallet.`;
+      const notif = { id: "view_" + rowId, title, msg, time: row.created_at ? new Date(row.created_at).getTime() : Date.now(), unread: true, _flash: true };
+      notifs.unshift(notif);
+      addedAny = true;
+      lastAdded = notif;
+    });
+
+    saveJSON(VIEWED_SEEN_KEY, [...seen]);
+
+    if(addedAny){
+      saveJSON(NOTIF_KEY, notifs);
+      render();
+      if(lastAdded) showToast(lastAdded.title, lastAdded.msg);
+      setTimeout(()=>{
+        const list = loadJSON(NOTIF_KEY, []);
+        list.forEach(n=> delete n._flash);
+        saveJSON(NOTIF_KEY, list);
+      }, 1600);
+    }
+  }catch(e){ console.error('checkForViewedAdRewards error:', e); }
+}
+
 /* ---- boot ---- */
 seedNotifications();
 render();
 checkForNewAds();
+checkForViewedAdRewards();
 
 setInterval(checkForNewAds, POLL_MS);           // catches new ads posted in the SAME tab/app
+setInterval(checkForViewedAdRewards, VIEW_POLL_MS); // catches newly-credited rewards
 window.addEventListener("storage", (e)=>{        // catches new ads posted from ANOTHER tab (e.g. admin approving one)
   if(e.key === "vendorCampaigns") checkForNewAds();
 });
