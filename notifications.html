@@ -12,6 +12,8 @@
         .back-btn { font-size: 24px; text-decoration: none; color: white; margin-right: 15px; }
         .page-title { font-size: 18px; font-weight: 700; flex: 1; }
         .unread-badge { background: rgba(255,255,255,0.25); font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 12px; min-width: 18px; text-align: center; }
+        .clear-all-btn { border: none; background: rgba(255,255,255,0.2); color: #fff; font-size: 10.5px; font-weight: 700; padding: 6px 12px; border-radius: 14px; cursor: pointer; margin-left: 10px; flex-shrink: 0; font-family: 'Poppins', sans-serif; }
+        .clear-all-btn:active { background: rgba(255,255,255,0.35); }
         .loc-strip { font-size: 10.5px; color: #a15c00; background: #fff3e0; padding: 8px 20px; display:flex; align-items:center; justify-content:space-between; gap:8px; }
         .loc-strip button { border: none; background: none; color: #ff9800; font-weight: 700; font-size: 10.5px; cursor: pointer; padding: 0; }
         .list { padding: 15px 20px 20px; flex: 1; overflow-y: auto; }
@@ -50,6 +52,7 @@
         <a href="settings.html" class="back-btn">←</a>
         <span class="page-title">Notifications</span>
         <span class="unread-badge" id="unreadBadge" style="display:none;">0</span>
+        <button class="clear-all-btn" id="clearAllBtn" onclick="clearAllNotifications()">Clear All</button>
     </div>
 
     <div class="loc-strip">
@@ -126,6 +129,14 @@ function haversineKm(lat1, lon1, lat2, lon2){
 }
 
 /* ---- default / seed notifications (kept only if nothing exists yet) ---- */
+/* ---- clear every notification (both the vendor-ad and the viewed-ad-
+   reward kind live in the same NOTIF_KEY list, so this clears both) ---- */
+function clearAllNotifications(){
+  if(!confirm("Clear all notifications? This can't be undone.")) return;
+  saveJSON(NOTIF_KEY, []);
+  render();
+}
+
 function seedNotifications(){
   if(localStorage.getItem(NOTIF_KEY)) return;
   saveJSON(NOTIF_KEY, [
@@ -195,6 +206,7 @@ function render(){
   const badge = document.getElementById("unreadBadge");
   if(unread > 0){ badge.style.display = "inline-block"; badge.textContent = unread; }
   else { badge.style.display = "none"; }
+  document.getElementById("clearAllBtn").style.display = notifs.length ? "inline-block" : "none";
 
   if(notifs.length === 0){
     list.innerHTML = `<div class="empty-state">No notifications yet.</div>`;
