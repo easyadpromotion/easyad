@@ -138,7 +138,7 @@
                 <div class="stat-val" id="dispCity">
                     <span class="locating-dot"></span> Locating…
                 </div>
-                <div class="stat-icon">📍</div>
+                <div class="stat-icon" id="locRefreshBtn" onclick="event.stopPropagation(); refreshLocation();" title="Tap to refresh your current location">📍</div>
             </div>
             <div class="stat-card">
                 <div class="stat-label">BALANCE</div>
@@ -293,6 +293,10 @@
         // Start GPS
         startLocationDetect();
 
+        // Keep location current without any action from the user — re-checks
+        // every few minutes in the background (see LOC_REFRESH_MS below).
+        setInterval(silentLocationRefresh, LOC_REFRESH_MS);
+
         // Notifications badge (from the shared notification store)
         updateNotifBadge();
         checkForNewAds();
@@ -302,6 +306,13 @@
     }
 
     // ── Location Detection ─────────────────────────────────────
+    // maximumAge: 0 forces a genuinely fresh GPS/network fix every time —
+    // without it, the browser is free to hand back an old cached position
+    // (potentially from a previous location entirely), which is the most
+    // likely reason a stale city could show up here.
+    var LOC_REFRESH_MS = 3 * 60 * 1000; // background re-check every 3 minutes
+    var GEO_OPTS = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
+
     function startLocationDetect() {
         if (!navigator.geolocation) {
             setCity(userProfile.city || "India");
@@ -321,25 +332,51 @@
                 console.warn("GPS error:", err.message);
                 setCity(userProfile.city || "India");
             },
-            { enableHighAccuracy: true, timeout: 10000 }
+            GEO_OPTS
         );
+    }
+
+    // Same GPS re-check as startLocationDetect(), but silent — doesn't reset
+    // the display to the pulsing "Locating…" state, so it doesn't flicker
+    // every few minutes while the person is just browsing. Only updates the
+    // label if a fresh fix actually succeeds.
+    function silentLocationRefresh() {
+        if (!navigator.geolocation) return;
+        navigator.geolocation.getCurrentPosition(
+            function(pos) {
+                userLat = pos.coords.latitude;
+                userLng = pos.coords.longitude;
+                reverseGeocodeAndSetCity(userLat, userLng);
+            },
+            function(err) { console.warn("Background GPS refresh failed:", err.message); },
+            GEO_OPTS
+        );
+    }
+
+    // Manual refresh — tapping the 📍 icon on the location card. Shows the
+    // pulsing "Locating…" state immediately so it's clear something's happening.
+    function refreshLocation() {
+        document.getElementById("dispCity").innerHTML = '<span class="locating-dot"></span> Locating…';
+        startLocationDetect();
     }
 
     // ── Reverse Geocode via OpenStreetMap Nominatim ─────────────
     // Free, no API key, no SDK dependency — this is what actually determines
     // the city name shown in the header. The Google Maps SDK (if it loads) is
     // used only for the little visual map inside the "view on map" modal.
+    // zoom=16 + neighbourhood-first ordering gives a finer-grained, more
+    // accurate label than a broad ward/suburb name.
     function reverseGeocodeAndSetCity(lat, lng) {
         var city = userProfile.city || "India";
         var fullAddr = city;
 
-        fetch("https://nominatim.openstreetmap.org/reverse?format=json&lat=" + lat + "&lon=" + lng + "&zoom=12&addressdetails=1", {
+        fetch("https://nominatim.openstreetmap.org/reverse?format=json&lat=" + lat + "&lon=" + lng + "&zoom=16&addressdetails=1", {
             headers: { "Accept": "application/json" }
         })
         .then(function(res){ return res.json(); })
         .then(function(data){
             var addr = data.address || {};
-            city = addr.suburb || addr.city || addr.town || addr.state_district || addr.county || addr.state || city;
+            city = addr.neighbourhood || addr.suburb || addr.city_district || addr.city || addr.town || addr.state_district || addr.county || addr.state || city;
             fullAddr = data.display_name || city;
             finishLocationUpdate(city, fullAddr, lat, lng);
         })
