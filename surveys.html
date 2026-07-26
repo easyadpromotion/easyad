@@ -163,7 +163,7 @@
 </script>
 </head>
 
-<body onload="loadSurveys()">
+<body onload="loadSurveys().then(autoOpenFromQuery)">
 <div class="mobile-screen">
 
   <div class="header">
@@ -792,6 +792,22 @@
   function closeAllModals() { document.getElementById("backdrop").classList.remove("open"); ["shareSheet", "referSheet", "commentSheet", "locationSheet"].forEach(function (id) { document.getElementById(id).classList.remove("open"); }); }
   function showToast(msg) { var t = document.getElementById("toast"); t.innerText = msg; t.classList.add("show"); setTimeout(function () { t.classList.remove("show"); }, 2500); }
   function getSurveys() { return window._surveys || []; }
+
+  // ── Deep-link support: home.html's Sponsored Tasks "Start" button links
+  // here as surveys.html?open=<campaignId> so tapping it opens THAT survey
+  // directly instead of landing on the generic list. Uses the real claim
+  // state (user.viewedAds, synced from Supabase) to decide whether this
+  // should be a fresh attempt or a read-only "view again". ──
+  function qParam(name) { return new URLSearchParams(window.location.search).get(name); }
+  function autoOpenFromQuery() {
+    var id = qParam('open');
+    if (!id) return;
+    var ad = getSurveys().find(function (a) { return a.id === id; });
+    if (!ad) return;
+    var viewed = user.viewedAds || [];
+    if (viewed.indexOf(id) !== -1) openViewAgain(id);
+    else openSurvey(id);
+  }
 </script>
 </body>
 </html>
