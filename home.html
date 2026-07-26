@@ -500,9 +500,23 @@
                 category: row.category,
                 location: row.location,
                 lat: row.lat,
-                lng: row.lng
+                lng: row.lng,
+                video_url: row.video_url,
+                image_url: row.image_url
             };
         });
+    }
+
+    // An ad is only "ready" to show as a startable task if it actually has
+    // the content its type needs — otherwise Start leads straight to a
+    // "Video Not Ready" / "No video uploaded" dead end, like Coffee and
+    // Mehendi design did before this fix. Surveys don't need video/image,
+    // so they're always considered ready here (their own page separately
+    // disables Start if a survey genuinely has zero questions).
+    function hasReadyContent(ad) {
+        if (ad.type === "Video") return !!(ad.video_url && String(ad.video_url).trim());
+        if (ad.type === "Frame") return !!(ad.image_url && String(ad.image_url).trim());
+        return true;
     }
 
     // ── Tasks ──────────────────────────────────────────────────
@@ -514,7 +528,7 @@
         // below). If your approval page uses a specific status string like
         // "Approved" or "Live", both this and the notification matcher will
         // pick it up automatically as long as it isn't "Pending"/"Rejected".
-        var active   = allAds.filter(function(ad){ return isLiveStatus(ad.status) && viewed.indexOf(ad.id) === -1; });
+        var active   = allAds.filter(function(ad){ return isLiveStatus(ad.status) && viewed.indexOf(ad.id) === -1 && hasReadyContent(ad); });
         var container = document.getElementById("taskContainer");
 
         container.innerHTML = "";
@@ -542,6 +556,7 @@
             container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">' + icon + '</div><div class="t-info"><div class="t-name">' + name + '</div><div class="t-sub">' + cat + '</div></div></div><a href="' + link + '" class="start-btn">Start</a></div>';
         });
     }
+
 
     // ═══════════════════════════════════════════════════════════
     // NOTIFICATION ENGINE — shares localStorage keys with
@@ -604,6 +619,7 @@
         ads.forEach(function(ad) {
             if (!ad || !ad.id || seenSet[ad.id]) return;
             if (!isLiveStatus(ad.status)) return;
+            if (!hasReadyContent(ad)) return; // no video/image yet — don't notify or mark seen; check again next poll
 
             var matchesLocation = true, distLabel = ad.location || "you";
             if (userLoc && userLoc.lat != null && ad.lat != null && ad.lng != null) {
