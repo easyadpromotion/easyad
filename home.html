@@ -531,6 +531,10 @@
             var link = "frame-ads.html", icon = "🖼️";
              if (ad.type === "Video")  { link = "video-ads.html"; icon = "▶️"; }
             if (ad.type === "Survey") { link = "surveys.html";   icon = "📝"; }
+            // Deep-link straight to this specific ad instead of the generic
+            // list — video-ads.html / surveys.html read this "open" param
+            // and auto-open that exact ad's viewing overlay on load.
+            link += "?open=" + encodeURIComponent(ad.id);
             // Fix: use ad.name, ad.title, or ad.adName with fallback
             var name = ad.name || ad.title || ad.adName || "Sponsored Ad";
             var cat  = ad.category || ad.type || "Task";
