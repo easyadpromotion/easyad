@@ -5,6 +5,12 @@
     <title>Create Account</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
     <style>
         /* 1. DESKTOP BACKGROUND */
         body { 
@@ -104,6 +110,8 @@
         }
         .opt-btn:hover { background: #fff8e1; border-color: #ff9800; }
         .opt-btn.selected { background: #ff9800; color: white; border-color: #ff9800; }
+        .opt-btn.center-btn { text-align: center; color: #ff9800; border-color: #ffcc80; }
+        .opt-btn:disabled { opacity: 0.6; cursor: default; }
 
         /* NEXT BUTTON - BIG ORANGE */
         .btn-next { 
@@ -113,6 +121,7 @@
             display: flex; justify-content: center; align-items: center; gap: 10px;
         }
         .btn-next:active { transform: scale(0.98); }
+        .btn-next:disabled { background: #e0e0e0; color: #999; box-shadow: none; cursor: not-allowed; }
 
         /* SCREENS LOGIC */
         .screen { display: none; flex-direction: column; flex: 1; }
@@ -157,7 +166,7 @@
         <form id="regForm" onsubmit="return false;" style="flex:1; display:flex; flex-direction:column;">
             
             <div class="screen active" id="scFName">
-                <div class="step-indicator">Step 1 of 6</div>
+                <div class="step-indicator">Step 1 of 7</div>
                 <div class="mobile-display" id="dispMobile">Mobile: ...</div>
                 
                 <div class="step-title">First Name</div>
@@ -166,21 +175,21 @@
             </div>
 
             <div class="screen" id="scLName">
-                <div class="step-indicator">Step 2 of 6</div>
+                <div class="step-indicator">Step 2 of 7</div>
                 <div class="step-title">Last Name</div>
                 <div class="step-desc">Enter your surname.</div>
                 <input type="text" id="inpLName" class="inp" placeholder="e.g. Verma">
             </div>
 
             <div class="screen" id="scDOB">
-                <div class="step-indicator">Step 3 of 6</div>
+                <div class="step-indicator">Step 3 of 7</div>
                 <div class="step-title">Date of Birth</div>
                 <div class="step-desc">Select your date of birth.</div>
                 <input type="date" id="inpDOB" class="inp">
             </div>
 
             <div class="screen" id="scGender">
-                <div class="step-indicator">Step 4 of 6</div>
+                <div class="step-indicator">Step 4 of 7</div>
                 <div class="step-title">Gender</div>
                 <div class="step-desc">Select your gender.</div>
                 <div class="opt-list">
@@ -191,7 +200,7 @@
             </div>
 
             <div class="screen" id="scProf">
-                <div class="step-indicator">Step 5 of 6</div>
+                <div class="step-indicator">Step 5 of 7</div>
                 <div class="step-title">Profession</div>
                 <div class="step-desc">What do you do?</div>
                 <div class="opt-list">
@@ -205,10 +214,18 @@
             </div>
 
             <div class="screen" id="scSubProf">
-                <div class="step-indicator">Step 6 of 6</div>
+                <div class="step-indicator">Step 6 of 7</div>
                 <div class="step-title">Specific Role</div>
                 <div class="step-desc">Select your specific role.</div>
                 <div id="subList" class="opt-list"></div>
+            </div>
+
+            <div class="screen" id="scLocation">
+                <div class="step-indicator">Step 7 of 7</div>
+                <div class="step-title">Your Location</div>
+                <div class="step-desc">Helps us show you ads and offers nearby.</div>
+                <input type="text" id="inpLocation" class="inp" placeholder="e.g. Gajuwaka, Visakhapatnam" style="margin-bottom:14px;">
+                <button type="button" class="opt-btn center-btn" id="detectLocBtn" onclick="detectLocationForSignup()">📍 Use My Current Location</button>
             </div>
 
             <div style="margin-top:20px;">
@@ -230,8 +247,25 @@
 </div>
 
 <script>
-    let userData = { mobile: '', firstName: '', lastName: '', dob: '', gender: '', profession: '', subProfession: '' };
-    const screens = ["scFName", "scLName", "scDOB", "scGender", "scProf", "scSubProf"];
+    /* ============================================================
+       Location step reuses the exact same detection approach and
+       localStorage cache key ("eap_user_location") already used by
+       notifications.html's nearby-ad matching — so a location set
+       here at signup is immediately usable there too, without
+       waiting for that page's own separate detection to run.
+
+       finishSignup() now upserts the full profile into Supabase
+       `users` (mobile, first_name, last_name, dob, gender,
+       profession, specific_role, location) — this is the row
+       admin_users.html reads. `wallet` is deliberately NOT included
+       in that upsert: overwriting an existing balance to 0 on a
+       re-registration edge case would be a real bug, so it's left
+       untouched and relies on the column's own default for brand
+       new rows.
+       ============================================================ */
+
+    let userData = { mobile: '', firstName: '', lastName: '', dob: '', gender: '', profession: '', subProfession: '', location: '' };
+    const screens = ["scFName", "scLName", "scDOB", "scGender", "scProf", "scSubProf", "scLocation"];
     let currentStep = 0;
     
     // Sub-professions list
@@ -269,14 +303,17 @@
         if(currentStep === 1 && !document.getElementById("inpLName").value) { alert("Please enter Last Name"); return; }
         if(currentStep === 2 && !document.getElementById("inpDOB").value) { alert("Please enter Date of Birth"); return; }
         if(currentStep === 3 && !userData.gender) { alert("Please select Gender"); return; }
+        if(currentStep === 5 && !userData.subProfession) { alert("Please select a specific role"); return; }
+        if(currentStep === 6 && !document.getElementById("inpLocation").value.trim()) { alert("Please enter your location"); return; }
 
         // Save Data
         if(currentStep === 0) userData.firstName = document.getElementById("inpFName").value;
         if(currentStep === 1) userData.lastName = document.getElementById("inpLName").value;
         if(currentStep === 2) userData.dob = document.getElementById("inpDOB").value;
+        if(currentStep === 6) userData.location = document.getElementById("inpLocation").value.trim();
 
         // Final Submit
-        if(currentStep === 5) {
+        if(currentStep === 6) {
             finishSignup();
             return;
         }
@@ -292,7 +329,7 @@
         document.getElementById(screens[currentStep]).classList.add("active");
         
         // Update Button Text
-        document.getElementById("btnNext").innerText = (currentStep === 5) ? "Submit & Start Earning" : "Next ➔";
+        document.getElementById("btnNext").innerText = (currentStep === 6) ? "Submit & Start Earning" : "Next ➔";
     }
 
     function selectOpt(btn, key, val) {
@@ -326,8 +363,54 @@
         goNext(); // Auto advance after selection
     }
 
-    function finishSignup() {
+    // ── Location auto-detect (GPS + reverse geocode), same pattern and
+    // localStorage key as notifications.html. Falls back gracefully to
+    // manual typing if geolocation is unavailable, denied, or times out. ──
+    function detectLocationForSignup() {
+        const btn = document.getElementById("detectLocBtn");
+        const inp = document.getElementById("inpLocation");
+
+        if(!navigator.geolocation) {
+            alert("Location detection isn't available on this device — please type it in manually.");
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerText = "Detecting…";
+
+        navigator.geolocation.getCurrentPosition(
+            async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                let label = "";
+                try {
+                    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=14&addressdetails=1`, { headers: { "Accept": "application/json" } });
+                    const data = await res.json();
+                    const addr = data.address || {};
+                    label = [addr.suburb || addr.neighbourhood, addr.city || addr.town || addr.state_district, addr.state].filter(Boolean).join(", ");
+                } catch(e) { /* label is cosmetic — coordinates are still cached below */ }
+
+                if(label) inp.value = label;
+                try {
+                    localStorage.setItem("eap_user_location", JSON.stringify({ lat: latitude, lng: longitude, label: label || inp.value }));
+                } catch(e) { /* non-fatal */ }
+
+                btn.disabled = false;
+                btn.innerText = "📍 Use My Current Location";
+            },
+            () => {
+                btn.disabled = false;
+                btn.innerText = "📍 Use My Current Location";
+                alert("Couldn't detect your location — please type it in manually.");
+            },
+            { timeout: 8000 }
+        );
+    }
+
+    async function finishSignup() {
         if(!userData.subProfession) { alert("Please select a specific role"); return; }
+        const locVal = document.getElementById("inpLocation").value.trim();
+        if(!locVal) { alert("Please enter your location"); return; }
+        userData.location = locVal;
 
         const finalProfile = {
             mobile: userData.mobile,
@@ -338,14 +421,40 @@
             gender: userData.gender,
             profession: userData.profession,
             subProfession: userData.subProfession,
+            location: userData.location,
             wallet: 0.00,
             viewedAds: []
         };
-        
-        // SAVE USER DATA
+
+        // SAVE LOCALLY FIRST — instant, works even if the network call below fails.
         localStorage.setItem("userProfile_" + userData.mobile, JSON.stringify(finalProfile));
         localStorage.setItem("activeUser", userData.mobile);
-        
+
+        // SAVE TO SUPABASE — this is the row admin_users.html (and every
+        // other page's syncUserFromCloud) actually reads. wallet is
+        // intentionally omitted — see the note at the top of this script.
+        const btn = document.getElementById("btnNext");
+        btn.disabled = true;
+        btn.innerText = "Saving…";
+        try {
+            const { error } = await supabaseClient.from('users').upsert({
+                mobile: userData.mobile,
+                first_name: userData.firstName,
+                last_name: userData.lastName,
+                dob: userData.dob || null,
+                gender: userData.gender || null,
+                profession: userData.profession || null,
+                specific_role: userData.subProfession || null,
+                location: userData.location || null
+            }, { onConflict: 'mobile' });
+            if(error) throw error;
+        } catch(e) {
+            console.error('registration cloud save error:', e);
+            // Don't block entry to the app — the local profile is already
+            // saved. admin_users.html just won't show these details until
+            // this succeeds on a retry (e.g. by editing the profile later).
+        }
+
         alert("Profile Completed! Welcome to EAP.");
         window.location.href = "home.html";
     }
