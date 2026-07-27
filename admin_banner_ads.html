@@ -27,11 +27,13 @@
         .ad-row { background:#fff; border-radius:16px; padding:14px; margin-bottom:12px; box-shadow:0 2px 6px rgba(0,0,0,0.04); }
         .ad-row.inactive { opacity:0.55; }
         .ad-row-top { display:flex; align-items:flex-start; gap:12px; }
-        .ad-emoji-box { font-size:26px; width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0; }
+        .ad-emoji-box { font-size:26px; width:46px; height:46px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--bg); flex-shrink:0; overflow:hidden; }
+        .ad-emoji-box img, .ad-emoji-box video { width:100%; height:100%; object-fit:cover; }
         .ad-row-info { flex:1; min-width:0; }
         .ad-row-badge { display:inline-block; font-size:9px; font-weight:800; padding:2px 8px; border-radius:8px; margin-bottom:4px; }
         .ad-row-title { font-size:13px; font-weight:700; color:#333; }
         .ad-row-desc { font-size:10.5px; color:var(--muted); margin-top:2px; line-height:1.4; overflow:hidden; text-overflow:ellipsis; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; }
+        .ad-row-loc { font-size:9.5px; color:#7b1fa2; background:#f3e5f5; display:inline-block; padding:2px 8px; border-radius:8px; margin-top:5px; }
         .ad-row-actions { display:flex; gap:6px; margin-top:12px; align-items:center; }
         .ad-btn { border:none; border-radius:10px; padding:7px 10px; font-size:10.5px; font-weight:700; cursor:pointer; font-family:inherit; }
         .ad-btn-edit { background:#e3f2fd; color:#1565c0; }
@@ -56,14 +58,26 @@
         .field-row > div { flex:1; }
         .color-input { width:100%; height:40px; border:1.5px solid #e2e2e2; border-radius:10px; padding:3px; background:#fff; cursor:pointer; }
         .field-hint { font-size:10px; color:var(--muted); margin-top:4px; }
+        .field-warn { font-size:10px; color:#c62828; margin-top:4px; }
         .toggle-row { display:flex; align-items:center; justify-content:space-between; margin:14px 0 4px; }
         .toggle-row span { font-size:12px; font-weight:700; color:#333; }
+
+        /* media upload */
+        .media-preview-wrap { margin-top:10px; background:var(--dark); border-radius:12px; padding:10px; }
+        .media-preview-wrap img, .media-preview-wrap video { width:100%; max-height:180px; object-fit:contain; border-radius:8px; display:block; background:#000; }
+        .remove-media-btn { margin-top:8px; width:100%; }
+
+        /* location targeting */
+        .loc-section { background:#f3e5f5; border-radius:14px; padding:14px; margin-top:8px; }
+        .loc-section .field-label { color:#7b1fa2; }
+        .loc-section .field-input { margin-bottom:2px; }
 
         /* live preview — mirrors index.html's real slide styling exactly */
         .preview-wrap { background:var(--dark); border-radius:16px; padding:14px; margin:18px 0 4px; }
         .preview-label { font-size:10px; color:rgba(255,255,255,0.5); font-weight:700; text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px; }
         .preview-card { background:#fff; border-radius:16px; padding:20px 18px 16px; text-align:center; }
         .p-emoji { font-size:38px; display:block; margin-bottom:8px; }
+        .p-media { width:100%; max-height:140px; object-fit:contain; border-radius:10px; margin-bottom:8px; display:none; }
         .p-badge { display:inline-block; font-size:9px; font-weight:800; padding:4px 14px; border-radius:12px; border:1px solid; margin-bottom:10px; letter-spacing:0.5px; }
         .p-title { font-size:18px; font-weight:800; color:#333; margin-bottom:7px; }
         .p-desc { font-size:11px; color:#777; line-height:1.6; }
@@ -106,6 +120,16 @@
         <div id="editView">
             <label class="field-label">Emoji</label>
             <input class="field-input" id="f_emoji" placeholder="✈️🌴" maxlength="6">
+            <div class="field-hint">Used only when no image/video is uploaded below.</div>
+
+            <label class="field-label">Image / Video</label>
+            <input type="file" class="field-input" id="f_media" accept="image/*,video/*">
+            <div class="field-hint">Overrides the emoji above when set. Keep files small — under ~500KB is safest. These are stored directly in the browser (not a server), so large files, especially video, may fail to save or slow the page down for every visitor.</div>
+            <div class="media-preview-wrap" id="mediaPreviewWrap" style="display:none;">
+                <img id="mediaPreviewImg" style="display:none;">
+                <video id="mediaPreviewVid" style="display:none;" controls></video>
+                <button type="button" class="ad-btn ad-btn-delete remove-media-btn" id="removeMediaBtn">Remove media</button>
+            </div>
 
             <div class="field-row">
                 <div>
@@ -151,10 +175,39 @@
                 <div class="switch on" id="f_activeSwitch"></div>
             </div>
 
+            <!-- LOCATION TARGETING — narrows which visitors see this slide.
+                 Leave a field blank to widen the audience at that level; e.g.
+                 State set but District blank = shown to the whole state. -->
+            <div class="loc-section">
+                <label class="field-label">Show To (Location Targeting)</label>
+                <div class="field-hint" style="margin-top:0;">Leave everything blank to show this slide to all of India. Fill in only as far down the list as you want to narrow it.</div>
+
+                <label class="field-label">State</label>
+                <select class="field-input" id="f_locState">
+                    <option value="">All India</option>
+                </select>
+
+                <label class="field-label">District</label>
+                <input class="field-input" id="f_locDistrict" placeholder="e.g. Visakhapatnam">
+
+                <label class="field-label">City / Town</label>
+                <input class="field-input" id="f_locCity" placeholder="e.g. Gajuwaka">
+
+                <label class="field-label">Taluka / Mandal</label>
+                <input class="field-input" id="f_locTaluka" placeholder="e.g. Pendurthi">
+
+                <label class="field-label">Village</label>
+                <input class="field-input" id="f_locVillage" placeholder="e.g. Sattivalasa">
+
+                <div class="field-warn">⚠️ This saves correctly here, but index.html doesn't read it yet — I don't have that file, so it can't actually filter which visitors see this slide until it's updated. See the note below the form.</div>
+            </div>
+
             <div class="preview-wrap">
                 <div class="preview-label">Live Preview</div>
                 <div class="preview-card">
                     <span class="p-emoji" id="p_emoji">📢</span>
+                    <img class="p-media" id="p_media_img">
+                    <video class="p-media" id="p_media_vid" muted loop autoplay playsinline></video>
                     <span class="p-badge" id="p_badge">PROMO</span>
                     <div class="p-title" id="p_title">Title goes here</div>
                     <div class="p-desc" id="p_desc">Description goes here</div>
@@ -191,6 +244,24 @@ const DEFAULT_ADS = [
       cta:"Watch & Earn", ctaLink:"user_login.html", duration:5, active:true }
 ];
 
+// Same 28 states + 8 union territories used elsewhere in the admin
+// dashboard (state_detail.html's INDIA_GEO), for consistency.
+const INDIA_STATES = [
+  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana",
+  "Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur",
+  "Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana",
+  "Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Andaman and Nicobar Islands","Chandigarh",
+  "Dadra and Nagar Haveli and Daman and Diu","Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry"
+];
+(function populateStateDropdown(){
+  const sel = document.getElementById("f_locState");
+  INDIA_STATES.forEach(function(s){
+    const opt = document.createElement("option");
+    opt.value = s; opt.textContent = s;
+    sel.appendChild(opt);
+  });
+})();
+
 function loadAds(){
   const raw = localStorage.getItem(STORAGE_KEY);
   if(raw){ try{ return JSON.parse(raw); }catch(e){ return DEFAULT_ADS.slice(); } }
@@ -201,7 +272,21 @@ function saveAds(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
 let ads = loadAds();
 let editingId = null; // null = adding new
 
+// ── Media upload state ──────────────────────────────────────────────────
+// pendingMedia / mediaTouched track a NEW upload or explicit removal made
+// during this edit session. If the admin never touches the file input,
+// mediaTouched stays false and the ad's existing media (if any) is kept
+// as-is on save — so re-saving other fields never accidentally wipes it.
+let pendingMedia = null;
+let mediaTouched = false;
+
 function esc(s){ const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
+
+function locationSummary(loc){
+  if(!loc) return "";
+  const parts = [loc.village, loc.taluka, loc.city, loc.district, loc.state].filter(Boolean);
+  return parts.length ? parts.join(", ") : "";
+}
 
 // ── LIST VIEW ──────────────────────────────────────────────────────────
 function renderList(){
@@ -210,14 +295,23 @@ function renderList(){
     container.innerHTML = `<div class="empty-state">No ads yet. Tap "+ New" to add one.</div>`;
     return;
   }
-  container.innerHTML = ads.map((ad, i) => `
+  container.innerHTML = ads.map((ad, i) => {
+    const locText = locationSummary(ad.targetLocation);
+    let mediaHtml = esc(ad.emoji) || "📢";
+    if(ad.mediaUrl){
+      mediaHtml = ad.mediaType === "video"
+        ? `<video src="${ad.mediaUrl}" muted></video>`
+        : `<img src="${ad.mediaUrl}">`;
+    }
+    return `
     <div class="ad-row ${ad.active === false ? "inactive" : ""}">
       <div class="ad-row-top">
-        <div class="ad-emoji-box">${esc(ad.emoji) || "📢"}</div>
+        <div class="ad-emoji-box">${mediaHtml}</div>
         <div class="ad-row-info">
           <span class="ad-row-badge" style="color:${ad.badgeColor || "#ff8f00"}; background:${ad.badgeBg || "#fff3e0"};">${esc(ad.badge) || "PROMO"}</span>
           <div class="ad-row-title">${esc(ad.title) || "(no title)"}</div>
           <div class="ad-row-desc">${esc(ad.desc)}</div>
+          ${locText ? `<span class="ad-row-loc">📍 ${esc(locText)}</span>` : ""}
         </div>
       </div>
       <div class="ad-row-actions">
@@ -230,7 +324,8 @@ function renderList(){
         </div>
       </div>
     </div>
-  `).join("");
+  `;
+  }).join("");
 
   container.querySelectorAll("[data-act]").forEach(el=>{
     const i = parseInt(el.dataset.i, 10);
@@ -274,6 +369,63 @@ document.getElementById("resetBtn").onclick = ()=>{
 // ── EDIT VIEW ──────────────────────────────────────────────────────────
 const FIELDS = ["emoji","badge","badgeColor","badgeBg","title","desc","cta","ctaLink","duration"];
 
+// ── Media upload handling ──
+function resetMediaUI(){
+  pendingMedia = null;
+  mediaTouched = false;
+  document.getElementById("f_media").value = "";
+  document.getElementById("mediaPreviewWrap").style.display = "none";
+  document.getElementById("mediaPreviewImg").style.display = "none";
+  document.getElementById("mediaPreviewVid").style.display = "none";
+}
+function showMediaPreview(media){
+  const wrap = document.getElementById("mediaPreviewWrap");
+  const img = document.getElementById("mediaPreviewImg");
+  const vid = document.getElementById("mediaPreviewVid");
+  if(!media || !media.mediaUrl){ wrap.style.display = "none"; return; }
+  wrap.style.display = "block";
+  if(media.mediaType === "video"){
+    vid.src = media.mediaUrl; vid.style.display = "block"; img.style.display = "none";
+  } else {
+    img.src = media.mediaUrl; img.style.display = "block"; vid.style.display = "none";
+  }
+}
+document.getElementById("f_media").addEventListener("change", function(e){
+  const file = e.target.files[0];
+  if(!file) return;
+  const isVideo = file.type.startsWith("video");
+  if(file.size > 800 * 1024){
+    const mb = (file.size / 1024 / 1024).toFixed(1);
+    if(!confirm(`This file is ${mb}MB. Files this size are stored directly in the browser (not a server) and may fail to save, or slow the app down for every visitor who loads the homepage. Continue anyway?`)){
+      e.target.value = "";
+      return;
+    }
+  }
+  const reader = new FileReader();
+  reader.onload = function(ev){
+    pendingMedia = { mediaUrl: ev.target.result, mediaType: isVideo ? "video" : "image" };
+    mediaTouched = true;
+    showMediaPreview(pendingMedia);
+    updatePreview();
+  };
+  reader.readAsDataURL(file);
+});
+document.getElementById("removeMediaBtn").onclick = function(){
+  pendingMedia = { mediaUrl: "", mediaType: "" };
+  mediaTouched = true;
+  document.getElementById("f_media").value = "";
+  document.getElementById("mediaPreviewWrap").style.display = "none";
+  updatePreview();
+};
+
+function currentMediaForPreview(ad){
+  // While editing, a fresh upload/removal in THIS session wins; otherwise
+  // fall back to whatever the ad already had (or nothing, when adding new).
+  if(mediaTouched) return pendingMedia;
+  if(ad && ad.mediaUrl) return { mediaUrl: ad.mediaUrl, mediaType: ad.mediaType || "image" };
+  return null;
+}
+
 function openEdit(i){
   editingId = i;
   const ad = ads[i];
@@ -287,6 +439,17 @@ function openEdit(i){
   document.getElementById("f_ctaLink").value = ad.ctaLink || "";
   document.getElementById("f_duration").value = ad.duration || 5;
   setSwitch(ad.active !== false);
+
+  resetMediaUI();
+  showMediaPreview(ad.mediaUrl ? { mediaUrl: ad.mediaUrl, mediaType: ad.mediaType || "image" } : null);
+
+  const loc = ad.targetLocation || {};
+  document.getElementById("f_locState").value = loc.state || "";
+  document.getElementById("f_locDistrict").value = loc.district || "";
+  document.getElementById("f_locCity").value = loc.city || "";
+  document.getElementById("f_locTaluka").value = loc.taluka || "";
+  document.getElementById("f_locVillage").value = loc.village || "";
+
   showEditView(`Edit Ad`);
 }
 
@@ -302,6 +465,15 @@ function openAdd(){
   document.getElementById("f_ctaLink").value = "";
   document.getElementById("f_duration").value = 5;
   setSwitch(true);
+
+  resetMediaUI();
+
+  document.getElementById("f_locState").value = "";
+  document.getElementById("f_locDistrict").value = "";
+  document.getElementById("f_locCity").value = "";
+  document.getElementById("f_locTaluka").value = "";
+  document.getElementById("f_locVillage").value = "";
+
   showEditView("New Ad");
 }
 
@@ -341,8 +513,19 @@ document.getElementById("saveBtn").onclick = ()=>{
   const title = document.getElementById("f_title").value.trim();
   if(!title){ alert("Please enter a title for this ad."); return; }
 
+  let mediaUrl, mediaType;
+  if(mediaTouched){
+    mediaUrl = pendingMedia.mediaUrl;
+    mediaType = pendingMedia.mediaType;
+  } else {
+    mediaUrl = editingId !== null ? (ads[editingId].mediaUrl || "") : "";
+    mediaType = editingId !== null ? (ads[editingId].mediaType || "") : "";
+  }
+
   const adData = {
     emoji: document.getElementById("f_emoji").value.trim() || "📢",
+    mediaUrl: mediaUrl,
+    mediaType: mediaType,
     badge: document.getElementById("f_badge").value.trim() || "PROMO",
     badgeColor: document.getElementById("f_badgeColor").value,
     badgeBg: document.getElementById("f_badgeBg").value,
@@ -351,7 +534,14 @@ document.getElementById("saveBtn").onclick = ()=>{
     cta: document.getElementById("f_cta").value.trim(),
     ctaLink: document.getElementById("f_ctaLink").value.trim() || "#",
     duration: Math.max(2, parseInt(document.getElementById("f_duration").value, 10) || 5),
-    active: document.getElementById("f_activeSwitch").dataset.on === "1"
+    active: document.getElementById("f_activeSwitch").dataset.on === "1",
+    targetLocation: {
+      state: document.getElementById("f_locState").value,
+      district: document.getElementById("f_locDistrict").value.trim(),
+      city: document.getElementById("f_locCity").value.trim(),
+      taluka: document.getElementById("f_locTaluka").value.trim(),
+      village: document.getElementById("f_locVillage").value.trim()
+    }
   };
 
   if(editingId === null){
@@ -367,7 +557,24 @@ document.getElementById("saveBtn").onclick = ()=>{
 
 // live preview updates as you type
 function updatePreview(){
-  document.getElementById("p_emoji").textContent = document.getElementById("f_emoji").value || "📢";
+  const media = currentMediaForPreview(editingId !== null ? ads[editingId] : null);
+  const emojiEl = document.getElementById("p_emoji");
+  const imgEl = document.getElementById("p_media_img");
+  const vidEl = document.getElementById("p_media_vid");
+
+  if(media && media.mediaUrl){
+    emojiEl.style.display = "none";
+    if(media.mediaType === "video"){
+      vidEl.src = media.mediaUrl; vidEl.style.display = "block"; imgEl.style.display = "none";
+    } else {
+      imgEl.src = media.mediaUrl; imgEl.style.display = "block"; vidEl.style.display = "none";
+    }
+  } else {
+    imgEl.style.display = "none"; vidEl.style.display = "none";
+    emojiEl.style.display = "block";
+    emojiEl.textContent = document.getElementById("f_emoji").value || "📢";
+  }
+
   const badgeText = document.getElementById("f_badge").value || "PROMO";
   const bColor = document.getElementById("f_badgeColor").value;
   const bBg = document.getElementById("f_badgeBg").value;
