@@ -3,6 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <script>if(sessionStorage.getItem("eap_admin_authed")!=="1"){document.documentElement.style.display="none";window.location.replace("admin_login.html");}</script>
+    <!-- Same Maps API key already used elsewhere in the app (home.html) —
+         adding the 'places' library here for the location search box below.
+         If this key doesn't have Places API enabled, or is referrer-locked
+         to a different page, the search box disables itself gracefully
+         (see gm_authFailure below) rather than failing silently. -->
+    <script>
+        var mapsReady = false;
+        var mapsFailed = false;
+        function initMap(){
+            mapsReady = true;
+            initLocationPicker();
+            // If an ad with a saved location was opened before Maps finished
+            // loading, render it now instead of leaving the map div blank.
+            if(typeof targetLoc !== "undefined" && targetLoc){
+                document.getElementById("mapPlaceholder").style.display = "none";
+                document.getElementById("targetLocMap").style.display = "block";
+                renderTargetMap();
+            }
+        }
+        window.gm_authFailure = function(){
+            mapsFailed = true;
+            console.error("❌ gm_authFailure: Google Maps blocked this request for this domain/key.");
+            var el = document.getElementById("locSearchInput");
+            if(el){ el.placeholder = "Location search unavailable"; el.disabled = true; }
+        };
+    </script>
+    <script async src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBIYCrCcEG-A-tDPVrM2I8bcEQ6k3VeNxc&callback=initMap&libraries=places&v=beta"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Landing Page Ads</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700;800&display=swap" rel="stylesheet">
@@ -71,6 +98,19 @@
         .loc-section { background:#f3e5f5; border-radius:14px; padding:14px; margin-top:8px; }
         .loc-section .field-label { color:#7b1fa2; }
         .loc-section .field-input { margin-bottom:2px; }
+        .loc-search-wrap { position:relative; margin-top:6px; }
+        .loc-search-input { width:100%; padding:11px 36px 11px 12px; border:1.5px solid #e2e2e2; border-radius:10px; font-family:inherit; font-size:13px; background:#fff; }
+        .loc-search-icon { position:absolute; right:12px; top:50%; transform:translateY(-50%); color:#999; pointer-events:none; }
+        .loc-map-card { border-radius:14px; overflow:hidden; margin-top:12px; border:1.5px solid #0d9488; }
+        .loc-map-header { background:#0d9488; color:#fff; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; font-size:12px; font-weight:700; }
+        .loc-map-badge { background:rgba(255,255,255,0.25); font-size:9.5px; padding:3px 10px; border-radius:10px; font-weight:700; }
+        .loc-map-badge.set { background:#fff; color:#0d9488; }
+        .loc-map-body { position:relative; height:180px; background:#e0f2f1; }
+        #targetLocMap { width:100%; height:100%; display:none; }
+        .loc-map-placeholder { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:#00695c; text-align:center; padding:0 20px; font-size:11px; font-weight:600; }
+        .loc-map-placeholder .pin { font-size:26px; margin-bottom:6px; }
+        .loc-map-placeholder .sub { font-size:9px; color:#4db6ac; margin-top:2px; font-weight:500; }
+        .loc-clear-btn { font-size:10.5px; color:#0d9488; text-decoration:underline; background:none; border:none; cursor:pointer; font-family:inherit; margin-top:8px; padding:0; display:block; }
 
         /* live preview — mirrors index.html's real slide styling exactly */
         .preview-wrap { background:var(--dark); border-radius:16px; padding:14px; margin:18px 0 4px; }
@@ -180,24 +220,30 @@
                  State set but District blank = shown to the whole state. -->
             <div class="loc-section">
                 <label class="field-label">Show To (Location Targeting)</label>
-                <div class="field-hint" style="margin-top:0;">Leave everything blank to show this slide to all of India. Fill in only as far down the list as you want to narrow it.</div>
+                <div class="field-hint" style="margin-top:0;">Leave blank to show this slide to all of India. Search a location to target visitors near it.</div>
 
-                <label class="field-label">State</label>
-                <select class="field-input" id="f_locState">
-                    <option value="">All India</option>
-                </select>
+                <label class="field-label">Target Location / Pincode</label>
+                <div class="loc-search-wrap">
+                    <input class="field-input loc-search-input" id="locSearchInput" placeholder="Type city, area or pincode…">
+                    <span class="loc-search-icon">🔍</span>
+                </div>
+                <div class="field-hint">Type and select from suggestions to highlight map</div>
 
-                <label class="field-label">District</label>
-                <input class="field-input" id="f_locDistrict" placeholder="e.g. Visakhapatnam">
-
-                <label class="field-label">City / Town</label>
-                <input class="field-input" id="f_locCity" placeholder="e.g. Gajuwaka">
-
-                <label class="field-label">Taluka / Mandal</label>
-                <input class="field-input" id="f_locTaluka" placeholder="e.g. Pendurthi">
-
-                <label class="field-label">Village</label>
-                <input class="field-input" id="f_locVillage" placeholder="e.g. Sattivalasa">
+                <div class="loc-map-card">
+                    <div class="loc-map-header">
+                        <span>🗺️ Target Location Map</span>
+                        <span class="loc-map-badge" id="locStatusBadge">No location set</span>
+                    </div>
+                    <div class="loc-map-body">
+                        <div id="targetLocMap"></div>
+                        <div class="loc-map-placeholder" id="mapPlaceholder">
+                            <div class="pin">📍</div>
+                            <div>Search a location above</div>
+                            <div class="sub">Map will highlight the target area</div>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="loc-clear-btn" id="clearLocBtn">✕ Clear location</button>
 
                 <div class="field-warn">⚠️ This saves correctly here, but index.html doesn't read it yet — I don't have that file, so it can't actually filter which visitors see this slide until it's updated. See the note below the form.</div>
             </div>
@@ -245,22 +291,8 @@ const DEFAULT_ADS = [
 ];
 
 // Same 28 states + 8 union territories used elsewhere in the admin
-// dashboard (state_detail.html's INDIA_GEO), for consistency.
-const INDIA_STATES = [
-  "Andhra Pradesh","Arunachal Pradesh","Assam","Bihar","Chhattisgarh","Goa","Gujarat","Haryana",
-  "Himachal Pradesh","Jharkhand","Karnataka","Kerala","Madhya Pradesh","Maharashtra","Manipur",
-  "Meghalaya","Mizoram","Nagaland","Odisha","Punjab","Rajasthan","Sikkim","Tamil Nadu","Telangana",
-  "Tripura","Uttar Pradesh","Uttarakhand","West Bengal","Andaman and Nicobar Islands","Chandigarh",
-  "Dadra and Nagar Haveli and Daman and Diu","Delhi","Jammu and Kashmir","Ladakh","Lakshadweep","Puducherry"
-];
-(function populateStateDropdown(){
-  const sel = document.getElementById("f_locState");
-  INDIA_STATES.forEach(function(s){
-    const opt = document.createElement("option");
-    opt.value = s; opt.textContent = s;
-    sel.appendChild(opt);
-  });
-})();
+// dashboard are NOT needed here anymore — location targeting is now a
+// lat/lng point (from the map picker below) instead of admin divisions.
 
 function loadAds(){
   const raw = localStorage.getItem(STORAGE_KEY);
@@ -283,9 +315,8 @@ let mediaTouched = false;
 function esc(s){ const d = document.createElement("div"); d.textContent = s || ""; return d.innerHTML; }
 
 function locationSummary(loc){
-  if(!loc) return "";
-  const parts = [loc.village, loc.taluka, loc.city, loc.district, loc.state].filter(Boolean);
-  return parts.length ? parts.join(", ") : "";
+  if(!loc || !loc.address) return "";
+  return loc.address;
 }
 
 // ── LIST VIEW ──────────────────────────────────────────────────────────
@@ -426,6 +457,71 @@ function currentMediaForPreview(ad){
   return null;
 }
 
+// ── Location targeting: Places search + live map pin ────────────────────
+// Mirrors the pattern already used in post_frame_ad.html — search a place,
+// pick a suggestion, the map highlights that point. Stored as a single
+// lat/lng + address instead of admin divisions (state/district/etc).
+var targetLoc = null;
+var gMap = null, gMarker = null, placesAutocomplete = null;
+
+function initLocationPicker(){
+  if(!window.google || !google.maps || !google.maps.places) return;
+  placesAutocomplete = new google.maps.places.Autocomplete(document.getElementById("locSearchInput"), {
+    componentRestrictions: { country: "in" },
+    fields: ["geometry", "formatted_address", "name"]
+  });
+  placesAutocomplete.addListener("place_changed", function(){
+    var place = placesAutocomplete.getPlace();
+    if(!place || !place.geometry || !place.geometry.location) return;
+    var lat = place.geometry.location.lat();
+    var lng = place.geometry.location.lng();
+    var address = place.formatted_address || place.name || "";
+    setTargetLocation(lat, lng, address);
+  });
+}
+
+function setTargetLocation(lat, lng, address){
+  targetLoc = { lat: lat, lng: lng, address: address };
+  var badge = document.getElementById("locStatusBadge");
+  badge.textContent = "✓ Location Set";
+  badge.classList.add("set");
+  if(window.google && google.maps){
+    document.getElementById("mapPlaceholder").style.display = "none";
+    document.getElementById("targetLocMap").style.display = "block";
+    renderTargetMap();
+  } else {
+    // Maps SDK hasn't loaded yet — keep the placeholder up rather than an
+    // empty map div; initMap() above will render it once the script arrives.
+    var ph = document.getElementById("mapPlaceholder");
+    var lines = ph.querySelectorAll("div");
+    if(lines[1]) lines[1].textContent = "Loading map…";
+  }
+}
+
+function renderTargetMap(){
+  if(!targetLoc || !window.google || !google.maps) return;
+  var pos = { lat: targetLoc.lat, lng: targetLoc.lng };
+  var mapDiv = document.getElementById("targetLocMap");
+  if(!gMap){
+    gMap = new google.maps.Map(mapDiv, { center: pos, zoom: 13, disableDefaultUI: true, zoomControl: true });
+    gMarker = new google.maps.Marker({ position: pos, map: gMap });
+  } else {
+    gMap.setCenter(pos);
+    gMarker.setPosition(pos);
+  }
+}
+
+function clearTargetLocation(){
+  targetLoc = null;
+  document.getElementById("locSearchInput").value = "";
+  document.getElementById("mapPlaceholder").style.display = "flex";
+  document.getElementById("targetLocMap").style.display = "none";
+  var badge = document.getElementById("locStatusBadge");
+  badge.textContent = "No location set";
+  badge.classList.remove("set");
+}
+document.getElementById("clearLocBtn").onclick = clearTargetLocation;
+
 function openEdit(i){
   editingId = i;
   const ad = ads[i];
@@ -443,12 +539,12 @@ function openEdit(i){
   resetMediaUI();
   showMediaPreview(ad.mediaUrl ? { mediaUrl: ad.mediaUrl, mediaType: ad.mediaType || "image" } : null);
 
-  const loc = ad.targetLocation || {};
-  document.getElementById("f_locState").value = loc.state || "";
-  document.getElementById("f_locDistrict").value = loc.district || "";
-  document.getElementById("f_locCity").value = loc.city || "";
-  document.getElementById("f_locTaluka").value = loc.taluka || "";
-  document.getElementById("f_locVillage").value = loc.village || "";
+  if(ad.targetLocation && ad.targetLocation.lat != null && ad.targetLocation.lng != null){
+    document.getElementById("locSearchInput").value = ad.targetLocation.address || "";
+    setTargetLocation(ad.targetLocation.lat, ad.targetLocation.lng, ad.targetLocation.address || "");
+  } else {
+    clearTargetLocation();
+  }
 
   showEditView(`Edit Ad`);
 }
@@ -467,12 +563,7 @@ function openAdd(){
   setSwitch(true);
 
   resetMediaUI();
-
-  document.getElementById("f_locState").value = "";
-  document.getElementById("f_locDistrict").value = "";
-  document.getElementById("f_locCity").value = "";
-  document.getElementById("f_locTaluka").value = "";
-  document.getElementById("f_locVillage").value = "";
+  clearTargetLocation();
 
   showEditView("New Ad");
 }
@@ -535,13 +626,7 @@ document.getElementById("saveBtn").onclick = ()=>{
     ctaLink: document.getElementById("f_ctaLink").value.trim() || "#",
     duration: Math.max(2, parseInt(document.getElementById("f_duration").value, 10) || 5),
     active: document.getElementById("f_activeSwitch").dataset.on === "1",
-    targetLocation: {
-      state: document.getElementById("f_locState").value,
-      district: document.getElementById("f_locDistrict").value.trim(),
-      city: document.getElementById("f_locCity").value.trim(),
-      taluka: document.getElementById("f_locTaluka").value.trim(),
-      village: document.getElementById("f_locVillage").value.trim()
-    }
+    targetLocation: targetLoc ? { lat: targetLoc.lat, lng: targetLoc.lng, address: targetLoc.address } : null
   };
 
   if(editingId === null){
