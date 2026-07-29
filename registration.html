@@ -256,7 +256,7 @@
 
        finishSignup() now upserts the full profile into Supabase
        `users` (mobile, first_name, last_name, dob, gender,
-       profession, specific_role, location) — this is the row
+       profession, specific_role, city) — this is the row
        admin_users.html reads. `wallet` is deliberately NOT included
        in that upsert: overwriting an existing balance to 0 on a
        re-registration edge case would be a real bug, so it's left
@@ -445,7 +445,11 @@
                 gender: userData.gender || null,
                 profession: userData.profession || null,
                 specific_role: userData.subProfession || null,
-                location: userData.location || null
+                // The real column is 'city' (same one home.html's GPS detection
+                // writes to), not 'location' — confirmed directly against the
+                // live Supabase schema. Using the wrong name here silently
+                // failed on every signup until this fix.
+                city: userData.location || null
             }, { onConflict: 'mobile' });
             if(error) throw error;
         } catch(e) {
