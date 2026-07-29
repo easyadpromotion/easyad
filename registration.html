@@ -278,15 +278,46 @@
         'Other': ['Retired', 'Unemployed', 'Gig Worker']
     };
 
-    function initReg() {
+    // ── "Complete your profile" mode ──────────────────────────
+    // Reached from home.html's profile-completion nudge for accounts that
+    // already exist in Supabase but are missing DOB/Gender/Profession/
+    // Specific Role (pre-existing accounts from before this flow wrote to
+    // the cloud, or ones that abandoned signup partway through). Skips
+    // straight to the DOB step instead of re-asking for a name.
+    let isCompleteMode = false;
+
+    async function initReg() {
         const params = new URLSearchParams(window.location.search);
         let mobile = params.get('mobile');
         if(!mobile) mobile = "Guest";
         userData.mobile = mobile.trim();
         document.getElementById("dispMobile").innerText = "Mobile: " + mobile;
+
+        isCompleteMode = params.get('complete') === '1' && mobile !== "Guest";
+        if(isCompleteMode) {
+            try {
+                const { data: row, error } = await supabaseClient
+                    .from('users').select('first_name,last_name').eq('mobile', userData.mobile).maybeSingle();
+                if(!error && row) {
+                    userData.firstName = row.first_name || "";
+                    userData.lastName = row.last_name || "";
+                }
+            } catch(e) { console.error('initReg cloud prefill error:', e); }
+            currentStep = 2; // jump straight to DOB
+            updateUI();
+        }
     }
 
     function handleBack() {
+        if (isCompleteMode) {
+            // Started at DOB (step 2) in this mode — going back past that
+            // point means leaving the flow entirely, not re-asking for a
+            // name that's already on file.
+            if (currentStep <= 2) { window.location.href = 'home.html'; return; }
+            currentStep--;
+            updateUI();
+            return;
+        }
         if (currentStep > 0) {
             // If on Step 2+, go back one step
             currentStep--;
