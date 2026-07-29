@@ -189,7 +189,7 @@ function renderUsers(list){
           <div><span class="uc-lbl">Gender</span><span class="uc-val">${fmtField(u.gender)}</span></div>
           <div><span class="uc-lbl">Profession</span><span class="uc-val">${fmtField(u.profession)}</span></div>
           <div><span class="uc-lbl">Specific Role</span><span class="uc-val">${fmtField(u.specific_role)}</span></div>
-          <div class="uc-span2"><span class="uc-lbl">Location</span><span class="uc-val">${fmtField(u.location)}</span></div>
+          <div class="uc-span2"><span class="uc-lbl">Location</span><span class="uc-val">${fmtField(u.city)}</span></div>
         </div>
         <div class="uc-actions">
           <button class="uc-btn ${u.blocked ? "btn-unblock" : "btn-block"}" onclick="toggleBlock('${u.mobile}', ${!u.blocked})">${u.blocked ? "Unblock" : "Block"}</button>
