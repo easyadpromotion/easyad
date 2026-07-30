@@ -68,6 +68,14 @@
         .map-address { padding: 10px 16px; font-size: 11px; color: #777; display: flex; gap: 5px; align-items: flex-start; line-height: 1.4; }
 
         .menu-grid { display: flex; justify-content: space-between; gap: 10px; padding: 20px; margin-top: -10px; }
+
+        .profile-nudge { display: none; margin: 0 20px 16px; background: #fff3e0; border: 1px solid #ffcc80; border-radius: 16px; padding: 12px 14px; align-items: center; gap: 10px; text-decoration: none; }
+        .profile-nudge.show { display: flex; }
+        .profile-nudge-icon { font-size: 22px; flex-shrink: 0; }
+        .profile-nudge-text { flex: 1; }
+        .profile-nudge-text b { display: block; font-size: 12px; color: #333; }
+        .profile-nudge-text span { font-size: 10.5px; color: #a15c00; }
+        .profile-nudge-arrow { color: #ff9800; font-weight: 800; font-size: 16px; flex-shrink: 0; }
         .menu-item { flex: 1; background: white; padding: 15px 5px; border-radius: 20px; display: flex; flex-direction: column; align-items: center; text-decoration: none; color: #333; box-shadow: 0 5px 15px rgba(0,0,0,0.03); transition: 0.2s; }
         .menu-item:active { transform: scale(0.95); }
         .menu-icon { font-size: 24px; margin-bottom: 8px; }
@@ -110,6 +118,7 @@
         .home-toast-close { background: rgba(255,255,255,0.15); border: none; color: #fff; width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; cursor: pointer; font-size: 12px; }
     </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="i18n.js"></script>
 <script>
   const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
   const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
@@ -134,14 +143,14 @@
         </div>
         <div class="stats-row">
             <div class="stat-card" onclick="openMap()" title="Tap to view map">
-                <div class="stat-label">LOCATION</div>
+                <div class="stat-label" data-i18n="locLabel">LOCATION</div>
                 <div class="stat-val" id="dispCity">
-                    <span class="locating-dot"></span> Locating…
+                    <span class="locating-dot"></span> <span data-i18n="locatingText">Locating…</span>
                 </div>
                 <div class="stat-icon" id="locRefreshBtn" onclick="event.stopPropagation(); refreshLocation();" title="Tap to refresh your current location">📍</div>
             </div>
             <div class="stat-card">
-                <div class="stat-label">BALANCE</div>
+                <div class="stat-label" data-i18n="balLabel">BALANCE</div>
                 <div class="stat-val" id="dispBal">₹ 0.00</div>
                 <div class="stat-icon">💰</div>
             </div>
@@ -159,34 +168,44 @@
     <div class="map-overlay" id="mapOverlay" onclick="handleOverlayClick(event)">
         <div class="map-box" id="mapBox">
             <div class="map-header">
-                <div class="map-header-city">📍 <span id="mapCity">Your Location</span></div>
+                <div class="map-header-city">📍 <span id="mapCity" data-i18n="defaultLocationLabel">Your Location</span></div>
                 <button class="map-close" onclick="closeMap()">✕</button>
             </div>
             <div id="googleMap">
-                <div style="display:flex;align-items:center;justify-content:center;height:250px;color:#aaa;font-size:13px;">
+                <div style="display:flex;align-items:center;justify-content:center;height:250px;color:#aaa;font-size:13px;" data-i18n="mapWaiting">
                     Waiting for location…
                 </div>
             </div>
-            <div class="map-address">🗺️ <span id="mapAddress">Fetching address…</span></div>
+            <div class="map-address">🗺️ <span id="mapAddress" data-i18n="mapFetching">Fetching address…</span></div>
         </div>
     </div>
 
     <!-- QUICK MENU -->
     <div class="menu-grid">
-        <a href="frame-ads.html" class="menu-item"><div class="menu-icon">🖼️</div><div class="menu-text">Frame Ads</div></a>
-        <a href="video-ads.html" class="menu-item"><div class="menu-icon">▶</div><div class="menu-text">Video Ads</div></a>
-        <a href="surveys.html" class="menu-item"><div class="menu-icon">📝</div><div class="menu-text">Surveys</div></a>
+        <a href="frame-ads.html" class="menu-item"><div class="menu-icon">🖼️</div><div class="menu-text" data-i18n="menuFrameAds">Frame Ads</div></a>
+        <a href="video-ads.html" class="menu-item"><div class="menu-icon">▶</div><div class="menu-text" data-i18n="menuVideoAds">Video Ads</div></a>
+        <a href="surveys.html" class="menu-item"><div class="menu-icon">📝</div><div class="menu-text" data-i18n="menuSurveys">Surveys</div></a>
     </div>
 
-    <div class="section-title">Sponsored Tasks</div>
-    <div class="task-list" id="taskContainer"><div class="empty-state">Loading tasks…</div></div>
+    <!-- Shown only for accounts missing profile details (DOB/Gender/
+         Profession/Specific Role) — pre-existing accounts created before
+         registration wrote to Supabase, or ones that abandoned signup
+         partway through. Links into a shortened re-entry into registration.html. -->
+    <a href="#" class="profile-nudge" id="profileNudge">
+        <div class="profile-nudge-icon">📝</div>
+        <div class="profile-nudge-text"><b data-i18n="profileNudgeTitle">Complete your profile</b><span data-i18n="profileNudgeDesc">Takes under a minute — helps us show you relevant ads</span></div>
+        <div class="profile-nudge-arrow">›</div>
+    </a>
+
+    <div class="section-title" data-i18n="sponsoredTasks">Sponsored Tasks</div>
+    <div class="task-list" id="taskContainer"><div class="empty-state" data-i18n="loadingTasks">Loading tasks…</div></div>
 
     <!-- BOTTOM NAV -->
     <div class="bottom-nav">
-        <a href="home.html" class="nav-item active"><div class="nav-ico">🏠</div><span class="nav-txt">Home</span></a>
-        <a href="frame-ads.html" class="nav-item"><div class="nav-ico">📢</div><span class="nav-txt">Ads</span></a>
-        <a href="user_wallet.html" class="nav-item"><div class="nav-ico">👛</div><span class="nav-txt">Wallet</span></a>
-        <a href="settings.html" class="nav-item"><div class="nav-ico">⚙️</div><span class="nav-txt">Settings</span></a>
+        <a href="home.html" class="nav-item active"><div class="nav-ico">🏠</div><span class="nav-txt" data-i18n="navHome">Home</span></a>
+        <a href="frame-ads.html" class="nav-item"><div class="nav-ico">📢</div><span class="nav-txt" data-i18n="navAds">Ads</span></a>
+        <a href="user_wallet.html" class="nav-item"><div class="nav-ico">👛</div><span class="nav-txt" data-i18n="navWallet">Wallet</span></a>
+        <a href="settings.html" class="nav-item"><div class="nav-ico">⚙️</div><span class="nav-txt" data-i18n="navSettings">Settings</span></a>
     </div>
 
 </div>
@@ -256,6 +275,16 @@
             lat: (userRow && userRow.lat != null) ? userRow.lat : local.lat,
             lng: (userRow && userRow.lng != null) ? userRow.lng : local.lng,
             name: (userRow && (userRow.first_name || userRow.last_name)) ? [userRow.first_name, userRow.last_name].filter(Boolean).join(" ") : local.name,
+            // These only populate for accounts that completed the FULL current
+            // registration flow — pre-existing accounts (created before that
+            // flow wrote to Supabase, or via the bare mobile+city row from
+            // ensure_user_exists) will have these as null/undefined here even
+            // though they're "logged in" — that's the real, current state of
+            // the row, not a bug. See the profile-completion nudge below.
+            dob: (userRow && userRow.dob) || local.dob,
+            gender: (userRow && userRow.gender) || local.gender,
+            profession: (userRow && userRow.profession) || local.profession,
+            specificRole: (userRow && userRow.specific_role) || local.specificRole,
             adHistory: adHistory,
             viewedAds: viewedAds
         });
@@ -289,6 +318,7 @@
             if (userProfile.city) setCity(userProfile.city);
             loadTasks(); // re-render now that viewedAds reflects the cloud
         }
+        updateProfileNudge();
 
         // Start GPS
         startLocationDetect();
@@ -303,6 +333,20 @@
 
         // Tasks (first paint from local cache; re-rendered above once cloud sync lands)
         loadTasks();
+    }
+
+    // ── Profile-completion nudge ──────────────────────────────
+    // A profile counts as "incomplete" if it's missing ANY of the fields
+    // registration.html's later steps collect — DOB, Gender, Profession,
+    // or Specific Role. Links into registration.html?mobile=X&complete=1,
+    // which skips straight past the name steps for an already-known account.
+    function updateProfileNudge() {
+        var incomplete = !userProfile.dob || !userProfile.gender || !userProfile.profession || !userProfile.specificRole;
+        var el = document.getElementById("profileNudge");
+        el.classList.toggle("show", incomplete);
+        if (incomplete) {
+            el.href = "registration.html?mobile=" + encodeURIComponent(activeMobile) + "&complete=1";
+        }
     }
 
     // ── Location Detection ─────────────────────────────────────
@@ -534,14 +578,20 @@
         container.innerHTML = "";
 
         if (active.length === 0) {
-            container.innerHTML = '<div class="empty-state">No new tasks available.<br>Check back later!</div>';
+            container.innerHTML = '<div class="empty-state">' + t('noTasksLine1') + '<br>' + t('noTasksLine2') + '</div>';
             if (allAds.length === 0) {
-                container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">🏦</div><div class="t-info"><div class="t-name">Business Loans</div><div class="t-sub">Finance • High Reward</div></div></div><a href="frame-ads.html" class="start-btn">Start</a></div>';
+                container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">🏦</div><div class="t-info"><div class="t-name">Business Loans</div><div class="t-sub">Finance • High Reward</div></div></div><a href="frame-ads.html" class="start-btn">' + t('startBtn') + '</a></div>';
             }
             return;
         }
 
-        active.forEach(function(ad) {
+        // Each task's name/category is real vendor-typed text — not something
+        // that can live in a fixed dictionary — so it's translated live via
+        // translateDynamic() (cached, falls back to English on any failure)
+        // whenever the current language isn't English.
+        var startLabel = t('startBtn');
+        for (var ti = 0; ti < active.length; ti++) {
+            var ad = active[ti];
             var link = "frame-ads.html", icon = "🖼️";
              if (ad.type === "Video")  { link = "video-ads.html"; icon = "▶️"; }
             if (ad.type === "Survey") { link = "surveys.html";   icon = "📝"; }
@@ -553,8 +603,13 @@
             var name = ad.name || ad.title || ad.adName || "Sponsored Ad";
             var cat  = ad.category || ad.type || "Task";
 
-            container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">' + icon + '</div><div class="t-info"><div class="t-name">' + name + '</div><div class="t-sub">' + cat + '</div></div></div><a href="' + link + '" class="start-btn">Start</a></div>';
-        });
+            if (currentLang !== "en") {
+                name = await translateDynamic(name, currentLang);
+                cat = await translateDynamic(cat, currentLang);
+            }
+
+            container.innerHTML += '<div class="task-card"><div class="t-left"><div class="t-icon">' + icon + '</div><div class="t-info"><div class="t-name">' + name + '</div><div class="t-sub">' + cat + '</div></div></div><a href="' + link + '" class="start-btn">' + startLabel + '</a></div>';
+        }
     }
 
 
@@ -616,10 +671,11 @@
         var notifs = loadJSON(NOTIF_KEY, []);
         var addedAny = false;
 
-        ads.forEach(function(ad) {
-            if (!ad || !ad.id || seenSet[ad.id]) return;
-            if (!isLiveStatus(ad.status)) return;
-            if (!hasReadyContent(ad)) return; // no video/image yet — don't notify or mark seen; check again next poll
+        for (var ai = 0; ai < ads.length; ai++) {
+            var ad = ads[ai];
+            if (!ad || !ad.id || seenSet[ad.id]) continue;
+            if (!isLiveStatus(ad.status)) continue;
+            if (!hasReadyContent(ad)) continue; // no video/image yet — don't notify or mark seen; check again next poll
 
             var matchesLocation = true, distLabel = ad.location || "you";
             if (userLoc && userLoc.lat != null && ad.lat != null && ad.lng != null) {
@@ -629,14 +685,20 @@
             }
 
             seenSet[ad.id] = true; // processed either way
-            if (!matchesLocation) return;
+            if (!matchesLocation) continue;
+
+            // The ad's real name is vendor-typed text, not something a fixed
+            // dictionary can cover — translated live (cached, falls back to
+            // English on failure) same as the Sponsored Tasks list above.
+            var displayAdTitle = adTitle(ad);
+            if (currentLang !== "en") displayAdTitle = await translateDynamic(displayAdTitle, currentLang);
 
             var title = "📢 New " + (ad.type || "Ad") + " from a vendor!";
-            var msg = adTitle(ad) + " is live — " + distLabel + ". Tap to check it out.";
+            var msg = displayAdTitle + " is live — " + distLabel + ". Tap to check it out.";
             notifs.unshift({ id: "ad_" + ad.id, title: title, msg: msg, time: Date.now(), unread: true });
             addedAny = true;
             showHomeToast(title, msg);
-        });
+        }
 
         var newSeen = [];
         for (var k in seenSet) newSeen.push(k);
@@ -649,6 +711,9 @@
     }
 
     setInterval(checkForNewAds, POLL_MS);
+    // Re-render Sponsored Tasks in the newly-selected language — called by
+    // i18n.js's applyLang() whenever the person picks a different language.
+    window.onLangChanged = function () { loadTasks(); };
     // ⚠️ The old cross-tab "storage" event listener for vendorCampaigns is
     // removed — that only ever fired when localStorage changed on this
     // same origin/browser, which doesn't apply now that ads live in
