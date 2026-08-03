@@ -266,6 +266,8 @@
     .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ✅ Added: same i18n helper video-ads.html already uses (currentLang, t(), translateDynamic()) -->
+<script src="i18n.js"></script>
 <script>
   const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
   const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
@@ -280,7 +282,7 @@
   <div class="header">
     <div style="display:flex;align-items:center;">
       <a href="home.html" class="back-btn">←</a>
-      <div class="page-title">Frame Ads Queue</div>
+      <div class="page-title" data-i18n="pageTitleFrameAds">Frame Ads Queue</div>
     </div>
     <div class="wallet-pill">💰 ₹<span id="headerBalance">0.00</span></div>
   </div>
@@ -293,7 +295,7 @@
 
     <!-- ✅ TOP BAR: title + close button — always at top, never cut -->
     <div class="ov-topbar">
-      <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
+      <div class="ov-topbar-title" id="ovTopTitle" data-i18n="loadingGeneric">Loading…</div>
       <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
     </div>
 
@@ -307,28 +309,28 @@
     <div class="ov-content">
 
       <div class="ov-title-area">
-        <div class="ov-title" id="ovTitle">Loading…</div>
+        <div class="ov-title" id="ovTitle" data-i18n="loadingGeneric">Loading…</div>
         <div class="ov-meta">
           <span class="ov-category" id="ovCatLabel">General</span>
           <span class="ov-dot">•</span>
-          <span class="ov-verified" id="ovVerified">Verified Ad</span>
-          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ Already Viewed</span>
+          <span class="ov-verified" id="ovVerified" data-i18n="ovVerified">Verified Ad</span>
+          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ <span data-i18n="alreadyViewed">Already Viewed</span></span>
         </div>
       </div>
 
       <div class="ov-desc-area">
-        <div class="ov-desc" id="ovDesc">Loading description…</div>
+        <div class="ov-desc" id="ovDesc" data-i18n="loadingDescription">Loading description…</div>
       </div>
 
       <div class="ov-earn-zone">
         <div id="timerWrap" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
           <div class="timer-ring" id="timerDisplay">10</div>
-          <div class="timer-label">Watch to earn ₹0.70</div>
+          <div class="timer-label" id="timerLabel"><span data-i18n="watchToEarn">Watch to earn</span> ₹0.70</div>
         </div>
         <button class="claim-btn" id="claimBtn" onclick="claimReward()">
-          🎉 Claim ₹0.70 Reward
+          🎉 <span data-i18n="claimWord">Claim</span> ₹0.70 <span data-i18n="rewardWord">Reward</span>
         </button>
-        <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()">
+        <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()" data-i18n="closeBtn">
           Close
         </button>
       </div>
@@ -343,7 +345,7 @@
   <div class="bottom-sheet" id="shareSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">🔗 Share This Ad</div>
+      <div class="sheet-title">🔗 <span data-i18n="shareThisAd">Share This Ad</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="share-grid">
@@ -362,18 +364,18 @@
   <div class="bottom-sheet" id="referSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">🎁 Refer & Earn</div>
+      <div class="sheet-title">🎁 <span data-i18n="referAndEarn">Refer &amp; Earn</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="refer-body">
       <div style="font-size:42px;">🎁</div>
       <div style="font-size:12px;color:#888;text-align:center;line-height:1.5;">Share this code with friends.<br>Earn bonus when they join EAP!</div>
       <div class="refer-code-box">
-        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;">REFERRAL CODE</div>
+        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;" data-i18n="referralCode">REFERRAL CODE</div>
         <div class="refer-code" id="referCodeDisplay">EAP0000</div>
       </div>
-      <button class="full-btn btn-orange" onclick="copyReferCode()">📋 Copy Code</button>
-      <button class="full-btn btn-wa"     onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
+      <button class="full-btn btn-orange" onclick="copyReferCode()">📋 <span data-i18n="copyCode">Copy Code</span></button>
+      <button class="full-btn btn-wa"     onclick="shareReferWhatsApp()">💬 <span data-i18n="shareViaWhatsApp">Share via WhatsApp</span></button>
     </div>
   </div>
 
@@ -381,7 +383,7 @@
   <div class="bottom-sheet" id="commentSheet" style="max-height:70%;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">💬 Comments</div>
+      <div class="sheet-title">💬 <span data-i18n="commentsTitle">Comments</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="comment-body">
@@ -397,7 +399,7 @@
   <div class="bottom-sheet" id="locationSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">📍 Vendor Location</div>
+      <div class="sheet-title">📍 <span data-i18n="vendorLocation">Vendor Location</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="loc-body" id="locBody"></div>
@@ -408,10 +410,10 @@
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
-    <a href="home.html"      class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
-    <a href="frame-ads.html" class="nav-item active"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
-    <a href="wallet.html"    class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
-    <a href="settings.html"  class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+    <a href="home.html"      class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text" data-i18n="navHome">Home</span></a>
+    <a href="frame-ads.html" class="nav-item active"><div class="nav-icon">📢</div><span class="nav-text" data-i18n="navAds">Ads</span></a>
+    <a href="wallet.html"    class="nav-item"><div class="nav-icon">👛</div><span class="nav-text" data-i18n="navWallet">Wallet</span></a>
+    <a href="settings.html"  class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text" data-i18n="navSettings">Settings</span></a>
   </div>
 
 </div>
@@ -460,6 +462,11 @@
   // a pre-existing bug where the old code showed everything except
   // "Rejected" ads, meaning un-approved Pending ads were visible (and
   // earnable) to real users before an admin ever reviewed them.
+  //
+  // ✅ i18n: each card's title is now run through translateDynamic() just
+  // like video-ads.html already does, so switching to Telugu (or any
+  // other language) actually changes the ad text here too — previously
+  // this page never called translateDynamic at all.
   async function loadAds(){
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet||0).toFixed(2);
 
@@ -473,7 +480,7 @@
     if (error) {
       console.error('Supabase loadAds error:', error);
       document.getElementById("adContainer").innerHTML =
-        '<div class="empty-msg">⚠️ Couldn\'t load ads right now.<br>Please try again shortly.</div>';
+        '<div class="empty-msg">⚠️ ' + t('couldntLoadAds') + '<br>' + t('tryAgainShortly') + '</div>';
       return;
     }
 
@@ -498,19 +505,30 @@
 
     var container = document.getElementById("adContainer");
     if(!frameAds.length){
-      container.innerHTML='<div class="empty-msg">📭 No active frame ads found.<br>Check back soon!</div>';
+      container.innerHTML='<div class="empty-msg">📭 ' + t('noFrameAdsFound') + '<br>' + t('checkBackSoon') + '</div>';
       return;
     }
     window._frameAds = frameAds;
     container.innerHTML = "";
     var viewed = user.viewedAds||[];
 
-    frameAds.forEach(function(ad){
+    for (var i = 0; i < frameAds.length; i++) {
+      var ad = frameAds[i];
       var isClaimed = viewed.indexOf(ad.id) !== -1;
       var img      = ad.image||"";
       var title    = ad.title||ad.name||"Untitled Ad";
       var desc     = ad.desc||ad.description||"No description.";
       var category = ad.category||"General";
+
+      // ✅ Translate the card's title + the short overlay-strip description
+      // when a non-English language is active, same pattern video-ads.html
+      // uses for its list titles.
+      if (currentLang !== "en") {
+        title = await translateDynamic(title, currentLang);
+        desc = await translateDynamic(desc, currentLang);
+        category = await translateDynamic(category, currentLang);
+      }
+
       var webLink  = ad.webLink||ad.website||"";
       var mapLink  = ad.mapLink||ad.location||ad.address||"";
       var refCode  = ad.referCode||("EAP"+String(ad.id).slice(-4).toUpperCase());
@@ -520,10 +538,10 @@
           +'<div class="img-placeholder" style="display:none;position:absolute;top:0;left:0;width:100%;height:100%;">📷<span style="font-size:11px">No Image</span></div>'
         : '<div class="img-placeholder">📷<span style="font-size:11px">No Image</span></div>';
 
-      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">₹0.70 Reward</span>';
+      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ ' + t('claimedTag') + '</span>' : '<span class="reward-tag">₹0.70 ' + t('rewardWord') + '</span>';
       var btnHtml   = isClaimed
-        ? '<button class="view-again-btn" onclick="openViewAgain(\''+ad.id+'\')">👁 View Again</button>'
-        : '<button class="earn-btn" onclick="openAd(\''+ad.id+'\')">Earn ₹0.70</button>';
+        ? '<button class="view-again-btn" onclick="openViewAgain(\''+ad.id+'\')">👁 ' + t('viewAgain') + '</button>'
+        : '<button class="earn-btn" onclick="openAd(\''+ad.id+'\')">' + t('watchAndEarn') + ' ₹0.70</button>';
 
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
       var webClick = webLink ? 'onclick="openWeb(\''+encodeURIComponent(webLink)+'\')"' : "";
@@ -531,7 +549,7 @@
       container.innerHTML +=
         '<div class="ad-card" id="card_'+ad.id+'">'
           +'<div class="ad-img-box">'+imgHtml
-            +(img?'<div class="black-overlay"><div class="overlay-desc">'+desc+'</div><div class="overlay-cat">'+category+' • Verified</div></div>':'')
+            +(img?'<div class="black-overlay"><div class="overlay-desc">'+desc+'</div><div class="overlay-cat">'+category+' • ' + t('ovVerified') + '</div></div>':'')
           +'</div>'
           +'<div class="action-row">'
             +'<div style="flex:1;margin-right:10px;"><div class="ad-title-txt">'+title+'</div><div class="badges-row">'+badgeHtml+'</div></div>'
@@ -545,7 +563,7 @@
             +'<button class="eng-btn eng-map" onclick="openLocation(\''+encodeURIComponent(mapLink)+'\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
           +'</div>'
         +'</div>';
-    });
+    }
   }
 
   // ✅ Set both image and blurred bg
@@ -562,28 +580,46 @@
       .replace(/'/g, "&#39;");
   }
 
-  // ✅ Fill ALL overlay fields including top bar title
-  function fillOverlay(ad){
+  // ✅ Fill ALL overlay fields including top bar title — now translates
+  // the title, category, and description (tagline + body) into the
+  // active language, same pattern video-ads.html uses in its fillOverlay().
+  // Original-language text is shown immediately so nothing sits blank
+  // during the translation round-trip, then swapped in once ready.
+  async function fillOverlay(ad){
     var title = ad.title||ad.name||"Ad";
     var cat   = ad.category||"General";
     setOverlayImage(ad.image||"");
+
     document.getElementById("ovTopTitle").innerText  = title;  // top bar
     document.getElementById("ovTitle").innerText     = title;  // content area
+    document.getElementById("ovCat").innerText       = cat;
+    document.getElementById("ovCatLabel").innerText  = cat;
 
     // The first line of the description is usually the ad's tagline
     // (e.g. "🔥 Good Food. Good Price. Every Day! 🌯") — style it as a
     // highlighted heading, with the rest of the description below it.
     var fullDesc = ad.desc||ad.description||"";
-    var lines = fullDesc.split(/\r?\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
-    var tagline = lines.length ? lines[0] : "";
-    var rest = lines.slice(1).join("\n");
-    var descHtml = "";
-    if (tagline) descHtml += '<div class="ov-tagline">'+escapeHtml(tagline)+'</div>';
-    if (rest) descHtml += '<div class="ov-desc-body">'+escapeHtml(rest).replace(/\n/g,'<br>')+'</div>';
-    document.getElementById("ovDesc").innerHTML = descHtml || '<div class="ov-desc-body">No description.</div>';
+    function renderDesc(text){
+      var lines = text.split(/\r?\n+/).map(function(l){ return l.trim(); }).filter(Boolean);
+      var tagline = lines.length ? lines[0] : "";
+      var rest = lines.slice(1).join("\n");
+      var html = "";
+      if (tagline) html += '<div class="ov-tagline">'+escapeHtml(tagline)+'</div>';
+      if (rest) html += '<div class="ov-desc-body">'+escapeHtml(rest).replace(/\n/g,'<br>')+'</div>';
+      return html || '<div class="ov-desc-body">No description.</div>';
+    }
+    document.getElementById("ovDesc").innerHTML = renderDesc(fullDesc);
 
-    document.getElementById("ovCat").innerText       = cat;
-    document.getElementById("ovCatLabel").innerText  = cat;
+    if (currentLang !== "en") {
+      var tTitle = await translateDynamic(title, currentLang);
+      var tCat = await translateDynamic(cat, currentLang);
+      var tDesc = fullDesc ? await translateDynamic(fullDesc, currentLang) : fullDesc;
+      document.getElementById("ovTopTitle").innerText = tTitle;
+      document.getElementById("ovTitle").innerText = tTitle;
+      document.getElementById("ovCat").innerText = tCat;
+      document.getElementById("ovCatLabel").innerText = tCat;
+      document.getElementById("ovDesc").innerHTML = renderDesc(tDesc);
+    }
   }
 
   function openAd(id){
@@ -598,10 +634,10 @@
     document.getElementById("timerDisplay").innerText   = "10";
     document.getElementById("adOverlay").style.display  = "flex";
     clearInterval(timerInterval);
-    var t = 10;
+    var t2 = 10;
     timerInterval = setInterval(function(){
-      t--; document.getElementById("timerDisplay").innerText = t;
-      if(t <= 0){
+      t2--; document.getElementById("timerDisplay").innerText = t2;
+      if(t2 <= 0){
         clearInterval(timerInterval);
         document.getElementById("timerWrap").style.display = "none";
         document.getElementById("claimBtn").style.display  = "block";
@@ -685,7 +721,7 @@
   function renderComments(adId){
     var comments=JSON.parse(localStorage.getItem("adComments_"+adId))||[];
     var list=document.getElementById("commentList");
-    if(!comments.length){ list.innerHTML='<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>'; return; }
+    if(!comments.length){ list.innerHTML='<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">' + t('noCommentsYet') + ' 💬</div>'; return; }
     list.innerHTML="";
     comments.forEach(function(c){ list.innerHTML+='<div class="comment-item"><div class="c-avatar">'+(c.name||"U").charAt(0).toUpperCase()+'</div><div class="c-body"><div class="c-name">'+c.name+'<span class="c-time">'+c.time+'</span></div><div class="c-text">'+c.text+'</div></div></div>'; });
     list.scrollTop=list.scrollHeight;
@@ -711,7 +747,7 @@
 
   function openLocation(enc){
     var loc=decodeURIComponent(enc).trim(); var body=document.getElementById("locBody");
-    if(!loc){ body.innerHTML='<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this ad yet.</div></div>'; }
+    if(!loc){ body.innerHTML='<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">' + t('locationNotAvailable') + '</div><div class="loc-not-sub">' + t('vendorNoLocation') + '</div></div>'; }
     else {
       var isUrl=loc.startsWith("http");
       var mapsUrl=isUrl?loc:"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(loc);
@@ -720,7 +756,7 @@
       var embedUrl=isUrl?"":"https://www.google.com/maps/embed/v1/place?key="+EMBED_API_KEY+"&q="+encodeURIComponent(loc);
       body.innerHTML=(embedUrl?'<iframe class="loc-map-frame" src="'+embedUrl+'" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>':'')
         +'<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">'+loc+'</div></div>'
-        +'<button class="open-maps-btn" onclick="openViaA(\''+mapsUrl+'\')">🗺️ Open in Google Maps</button>';
+        +'<button class="open-maps-btn" onclick="openViaA(\''+mapsUrl+'\')">🗺️ ' + t('openInGoogleMaps') + '</button>';
     }
     openSheet("locationSheet");
   }
