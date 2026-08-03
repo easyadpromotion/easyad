@@ -1041,6 +1041,19 @@
     if (viewed.indexOf(id) !== -1) openViewAgain(id);
     else openAd(id);
   }
+
+  // ── Live language switching, no refresh needed ──────────────────────
+  // Same pattern as frame-ads.html: i18n.js's applyLang() already updates
+  // static data-i18n text instantly, then calls window.onLangChanged(code)
+  // if defined. The video cards/overlay are built from dynamic content
+  // (translateDynamic()), so re-running loadAds() — and re-filling an open
+  // overlay — is what applies the new language to that content right away.
+  window.onLangChanged = function () {
+    loadAds();
+    if (document.getElementById("adOverlay").style.display === "flex" && activeAdObj) {
+      fillOverlay(activeAdObj);
+    }
+  };
 </script>
 </body>
 </html>
