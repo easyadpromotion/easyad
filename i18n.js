@@ -79,9 +79,13 @@ var LANGUAGES = [
 
 // DICT: one flat key-namespace shared across every page. Keys already used
 // by index.html (langModal, welcomeTitle, welcomeSub, roleUserTitle,
-// roleUserDesc, roleVendorTitle, roleVendorDesc) are unchanged. Keys added
-// below this comment are home.html's. Each additional page adds its own
-// keys the same way — see the per-page files for what's been added.
+// roleUserDesc, roleVendorTitle, roleVendorDesc) and home.html
+// (navHome...profileNudgeDesc) are unchanged.
+//
+// ✅ ADDED: keys used by frame-ads.html and video-ads.html (pageTitleFrameAds
+// through videoFormatUnsupported below). These were referenced by both pages
+// via t('someKey') but were missing from DICT entirely, so t() was correctly
+// falling back to printing the raw key name instead of real text.
 var DICT = {
     en: {
         langModal:"Select Language", welcomeTitle:"Welcome to EAP", welcomeSub:"Choose your role to start:",
@@ -95,7 +99,22 @@ var DICT = {
         sponsoredTasks:"Sponsored Tasks", loadingTasks:"Loading tasks…",
         noTasksLine1:"No new tasks available.", noTasksLine2:"Check back later!",
         startBtn:"Start", profileNudgeTitle:"Complete your profile",
-        profileNudgeDesc:"Takes under a minute — helps us show you relevant ads"
+        profileNudgeDesc:"Takes under a minute — helps us show you relevant ads",
+        // frame-ads.html / video-ads.html
+        pageTitleFrameAds:"Frame Ads Queue", pageTitleVideoAds:"Video Ads",
+        loadingGeneric:"Loading…", loadingDescription:"Loading description…",
+        ovVerified:"Verified Ad", alreadyViewed:"Already Viewed",
+        watchToEarn:"Watch to earn", claimWord:"Claim", rewardWord:"Reward", closeBtn:"Close",
+        shareThisAd:"Share This Ad", referAndEarn:"Refer & Earn", referralCode:"REFERRAL CODE",
+        copyCode:"Copy Code", shareViaWhatsApp:"Share via WhatsApp",
+        commentsTitle:"Comments", vendorLocation:"Vendor Location", noCommentsYet:"No comments yet. Be first!",
+        locationNotAvailable:"Location Not Available", vendorNoLocation:"This vendor has not provided a location for this ad yet.",
+        openInGoogleMaps:"Open in Google Maps", couldntLoadAds:"Couldn't load ads right now.",
+        tryAgainShortly:"Please try again shortly.", checkBackSoon:"Check back soon!",
+        claimedTag:"Claimed", viewAgain:"View Again", watchAndEarn:"Watch & Earn",
+        noFrameAdsFound:"No active frame ads found.", noVideoAdsFound:"No video ads found.",
+        videoNotReady:"Video Not Ready", earnedSoFar:"Earned so far", fullWord:"Full", soFarWord:"So Far",
+        videoFormatUnsupported:"This video's format isn't supported on your device — tap below to watch it, you can still earn your reward."
     },
     hi: {
         langModal:"भाषा चुनें", welcomeTitle:"EAP में आपका स्वागत है", welcomeSub:"शुरू करने के लिए अपनी भूमिका चुनें:",
@@ -108,7 +127,21 @@ var DICT = {
         sponsoredTasks:"प्रायोजित कार्य", loadingTasks:"कार्य लोड हो रहे हैं…",
         noTasksLine1:"कोई नया कार्य उपलब्ध नहीं है।", noTasksLine2:"बाद में फिर से देखें!",
         startBtn:"शुरू करें", profileNudgeTitle:"अपनी प्रोफ़ाइल पूरी करें",
-        profileNudgeDesc:"एक मिनट से भी कम समय लगेगा — इससे हमें आपको प्रासंगिक विज्ञापन दिखाने में मदद मिलती है"
+        profileNudgeDesc:"एक मिनट से भी कम समय लगेगा — इससे हमें आपको प्रासंगिक विज्ञापन दिखाने में मदद मिलती है",
+        pageTitleFrameAds:"फ्रेम विज्ञापन सूची", pageTitleVideoAds:"वीडियो विज्ञापन",
+        loadingGeneric:"लोड हो रहा है…", loadingDescription:"विवरण लोड हो रहा है…",
+        ovVerified:"सत्यापित विज्ञापन", alreadyViewed:"पहले से देखा गया",
+        watchToEarn:"कमाने के लिए देखें", claimWord:"प्राप्त करें", rewardWord:"इनाम", closeBtn:"बंद करें",
+        shareThisAd:"इस विज्ञापन को शेयर करें", referAndEarn:"रेफर करें और कमाएं", referralCode:"रेफरल कोड",
+        copyCode:"कोड कॉपी करें", shareViaWhatsApp:"व्हाट्सएप से शेयर करें",
+        commentsTitle:"टिप्पणियाँ", vendorLocation:"विक्रेता का स्थान", noCommentsYet:"अभी तक कोई टिप्पणी नहीं। पहले बनें!",
+        locationNotAvailable:"स्थान उपलब्ध नहीं है", vendorNoLocation:"इस विक्रेता ने अभी तक इस विज्ञापन के लिए स्थान प्रदान नहीं किया है।",
+        openInGoogleMaps:"गूगल मैप्स में खोलें", couldntLoadAds:"अभी विज्ञापन लोड नहीं हो सके।",
+        tryAgainShortly:"कृपया थोड़ी देर बाद पुनः प्रयास करें।", checkBackSoon:"जल्द ही फिर देखें!",
+        claimedTag:"प्राप्त किया गया", viewAgain:"फिर देखें", watchAndEarn:"देखें और कमाएं",
+        noFrameAdsFound:"कोई सक्रिय फ्रेम विज्ञापन नहीं मिला।", noVideoAdsFound:"कोई वीडियो विज्ञापन नहीं मिला।",
+        videoNotReady:"वीडियो तैयार नहीं है", earnedSoFar:"अब तक कमाया", fullWord:"पूर्ण", soFarWord:"अब तक",
+        videoFormatUnsupported:"यह वीडियो फॉर्मेट आपके डिवाइस पर समर्थित नहीं है — इसे देखने के लिए नीचे टैप करें, आप फिर भी अपना इनाम कमा सकते हैं।"
     },
     bn: {
         langModal:"ভাষা নির্বাচন করুন", welcomeTitle:"EAP-এ স্বাগতম", welcomeSub:"শুরু করতে আপনার ভূমিকা বেছে নিন:",
@@ -121,7 +154,21 @@ var DICT = {
         sponsoredTasks:"স্পনসরড টাস্ক", loadingTasks:"টাস্ক লোড হচ্ছে…",
         noTasksLine1:"কোনো নতুন টাস্ক উপলব্ধ নেই।", noTasksLine2:"পরে আবার দেখুন!",
         startBtn:"শুরু করুন", profileNudgeTitle:"আপনার প্রোফাইল সম্পূর্ণ করুন",
-        profileNudgeDesc:"এক মিনিটেরও কম সময় লাগবে — এটি আমাদের আপনাকে প্রাসঙ্গিক বিজ্ঞাপন দেখাতে সাহায্য করে"
+        profileNudgeDesc:"এক মিনিটেরও কম সময় লাগবে — এটি আমাদের আপনাকে প্রাসঙ্গিক বিজ্ঞাপন দেখাতে সাহায্য করে",
+        pageTitleFrameAds:"ফ্রেম বিজ্ঞাপন তালিকা", pageTitleVideoAds:"ভিডিও বিজ্ঞাপন",
+        loadingGeneric:"লোড হচ্ছে…", loadingDescription:"বিবরণ লোড হচ্ছে…",
+        ovVerified:"যাচাইকৃত বিজ্ঞাপন", alreadyViewed:"ইতিমধ্যে দেখা হয়েছে",
+        watchToEarn:"আয় করতে দেখুন", claimWord:"দাবি করুন", rewardWord:"পুরস্কার", closeBtn:"বন্ধ করুন",
+        shareThisAd:"এই বিজ্ঞাপনটি শেয়ার করুন", referAndEarn:"রেফার করুন এবং আয় করুন", referralCode:"রেফারেল কোড",
+        copyCode:"কোড কপি করুন", shareViaWhatsApp:"হোয়াটসঅ্যাপের মাধ্যমে শেয়ার করুন",
+        commentsTitle:"মন্তব্য", vendorLocation:"বিক্রেতার অবস্থান", noCommentsYet:"এখনও কোনো মন্তব্য নেই। প্রথম হন!",
+        locationNotAvailable:"অবস্থান উপলব্ধ নেই", vendorNoLocation:"এই বিক্রেতা এখনও এই বিজ্ঞাপনের জন্য কোনো অবস্থান প্রদান করেননি।",
+        openInGoogleMaps:"গুগল ম্যাপে খুলুন", couldntLoadAds:"এই মুহূর্তে বিজ্ঞাপন লোড করা যায়নি।",
+        tryAgainShortly:"দয়া করে কিছুক্ষণ পর আবার চেষ্টা করুন।", checkBackSoon:"শীঘ্রই আবার দেখুন!",
+        claimedTag:"দাবি করা হয়েছে", viewAgain:"আবার দেখুন", watchAndEarn:"দেখুন এবং আয় করুন",
+        noFrameAdsFound:"কোনো সক্রিয় ফ্রেম বিজ্ঞাপন পাওয়া যায়নি।", noVideoAdsFound:"কোনো ভিডিও বিজ্ঞাপন পাওয়া যায়নি।",
+        videoNotReady:"ভিডিও প্রস্তুত নয়", earnedSoFar:"এখন পর্যন্ত আয় হয়েছে", fullWord:"সম্পূর্ণ", soFarWord:"এখন পর্যন্ত",
+        videoFormatUnsupported:"এই ভিডিওর ফরম্যাট আপনার ডিভাইসে সমর্থিত নয় — এটি দেখতে নিচে ট্যাপ করুন, আপনি তবুও আপনার পুরস্কার পেতে পারেন।"
     },
     te: {
         langModal:"భాషను ఎంచుకోండి", welcomeTitle:"EAPకి స్వాగతం", welcomeSub:"ప్రారంభించడానికి మీ పాత్రను ఎంచుకోండి:",
@@ -134,7 +181,21 @@ var DICT = {
         sponsoredTasks:"స్పాన్సర్డ్ టాస్క్‌లు", loadingTasks:"టాస్క్‌లు లోడ్ అవుతున్నాయి…",
         noTasksLine1:"కొత్త టాస్క్‌లు అందుబాటులో లేవు.", noTasksLine2:"తర్వాత మళ్ళీ చూడండి!",
         startBtn:"ప్రారంభించండి", profileNudgeTitle:"మీ ప్రొఫైల్‌ను పూర్తి చేయండి",
-        profileNudgeDesc:"ఒక నిమిషం కంటే తక్కువ సమయం పడుతుంది — ఇది మీకు సంబంధిత ప్రకటనలను చూపించడంలో మాకు సహాయపడుతుంది"
+        profileNudgeDesc:"ఒక నిమిషం కంటే తక్కువ సమయం పడుతుంది — ఇది మీకు సంబంధిత ప్రకటనలను చూపించడంలో మాకు సహాయపడుతుంది",
+        pageTitleFrameAds:"ఫ్రేమ్ ప్రకటనల జాబితా", pageTitleVideoAds:"వీడియో ప్రకటనలు",
+        loadingGeneric:"లోడ్ అవుతోంది…", loadingDescription:"వివరణ లోడ్ అవుతోంది…",
+        ovVerified:"ధృవీకరించిన ప్రకటన", alreadyViewed:"ఇప్పటికే వీక్షించారు",
+        watchToEarn:"సంపాదించడానికి చూడండి", claimWord:"క్లెయిమ్ చేయండి", rewardWord:"రివార్డ్", closeBtn:"మూసివేయండి",
+        shareThisAd:"ఈ ప్రకటనను షేర్ చేయండి", referAndEarn:"రెఫర్ చేయండి & సంపాదించండి", referralCode:"రెఫరల్ కోడ్",
+        copyCode:"కోడ్ కాపీ చేయండి", shareViaWhatsApp:"వాట్సాప్ ద్వారా షేర్ చేయండి",
+        commentsTitle:"వ్యాఖ్యలు", vendorLocation:"వెండర్ లొకేషన్", noCommentsYet:"ఇంకా వ్యాఖ్యలు లేవు. మొదటివారు అవ్వండి!",
+        locationNotAvailable:"లొకేషన్ అందుబాటులో లేదు", vendorNoLocation:"ఈ వెండర్ ఈ ప్రకటన కోసం ఇంకా లొకేషన్ ఇవ్వలేదు.",
+        openInGoogleMaps:"గూగుల్ మ్యాప్స్‌లో తెరవండి", couldntLoadAds:"ప్రస్తుతం ప్రకటనలను లోడ్ చేయలేకపోయాము.",
+        tryAgainShortly:"దయచేసి కొద్దిసేపు తర్వాత మళ్ళీ ప్రయత్నించండి.", checkBackSoon:"త్వరలో మళ్ళీ చూడండి!",
+        claimedTag:"క్లెయిమ్ చేయబడింది", viewAgain:"మళ్ళీ చూడండి", watchAndEarn:"చూడండి & సంపాదించండి",
+        noFrameAdsFound:"సక్రియ ఫ్రేమ్ ప్రకటనలు కనుగొనబడలేదు.", noVideoAdsFound:"వీడియో ప్రకటనలు కనుగొనబడలేదు.",
+        videoNotReady:"వీడియో సిద్ధంగా లేదు", earnedSoFar:"ఇప్పటివరకు సంపాదించింది", fullWord:"పూర్తి", soFarWord:"ఇప్పటివరకు",
+        videoFormatUnsupported:"ఈ వీడియో ఫార్మాట్ మీ పరికరంలో మద్దతు లేదు — దీన్ని చూడటానికి క్రింద నొక్కండి, మీరు ఇప్పటికీ మీ రివార్డ్ సంపాదించవచ్చు."
     },
     mr: {
         langModal:"भाषा निवडा", welcomeTitle:"EAP मध्ये आपले स्वागत आहे", welcomeSub:"सुरू करण्यासाठी आपली भूमिका निवडा:",
@@ -147,7 +208,21 @@ var DICT = {
         sponsoredTasks:"प्रायोजित कामे", loadingTasks:"कामे लोड होत आहेत…",
         noTasksLine1:"नवीन कामे उपलब्ध नाहीत.", noTasksLine2:"नंतर पुन्हा तपासा!",
         startBtn:"सुरू करा", profileNudgeTitle:"तुमची प्रोफाइल पूर्ण करा",
-        profileNudgeDesc:"एक मिनिटापेक्षा कमी वेळ लागेल — यामुळे आम्हाला तुम्हाला संबंधित जाहिराती दाखवण्यास मदत होते"
+        profileNudgeDesc:"एक मिनिटापेक्षा कमी वेळ लागेल — यामुळे आम्हाला तुम्हाला संबंधित जाहिराती दाखवण्यास मदत होते",
+        pageTitleFrameAds:"फ्रेम जाहिराती यादी", pageTitleVideoAds:"व्हिडिओ जाहिराती",
+        loadingGeneric:"लोड होत आहे…", loadingDescription:"वर्णन लोड होत आहे…",
+        ovVerified:"सत्यापित जाहिरात", alreadyViewed:"आधीच पाहिले आहे",
+        watchToEarn:"कमवण्यासाठी पहा", claimWord:"दावा करा", rewardWord:"बक्षीस", closeBtn:"बंद करा",
+        shareThisAd:"ही जाहिरात शेअर करा", referAndEarn:"संदर्भ द्या आणि कमवा", referralCode:"रेफरल कोड",
+        copyCode:"कोड कॉपी करा", shareViaWhatsApp:"व्हॉट्सअॅपद्वारे शेअर करा",
+        commentsTitle:"टिप्पण्या", vendorLocation:"विक्रेता स्थान", noCommentsYet:"अजून कोणतीही टिप्पणी नाही. प्रथम व्हा!",
+        locationNotAvailable:"स्थान उपलब्ध नाही", vendorNoLocation:"या विक्रेत्याने या जाहिरातीसाठी अद्याप स्थान दिलेले नाही.",
+        openInGoogleMaps:"गुगल मॅप्समध्ये उघडा", couldntLoadAds:"सध्या जाहिराती लोड करता आल्या नाहीत.",
+        tryAgainShortly:"कृपया थोड्या वेळाने पुन्हा प्रयत्न करा.", checkBackSoon:"लवकरच पुन्हा तपासा!",
+        claimedTag:"दावा केला", viewAgain:"पुन्हा पहा", watchAndEarn:"पहा आणि कमवा",
+        noFrameAdsFound:"कोणतीही सक्रिय फ्रेम जाहिरात आढळली नाही.", noVideoAdsFound:"कोणतीही व्हिडिओ जाहिरात आढळली नाही.",
+        videoNotReady:"व्हिडिओ तयार नाही", earnedSoFar:"आतापर्यंत कमावले", fullWord:"पूर्ण", soFarWord:"आतापर्यंत",
+        videoFormatUnsupported:"हा व्हिडिओ फॉरमॅट तुमच्या डिव्हाइसवर समर्थित नाही — तो पाहण्यासाठी खाली टॅप करा, तुम्ही तरीही तुमचे बक्षीस मिळवू शकता."
     },
     ta: {
         langModal:"மொழியைத் தேர்ந்தெடுக்கவும்", welcomeTitle:"EAP-க்கு வரவேற்கிறோம்", welcomeSub:"தொடங்க உங்கள் பங்கைத் தேர்ந்தெடுக்கவும்:",
@@ -160,7 +235,21 @@ var DICT = {
         sponsoredTasks:"நிதியுதவி பணிகள்", loadingTasks:"பணிகள் ஏற்றப்படுகின்றன…",
         noTasksLine1:"புதிய பணிகள் இல்லை.", noTasksLine2:"பின்னர் மீண்டும் பாருங்கள்!",
         startBtn:"தொடங்கு", profileNudgeTitle:"உங்கள் சுயவிவரத்தை முடிக்கவும்",
-        profileNudgeDesc:"ஒரு நிமிடத்திற்கும் குறைவான நேரம் ஆகும் — இது பொருத்தமான விளம்பரங்களைக் காட்ட உதவுகிறது"
+        profileNudgeDesc:"ஒரு நிமிடத்திற்கும் குறைவான நேரம் ஆகும் — இது பொருத்தமான விளம்பரங்களைக் காட்ட உதவுகிறது",
+        pageTitleFrameAds:"ஃப்ரேம் விளம்பர பட்டியல்", pageTitleVideoAds:"வீடியோ விளம்பரங்கள்",
+        loadingGeneric:"ஏற்றப்படுகிறது…", loadingDescription:"விளக்கம் ஏற்றப்படுகிறது…",
+        ovVerified:"சரிபார்க்கப்பட்ட விளம்பரம்", alreadyViewed:"ஏற்கனவே பார்க்கப்பட்டது",
+        watchToEarn:"சம்பாதிக்க பாருங்கள்", claimWord:"பெறு", rewardWord:"வெகுமதி", closeBtn:"மூடு",
+        shareThisAd:"இந்த விளம்பரத்தைப் பகிரவும்", referAndEarn:"பரிந்துரைத்து சம்பாதிக்கவும்", referralCode:"பரிந்துரைக் குறியீடு",
+        copyCode:"குறியீட்டை நகலெடு", shareViaWhatsApp:"வாட்ஸ்அப் மூலம் பகிரவும்",
+        commentsTitle:"கருத்துகள்", vendorLocation:"விற்பனையாளர் இருப்பிடம்", noCommentsYet:"இன்னும் கருத்துகள் இல்லை. முதலில் இருங்கள்!",
+        locationNotAvailable:"இருப்பிடம் கிடைக்கவில்லை", vendorNoLocation:"இந்த விற்பனையாளர் இந்த விளம்பரத்திற்கு இன்னும் இருப்பிடத்தை வழங்கவில்லை.",
+        openInGoogleMaps:"கூகுள் மேப்ஸில் திற", couldntLoadAds:"இப்போது விளம்பரங்களை ஏற்ற முடியவில்லை.",
+        tryAgainShortly:"சிறிது நேரம் கழித்து மீண்டும் முயற்சிக்கவும்.", checkBackSoon:"விரைவில் மீண்டும் பாருங்கள்!",
+        claimedTag:"பெறப்பட்டது", viewAgain:"மீண்டும் காண்க", watchAndEarn:"பாருங்கள் & சம்பாதியுங்கள்",
+        noFrameAdsFound:"செயலில் உள்ள ஃப்ரேம் விளம்பரங்கள் இல்லை.", noVideoAdsFound:"வீடியோ விளம்பரங்கள் இல்லை.",
+        videoNotReady:"வீடியோ தயாராக இல்லை", earnedSoFar:"இதுவரை சம்பாதித்தது", fullWord:"முழு", soFarWord:"இதுவரை",
+        videoFormatUnsupported:"இந்த வீடியோ வடிவம் உங்கள் சாதனத்தில் ஆதரிக்கப்படவில்லை — இதைப் பார்க்க கீழே தட்டவும், நீங்கள் இன்னும் உங்கள் வெகுமதியைப் பெறலாம்."
     },
     ur: {
         langModal:"زبان منتخب کریں", welcomeTitle:"EAP میں خوش آمدید", welcomeSub:"شروع کرنے کے لیے اپنا کردار منتخب کریں:",
@@ -173,7 +262,21 @@ var DICT = {
         sponsoredTasks:"اسپانسرڈ کام", loadingTasks:"کام لوڈ ہو رہے ہیں…",
         noTasksLine1:"کوئی نیا کام دستیاب نہیں۔", noTasksLine2:"بعد میں دوبارہ دیکھیں!",
         startBtn:"شروع کریں", profileNudgeTitle:"اپنی پروفائل مکمل کریں",
-        profileNudgeDesc:"ایک منٹ سے بھی کم وقت لگے گا — اس سے ہمیں آپ کو متعلقہ اشتہارات دکھانے میں مدد ملتی ہے"
+        profileNudgeDesc:"ایک منٹ سے بھی کم وقت لگے گا — اس سے ہمیں آپ کو متعلقہ اشتہارات دکھانے میں مدد ملتی ہے",
+        pageTitleFrameAds:"فریم اشتہارات کی فہرست", pageTitleVideoAds:"ویڈیو اشتہارات",
+        loadingGeneric:"لوڈ ہو رہا ہے…", loadingDescription:"تفصیل لوڈ ہو رہی ہے…",
+        ovVerified:"تصدیق شدہ اشتہار", alreadyViewed:"پہلے ہی دیکھا جا چکا ہے",
+        watchToEarn:"کمانے کے لیے دیکھیں", claimWord:"کلیم کریں", rewardWord:"انعام", closeBtn:"بند کریں",
+        shareThisAd:"یہ اشتہار شیئر کریں", referAndEarn:"ریفر کریں اور کمائیں", referralCode:"ریفرل کوڈ",
+        copyCode:"کوڈ کاپی کریں", shareViaWhatsApp:"واٹس ایپ کے ذریعے شیئر کریں",
+        commentsTitle:"تبصرے", vendorLocation:"وینڈر کا مقام", noCommentsYet:"ابھی تک کوئی تبصرہ نہیں۔ پہلے بنیں!",
+        locationNotAvailable:"مقام دستیاب نہیں ہے", vendorNoLocation:"اس وینڈر نے ابھی تک اس اشتہار کے لیے کوئی مقام فراہم نہیں کیا۔",
+        openInGoogleMaps:"گوگل میپس میں کھولیں", couldntLoadAds:"ابھی اشتہارات لوڈ نہیں ہو سکے۔",
+        tryAgainShortly:"براہ کرم تھوڑی دیر بعد دوبارہ کوشش کریں۔", checkBackSoon:"جلد ہی دوبارہ دیکھیں!",
+        claimedTag:"کلیم ہو چکا", viewAgain:"دوبارہ دیکھیں", watchAndEarn:"دیکھیں اور کمائیں",
+        noFrameAdsFound:"کوئی فعال فریم اشتہار نہیں ملا۔", noVideoAdsFound:"کوئی ویڈیو اشتہار نہیں ملا۔",
+        videoNotReady:"ویڈیو تیار نہیں ہے", earnedSoFar:"اب تک کمایا", fullWord:"مکمل", soFarWord:"اب تک",
+        videoFormatUnsupported:"یہ ویڈیو فارمیٹ آپ کے ڈیوائس پر سپورٹ نہیں ہے — اسے دیکھنے کے لیے نیچے ٹیپ کریں، آپ پھر بھی اپنا انعام حاصل کر سکتے ہیں۔"
     },
     gu: {
         langModal:"ભાષા પસંદ કરો", welcomeTitle:"EAP માં તમારું સ્વાગત છે", welcomeSub:"શરૂ કરવા માટે તમારી ભૂમિકા પસંદ કરો:",
@@ -186,7 +289,21 @@ var DICT = {
         sponsoredTasks:"પ્રાયોજિત કાર્યો", loadingTasks:"કાર્યો લોડ થઈ રહ્યા છે…",
         noTasksLine1:"કોઈ નવું કાર્ય ઉપલબ્ધ નથી.", noTasksLine2:"પછીથી ફરી તપાસો!",
         startBtn:"શરૂ કરો", profileNudgeTitle:"તમારી પ્રોફાઇલ પૂર્ણ કરો",
-        profileNudgeDesc:"એક મિનિટથી ઓછો સમય લાગશે — આ અમને તમને સંબંધિત જાહેરાતો બતાવવામાં મદદ કરે છે"
+        profileNudgeDesc:"એક મિનિટથી ઓછો સમય લાગશે — આ અમને તમને સંબંધિત જાહેરાતો બતાવવામાં મદદ કરે છે",
+        pageTitleFrameAds:"ફ્રેમ જાહેરાત યાદી", pageTitleVideoAds:"વિડિયો જાહેરાતો",
+        loadingGeneric:"લોડ થઈ રહ્યું છે…", loadingDescription:"વર્ણન લોડ થઈ રહ્યું છે…",
+        ovVerified:"ચકાસાયેલ જાહેરાત", alreadyViewed:"પહેલેથી જ જોવાયું",
+        watchToEarn:"કમાવવા માટે જુઓ", claimWord:"ક્લેમ કરો", rewardWord:"ઈનામ", closeBtn:"બંધ કરો",
+        shareThisAd:"આ જાહેરાત શેર કરો", referAndEarn:"રેફર કરો અને કમાઓ", referralCode:"રેફરલ કોડ",
+        copyCode:"કોડ કૉપિ કરો", shareViaWhatsApp:"વોટ્સએપ દ્વારા શેર કરો",
+        commentsTitle:"ટિપ્પણીઓ", vendorLocation:"વિક્રેતાનું સ્થાન", noCommentsYet:"હજુ સુધી કોઈ ટિપ્પણી નથી. પ્રથમ બનો!",
+        locationNotAvailable:"સ્થાન ઉપલબ્ધ નથી", vendorNoLocation:"આ વિક્રેતાએ હજુ સુધી આ જાહેરાત માટે સ્થાન આપ્યું નથી.",
+        openInGoogleMaps:"ગૂગલ મેપ્સમાં ખોલો", couldntLoadAds:"અત્યારે જાહેરાતો લોડ કરી શકાઈ નથી.",
+        tryAgainShortly:"કૃપા કરીને થોડી વારમાં ફરી પ્રયાસ કરો.", checkBackSoon:"ટૂંક સમયમાં ફરી તપાસો!",
+        claimedTag:"ક્લેમ થયું", viewAgain:"ફરી જુઓ", watchAndEarn:"જુઓ અને કમાઓ",
+        noFrameAdsFound:"કોઈ સક્રિય ફ્રેમ જાહેરાત મળી નથી.", noVideoAdsFound:"કોઈ વિડિયો જાહેરાત મળી નથી.",
+        videoNotReady:"વિડિયો તૈયાર નથી", earnedSoFar:"અત્યાર સુધી કમાયું", fullWord:"સંપૂર્ણ", soFarWord:"અત્યાર સુધી",
+        videoFormatUnsupported:"આ વિડિયો ફોર્મેટ તમારા ડિવાઇસ પર સપોર્ટેડ નથી — તેને જોવા માટે નીચે ટેપ કરો, તમે હજુ પણ તમારું ઈનામ મેળવી શકો છો."
     },
     kn: {
         langModal:"ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ", welcomeTitle:"EAP ಗೆ ಸ್ವಾಗತ", welcomeSub:"ಪ್ರಾರಂಭಿಸಲು ನಿಮ್ಮ ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ:",
@@ -199,7 +316,21 @@ var DICT = {
         sponsoredTasks:"ಪ್ರಾಯೋಜಿತ ಕಾರ್ಯಗಳು", loadingTasks:"ಕಾರ್ಯಗಳು ಲೋಡ್ ಆಗುತ್ತಿವೆ…",
         noTasksLine1:"ಹೊಸ ಕಾರ್ಯಗಳು ಲಭ್ಯವಿಲ್ಲ.", noTasksLine2:"ನಂತರ ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ!",
         startBtn:"ಪ್ರಾರಂಭಿಸಿ", profileNudgeTitle:"ನಿಮ್ಮ ಪ್ರೊಫೈಲ್ ಪೂರ್ಣಗೊಳಿಸಿ",
-        profileNudgeDesc:"ಒಂದು ನಿಮಿಷಕ್ಕಿಂತ ಕಡಿಮೆ ಸಮಯ ತೆಗೆದುಕೊಳ್ಳುತ್ತದೆ — ಇದು ನಿಮಗೆ ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ನಮಗೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ"
+        profileNudgeDesc:"ಒಂದು ನಿಮಿಷಕ್ಕಿಂತ ಕಡಿಮೆ ಸಮಯ ತೆಗೆದುಕೊಳ್ಳುತ್ತದೆ — ಇದು ನಿಮಗೆ ಸಂಬಂಧಿತ ಜಾಹೀರಾತುಗಳನ್ನು ತೋರಿಸಲು ನಮಗೆ ಸಹಾಯ ಮಾಡುತ್ತದೆ",
+        pageTitleFrameAds:"ಫ್ರೇಮ್ ಜಾಹೀರಾತು ಪಟ್ಟಿ", pageTitleVideoAds:"ವೀಡಿಯೋ ಜಾಹೀರಾತುಗಳು",
+        loadingGeneric:"ಲೋಡ್ ಆಗುತ್ತಿದೆ…", loadingDescription:"ವಿವರಣೆ ಲೋಡ್ ಆಗುತ್ತಿದೆ…",
+        ovVerified:"ಪರಿಶೀಲಿತ ಜಾಹೀರಾತು", alreadyViewed:"ಈಗಾಗಲೇ ವೀಕ್ಷಿಸಲಾಗಿದೆ",
+        watchToEarn:"ಗಳಿಸಲು ವೀಕ್ಷಿಸಿ", claimWord:"ಪಡೆಯಿರಿ", rewardWord:"ಬಹುಮಾನ", closeBtn:"ಮುಚ್ಚಿ",
+        shareThisAd:"ಈ ಜಾಹೀರಾತನ್ನು ಹಂಚಿಕೊಳ್ಳಿ", referAndEarn:"ರೆಫರ್ ಮಾಡಿ ಮತ್ತು ಗಳಿಸಿ", referralCode:"ರೆಫರಲ್ ಕೋಡ್",
+        copyCode:"ಕೋಡ್ ನಕಲಿಸಿ", shareViaWhatsApp:"ವಾಟ್ಸ್‌ಆ್ಯಪ್ ಮೂಲಕ ಹಂಚಿಕೊಳ್ಳಿ",
+        commentsTitle:"ಕಾಮೆಂಟ್‌ಗಳು", vendorLocation:"ಮಾರಾಟಗಾರರ ಸ್ಥಳ", noCommentsYet:"ಇನ್ನೂ ಯಾವುದೇ ಕಾಮೆಂಟ್‌ಗಳಿಲ್ಲ. ಮೊದಲಿಗರಾಗಿ!",
+        locationNotAvailable:"ಸ್ಥಳ ಲಭ್ಯವಿಲ್ಲ", vendorNoLocation:"ಈ ಮಾರಾಟಗಾರರು ಈ ಜಾಹೀರಾತಿಗೆ ಇನ್ನೂ ಸ್ಥಳವನ್ನು ಒದಗಿಸಿಲ್ಲ.",
+        openInGoogleMaps:"ಗೂಗಲ್ ಮ್ಯಾಪ್ಸ್‌ನಲ್ಲಿ ತೆರೆಯಿರಿ", couldntLoadAds:"ಈಗ ಜಾಹೀರಾತುಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗಲಿಲ್ಲ.",
+        tryAgainShortly:"ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ.", checkBackSoon:"ಶೀಘ್ರದಲ್ಲೇ ಮತ್ತೆ ಪರಿಶೀಲಿಸಿ!",
+        claimedTag:"ಪಡೆಯಲಾಗಿದೆ", viewAgain:"ಮತ್ತೆ ವೀಕ್ಷಿಸಿ", watchAndEarn:"ವೀಕ್ಷಿಸಿ ಮತ್ತು ಗಳಿಸಿ",
+        noFrameAdsFound:"ಯಾವುದೇ ಸಕ್ರಿಯ ಫ್ರೇಮ್ ಜಾಹೀರಾತು ಕಂಡುಬಂದಿಲ್ಲ.", noVideoAdsFound:"ಯಾವುದೇ ವೀಡಿಯೋ ಜಾಹೀರಾತು ಕಂಡುಬಂದಿಲ್ಲ.",
+        videoNotReady:"ವೀಡಿಯೋ ಸಿದ್ಧವಾಗಿಲ್ಲ", earnedSoFar:"ಈವರೆಗೆ ಗಳಿಸಿದ್ದು", fullWord:"ಪೂರ್ಣ", soFarWord:"ಈವರೆಗೆ",
+        videoFormatUnsupported:"ಈ ವೀಡಿಯೋ ಫಾರ್ಮ್ಯಾಟ್ ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ — ಇದನ್ನು ವೀಕ್ಷಿಸಲು ಕೆಳಗೆ ಟ್ಯಾಪ್ ಮಾಡಿ, ನೀವು ಇನ್ನೂ ನಿಮ್ಮ ಬಹುಮಾನವನ್ನು ಗಳಿಸಬಹುದು."
     },
     or: {
         langModal:"ଭାଷା ବାଛନ୍ତୁ", welcomeTitle:"EAP କୁ ସ୍ୱାଗତ", welcomeSub:"ଆରମ୍ଭ କରିବାକୁ ଆପଣଙ୍କର ଭୂମିକା ବାଛନ୍ତୁ:",
@@ -212,7 +343,21 @@ var DICT = {
         sponsoredTasks:"ପ୍ରାୟୋଜିତ କାର୍ଯ୍ୟ", loadingTasks:"କାର୍ଯ୍ୟ ଲୋଡ୍ ହେଉଛି…",
         noTasksLine1:"କୌଣସି ନୂଆ କାର୍ଯ୍ୟ ଉପଲବ୍ଧ ନାହିଁ।", noTasksLine2:"ପରେ ପୁଣି ଦେଖନ୍ତୁ!",
         startBtn:"ଆରମ୍ଭ କରନ୍ତୁ", profileNudgeTitle:"ଆପଣଙ୍କ ପ୍ରୋଫାଇଲ୍ ସମ୍ପୂର୍ଣ୍ଣ କରନ୍ତୁ",
-        profileNudgeDesc:"ଏକ ମିନିଟରୁ କମ୍ ସମୟ ଲାଗିବ — ଏହା ଆପଣଙ୍କୁ ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନ ଦେଖାଇବାରେ ଆମକୁ ସାହାଯ୍ୟ କରେ"
+        profileNudgeDesc:"ଏକ ମିନିଟରୁ କମ୍ ସମୟ ଲାଗିବ — ଏହା ଆପଣଙ୍କୁ ପ୍ରାସଙ୍ଗିକ ବିଜ୍ଞାପନ ଦେଖାଇବାରେ ଆମକୁ ସାହାଯ୍ୟ କରେ",
+        pageTitleFrameAds:"ଫ୍ରେମ୍ ବିଜ୍ଞାପନ ତାଲିକା", pageTitleVideoAds:"ଭିଡିଓ ବିଜ୍ଞାପନ",
+        loadingGeneric:"ଲୋଡ୍ ହେଉଛି…", loadingDescription:"ବର୍ଣ୍ଣନା ଲୋଡ୍ ହେଉଛି…",
+        ovVerified:"ଯାଞ୍ଚିତ ବିଜ୍ଞାପନ", alreadyViewed:"ପୂର୍ବରୁ ଦେଖାଯାଇଛି",
+        watchToEarn:"ରୋଜଗାର କରିବାକୁ ଦେଖନ୍ତୁ", claimWord:"କ୍ଲେମ୍ କରନ୍ତୁ", rewardWord:"ପୁରସ୍କାର", closeBtn:"ବନ୍ଦ କରନ୍ତୁ",
+        shareThisAd:"ଏହି ବିଜ୍ଞାପନ ସେୟାର କରନ୍ତୁ", referAndEarn:"ରେଫର୍ କରନ୍ତୁ ଏବଂ ରୋଜଗାର କରନ୍ତୁ", referralCode:"ରେଫେରାଲ୍ କୋଡ୍",
+        copyCode:"କୋଡ୍ କପି କରନ୍ତୁ", shareViaWhatsApp:"ହ୍ୱାଟସ୍ଆପ୍ ମାଧ୍ୟମରେ ସେୟାର କରନ୍ତୁ",
+        commentsTitle:"ମନ୍ତବ୍ୟ", vendorLocation:"ବିକ୍ରେତା ଅବସ୍ଥାନ", noCommentsYet:"ଏପର୍ଯ୍ୟନ୍ତ କୌଣସି ମନ୍ତବ୍ୟ ନାହିଁ। ପ୍ରଥମ ହୁଅନ୍ତୁ!",
+        locationNotAvailable:"ଅବସ୍ଥାନ ଉପଲବ୍ଧ ନାହିଁ", vendorNoLocation:"ଏହି ବିକ୍ରେତା ଏହି ବିଜ୍ଞାପନ ପାଇଁ ଏପର୍ଯ୍ୟନ୍ତ ଅବସ୍ଥାନ ପ୍ରଦାନ କରିନାହାଁନ୍ତି।",
+        openInGoogleMaps:"ଗୁଗଲ୍ ମାନଚିତ୍ରରେ ଖୋଲନ୍ତୁ", couldntLoadAds:"ବର୍ତ୍ତମାନ ବିଜ୍ଞାପନ ଲୋଡ୍ ହୋଇପାରିଲା ନାହିଁ।",
+        tryAgainShortly:"ଦୟାକରି କିଛି ସମୟ ପରେ ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।", checkBackSoon:"ଶୀଘ୍ର ପୁଣି ଦେଖନ୍ତୁ!",
+        claimedTag:"କ୍ଲେମ୍ ହୋଇଛି", viewAgain:"ପୁଣି ଦେଖନ୍ତୁ", watchAndEarn:"ଦେଖନ୍ତୁ ଏବଂ ରୋଜଗାର କରନ୍ତୁ",
+        noFrameAdsFound:"କୌଣସି ସକ୍ରିୟ ଫ୍ରେମ୍ ବିଜ୍ଞାପନ ମିଳିଲା ନାହିଁ।", noVideoAdsFound:"କୌଣସି ଭିଡିଓ ବିଜ୍ଞାପନ ମିଳିଲା ନାହିଁ।",
+        videoNotReady:"ଭିଡିଓ ପ୍ରସ୍ତୁତ ନାହିଁ", earnedSoFar:"ଏପର୍ଯ୍ୟନ୍ତ ରୋଜଗାର", fullWord:"ପୂର୍ଣ୍ଣ", soFarWord:"ଏପର୍ଯ୍ୟନ୍ତ",
+        videoFormatUnsupported:"ଏହି ଭିଡିଓ ଫର୍ମାଟ୍ ଆପଣଙ୍କ ଡିଭାଇସରେ ସମର୍ଥିତ ନାହିଁ — ଏହାକୁ ଦେଖିବାକୁ ତଳେ ଟ୍ୟାପ୍ କରନ୍ତୁ, ଆପଣ ତଥାପି ଆପଣଙ୍କ ପୁରସ୍କାର ରୋଜଗାର କରିପାରିବେ।"
     },
     ml: {
         langModal:"ഭാഷ തിരഞ്ഞെടുക്കുക", welcomeTitle:"EAP-ലേക്ക് സ്വാഗതം", welcomeSub:"ആരംഭിക്കാൻ നിങ്ങളുടെ റോൾ തിരഞ്ഞെടുക്കുക:",
@@ -225,7 +370,21 @@ var DICT = {
         sponsoredTasks:"സ്പോൺസേർഡ് ടാസ്കുകൾ", loadingTasks:"ടാസ്കുകൾ ലോഡ് ചെയ്യുന്നു…",
         noTasksLine1:"പുതിയ ടാസ്കുകൾ ലഭ്യമല്ല.", noTasksLine2:"പിന്നീട് വീണ്ടും പരിശോധിക്കുക!",
         startBtn:"ആരംഭിക്കുക", profileNudgeTitle:"നിങ്ങളുടെ പ്രൊഫൈൽ പൂർത്തിയാക്കുക",
-        profileNudgeDesc:"ഒരു മിനിറ്റിൽ താഴെ സമയമേ എടുക്കൂ — ഇത് പ്രസക്തമായ പരസ്യങ്ങൾ കാണിക്കാൻ ഞങ്ങളെ സഹായിക്കുന്നു"
+        profileNudgeDesc:"ഒരു മിനിറ്റിൽ താഴെ സമയമേ എടുക്കൂ — ഇത് പ്രസക്തമായ പരസ്യങ്ങൾ കാണിക്കാൻ ഞങ്ങളെ സഹായിക്കുന്നു",
+        pageTitleFrameAds:"ഫ്രെയിം പരസ്യ പട്ടിക", pageTitleVideoAds:"വീഡിയോ പരസ്യങ്ങൾ",
+        loadingGeneric:"ലോഡ് ചെയ്യുന്നു…", loadingDescription:"വിവരണം ലോഡ് ചെയ്യുന്നു…",
+        ovVerified:"പരിശോധിച്ച പരസ്യം", alreadyViewed:"ഇതിനകം കണ്ടത്",
+        watchToEarn:"സമ്പാദിക്കാൻ കാണുക", claimWord:"ക്ലെയിം ചെയ്യുക", rewardWord:"റിവാർഡ്", closeBtn:"അടയ്ക്കുക",
+        shareThisAd:"ഈ പരസ്യം പങ്കിടുക", referAndEarn:"റഫർ ചെയ്ത് സമ്പാദിക്കുക", referralCode:"റഫറൽ കോഡ്",
+        copyCode:"കോഡ് പകർത്തുക", shareViaWhatsApp:"വാട്ട്‌സ്ആപ്പ് വഴി പങ്കിടുക",
+        commentsTitle:"അഭിപ്രായങ്ങൾ", vendorLocation:"വെണ്ടർ ലൊക്കേഷൻ", noCommentsYet:"ഇതുവരെ അഭിപ്രായങ്ങളില്ല. ആദ്യമാകൂ!",
+        locationNotAvailable:"ലൊക്കേഷൻ ലഭ്യമല്ല", vendorNoLocation:"ഈ വെണ്ടർ ഈ പരസ്യത്തിന് ഇതുവരെ ലൊക്കേഷൻ നൽകിയിട്ടില്ല.",
+        openInGoogleMaps:"ഗൂഗിൾ മാപ്സിൽ തുറക്കുക", couldntLoadAds:"ഇപ്പോൾ പരസ്യങ്ങൾ ലോഡ് ചെയ്യാനായില്ല.",
+        tryAgainShortly:"ദയവായി കുറച്ച് സമയത്തിന് ശേഷം വീണ്ടും ശ്രമിക്കുക.", checkBackSoon:"ഉടൻ വീണ്ടും പരിശോധിക്കുക!",
+        claimedTag:"ക്ലെയിം ചെയ്തു", viewAgain:"വീണ്ടും കാണുക", watchAndEarn:"കാണുക & സമ്പാദിക്കുക",
+        noFrameAdsFound:"സജീവമായ ഫ്രെയിം പരസ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല.", noVideoAdsFound:"വീഡിയോ പരസ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല.",
+        videoNotReady:"വീഡിയോ തയ്യാറല്ല", earnedSoFar:"ഇതുവരെ സമ്പാദിച്ചത്", fullWord:"പൂർണ്ണം", soFarWord:"ഇതുവരെ",
+        videoFormatUnsupported:"ഈ വീഡിയോ ഫോർമാറ്റ് നിങ്ങളുടെ ഉപകരണത്തിൽ പിന്തുണയ്ക്കുന്നില്ല — ഇത് കാണാൻ താഴെ ടാപ്പ് ചെയ്യുക, നിങ്ങൾക്ക് ഇപ്പോഴും നിങ്ങളുടെ റിവാർഡ് നേടാം."
     },
     pa: {
         langModal:"ਭਾਸ਼ਾ ਚੁਣੋ", welcomeTitle:"EAP ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ", welcomeSub:"ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਆਪਣੀ ਭੂਮਿਕਾ ਚੁਣੋ:",
@@ -238,7 +397,21 @@ var DICT = {
         sponsoredTasks:"ਸਪਾਂਸਰਡ ਕੰਮ", loadingTasks:"ਕੰਮ ਲੋਡ ਹੋ ਰਹੇ ਹਨ…",
         noTasksLine1:"ਕੋਈ ਨਵਾਂ ਕੰਮ ਉਪਲਬਧ ਨਹੀਂ।", noTasksLine2:"ਬਾਅਦ ਵਿੱਚ ਦੁਬਾਰਾ ਦੇਖੋ!",
         startBtn:"ਸ਼ੁਰੂ ਕਰੋ", profileNudgeTitle:"ਆਪਣੀ ਪ੍ਰੋਫਾਈਲ ਪੂਰੀ ਕਰੋ",
-        profileNudgeDesc:"ਇੱਕ ਮਿੰਟ ਤੋਂ ਵੀ ਘੱਟ ਸਮਾਂ ਲੱਗੇਗਾ — ਇਹ ਸਾਨੂੰ ਤੁਹਾਨੂੰ ਢੁਕਵੇਂ ਇਸ਼ਤਿਹਾਰ ਦਿਖਾਉਣ ਵਿੱਚ ਮਦਦ ਕਰਦਾ ਹੈ"
+        profileNudgeDesc:"ਇੱਕ ਮਿੰਟ ਤੋਂ ਵੀ ਘੱਟ ਸਮਾਂ ਲੱਗੇਗਾ — ਇਹ ਸਾਨੂੰ ਤੁਹਾਨੂੰ ਢੁਕਵੇਂ ਇਸ਼ਤਿਹਾਰ ਦਿਖਾਉਣ ਵਿੱਚ ਮਦਦ ਕਰਦਾ ਹੈ",
+        pageTitleFrameAds:"ਫਰੇਮ ਇਸ਼ਤਿਹਾਰ ਸੂਚੀ", pageTitleVideoAds:"ਵੀਡੀਓ ਇਸ਼ਤਿਹਾਰ",
+        loadingGeneric:"ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…", loadingDescription:"ਵੇਰਵਾ ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ…",
+        ovVerified:"ਤਸਦੀਕਸ਼ੁਦਾ ਇਸ਼ਤਿਹਾਰ", alreadyViewed:"ਪਹਿਲਾਂ ਹੀ ਦੇਖਿਆ ਗਿਆ",
+        watchToEarn:"ਕਮਾਉਣ ਲਈ ਦੇਖੋ", claimWord:"ਕਲੇਮ ਕਰੋ", rewardWord:"ਇਨਾਮ", closeBtn:"ਬੰਦ ਕਰੋ",
+        shareThisAd:"ਇਹ ਇਸ਼ਤਿਹਾਰ ਸਾਂਝਾ ਕਰੋ", referAndEarn:"ਰੈਫਰ ਕਰੋ ਅਤੇ ਕਮਾਓ", referralCode:"ਰੈਫਰਲ ਕੋਡ",
+        copyCode:"ਕੋਡ ਕਾਪੀ ਕਰੋ", shareViaWhatsApp:"ਵਟਸਐਪ ਰਾਹੀਂ ਸਾਂਝਾ ਕਰੋ",
+        commentsTitle:"ਟਿੱਪਣੀਆਂ", vendorLocation:"ਵੈਂਡਰ ਦਾ ਟਿਕਾਣਾ", noCommentsYet:"ਹਾਲੇ ਤੱਕ ਕੋਈ ਟਿੱਪਣੀ ਨਹੀਂ। ਪਹਿਲਾਂ ਬਣੋ!",
+        locationNotAvailable:"ਟਿਕਾਣਾ ਉਪਲਬਧ ਨਹੀਂ ਹੈ", vendorNoLocation:"ਇਸ ਵੈਂਡਰ ਨੇ ਹਾਲੇ ਤੱਕ ਇਸ ਇਸ਼ਤਿਹਾਰ ਲਈ ਟਿਕਾਣਾ ਨਹੀਂ ਦਿੱਤਾ।",
+        openInGoogleMaps:"ਗੂਗਲ ਮੈਪਸ ਵਿੱਚ ਖੋਲ੍ਹੋ", couldntLoadAds:"ਹੁਣੇ ਇਸ਼ਤਿਹਾਰ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ।",
+        tryAgainShortly:"ਕਿਰਪਾ ਕਰਕੇ ਥੋੜ੍ਹੀ ਦੇਰ ਬਾਅਦ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।", checkBackSoon:"ਜਲਦੀ ਹੀ ਦੁਬਾਰਾ ਦੇਖੋ!",
+        claimedTag:"ਕਲੇਮ ਕੀਤਾ ਗਿਆ", viewAgain:"ਦੁਬਾਰਾ ਦੇਖੋ", watchAndEarn:"ਦੇਖੋ ਅਤੇ ਕਮਾਓ",
+        noFrameAdsFound:"ਕੋਈ ਸਰਗਰਮ ਫਰੇਮ ਇਸ਼ਤਿਹਾਰ ਨਹੀਂ ਮਿਲਿਆ।", noVideoAdsFound:"ਕੋਈ ਵੀਡੀਓ ਇਸ਼ਤਿਹਾਰ ਨਹੀਂ ਮਿਲਿਆ।",
+        videoNotReady:"ਵੀਡੀਓ ਤਿਆਰ ਨਹੀਂ ਹੈ", earnedSoFar:"ਹੁਣ ਤੱਕ ਕਮਾਇਆ", fullWord:"ਪੂਰਾ", soFarWord:"ਹੁਣ ਤੱਕ",
+        videoFormatUnsupported:"ਇਹ ਵੀਡੀਓ ਫਾਰਮੈਟ ਤੁਹਾਡੀ ਡਿਵਾਈਸ 'ਤੇ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ — ਇਸਨੂੰ ਦੇਖਣ ਲਈ ਹੇਠਾਂ ਟੈਪ ਕਰੋ, ਤੁਸੀਂ ਫਿਰ ਵੀ ਆਪਣਾ ਇਨਾਮ ਕਮਾ ਸਕਦੇ ਹੋ।"
     },
     as: {
         langModal:"ভাষা বাছনি কৰক", welcomeTitle:"EAP লৈ স্বাগতম", welcomeSub:"আৰম্ভ কৰিবলৈ আপোনাৰ ভূমিকা বাছনি কৰক:",
@@ -251,7 +424,21 @@ var DICT = {
         sponsoredTasks:"পৃষ্ঠপোষকতাপ্ৰাপ্ত কাম", loadingTasks:"কাম ল'ড হৈ আছে…",
         noTasksLine1:"কোনো নতুন কাম উপলব্ধ নাই।", noTasksLine2:"পিছত পুনৰ চাওক!",
         startBtn:"আৰম্ভ কৰক", profileNudgeTitle:"আপোনাৰ প্ৰ'ফাইল সম্পূৰ্ণ কৰক",
-        profileNudgeDesc:"এক মিনিটতকৈ কম সময় লাগিব — ইয়াৰ দ্বাৰা আমি আপোনাক প্ৰাসংগিক বিজ্ঞাপন দেখুৱাব পাৰোঁ"
+        profileNudgeDesc:"এক মিনিটতকৈ কম সময় লাগিব — ইয়াৰ দ্বাৰা আমি আপোনাক প্ৰাসংগিক বিজ্ঞাপন দেখুৱাব পাৰোঁ",
+        pageTitleFrameAds:"ফ্ৰেম বিজ্ঞাপন তালিকা", pageTitleVideoAds:"ভিডিঅ' বিজ্ঞাপন",
+        loadingGeneric:"ল'ড হৈ আছে…", loadingDescription:"বিৱৰণ ল'ড হৈ আছে…",
+        ovVerified:"প্ৰমাণিত বিজ্ঞাপন", alreadyViewed:"ইতিমধ্যে চোৱা হৈছে",
+        watchToEarn:"উপাৰ্জন কৰিবলৈ চাওক", claimWord:"দাবী কৰক", rewardWord:"পুৰস্কাৰ", closeBtn:"বন্ধ কৰক",
+        shareThisAd:"এই বিজ্ঞাপনটো শ্বেয়াৰ কৰক", referAndEarn:"ৰেফাৰ কৰক আৰু উপাৰ্জন কৰক", referralCode:"ৰেফাৰেল ক'ড",
+        copyCode:"ক'ড কপি কৰক", shareViaWhatsApp:"ৱাটছএপৰ জৰিয়তে শ্বেয়াৰ কৰক",
+        commentsTitle:"মন্তব্য", vendorLocation:"বিক্ৰেতাৰ অৱস্থান", noCommentsYet:"এতিয়াও কোনো মন্তব্য নাই। প্ৰথম হওক!",
+        locationNotAvailable:"অৱস্থান উপলব্ধ নহয়", vendorNoLocation:"এই বিক্ৰেতাই এই বিজ্ঞাপনৰ বাবে এতিয়াও অৱস্থান প্ৰদান কৰা নাই।",
+        openInGoogleMaps:"গুগল মেপত খোলক", couldntLoadAds:"এতিয়া বিজ্ঞাপন ল'ড কৰিব পৰা নগ'ল।",
+        tryAgainShortly:"অনুগ্ৰহ কৰি অলপ সময় পিছত পুনৰ চেষ্টা কৰক।", checkBackSoon:"সোনকালে পুনৰ চাওক!",
+        claimedTag:"দাবী কৰা হৈছে", viewAgain:"পুনৰ চাওক", watchAndEarn:"চাওক আৰু উপাৰ্জন কৰক",
+        noFrameAdsFound:"কোনো সক্ৰিয় ফ্ৰেম বিজ্ঞাপন পোৱা নগ'ল।", noVideoAdsFound:"কোনো ভিডিঅ' বিজ্ঞাপন পোৱা নগ'ল।",
+        videoNotReady:"ভিডিঅ' সাজু নাই", earnedSoFar:"এতিয়ালৈকে উপাৰ্জন কৰা", fullWord:"সম্পূৰ্ণ", soFarWord:"এতিয়ালৈকে",
+        videoFormatUnsupported:"এই ভিডিঅ'ৰ ফৰ্মেট আপোনাৰ ডিভাইচত সমৰ্থিত নহয় — ইয়াক চাবলৈ তলত টেপ কৰক, আপুনি তথাপিও আপোনাৰ পুৰস্কাৰ উপাৰ্জন কৰিব পাৰে।"
     },
     ne: {
         langModal:"भाषा छान्नुहोस्", welcomeTitle:"EAP मा स्वागत छ", welcomeSub:"सुरु गर्न आफ्नो भूमिका छान्नुहोस्:",
@@ -264,7 +451,21 @@ var DICT = {
         sponsoredTasks:"प्रायोजित कार्यहरू", loadingTasks:"कार्यहरू लोड हुँदैछ…",
         noTasksLine1:"कुनै नयाँ कार्य उपलब्ध छैन।", noTasksLine2:"पछि फेरि जाँच गर्नुहोस्!",
         startBtn:"सुरु गर्नुहोस्", profileNudgeTitle:"आफ्नो प्रोफाइल पूरा गर्नुहोस्",
-        profileNudgeDesc:"एक मिनेट भन्दा कम समय लाग्छ — यसले हामीलाई तपाईंलाई सान्दर्भिक विज्ञापनहरू देखाउन मद्दत गर्छ"
+        profileNudgeDesc:"एक मिनेट भन्दा कम समय लाग्छ — यसले हामीलाई तपाईंलाई सान्दर्भिक विज्ञापनहरू देखाउन मद्दत गर्छ",
+        pageTitleFrameAds:"फ्रेम विज्ञापन सूची", pageTitleVideoAds:"भिडियो विज्ञापन",
+        loadingGeneric:"लोड हुँदैछ…", loadingDescription:"विवरण लोड हुँदैछ…",
+        ovVerified:"प्रमाणित विज्ञापन", alreadyViewed:"पहिले नै हेरिसकियो",
+        watchToEarn:"कमाउन हेर्नुहोस्", claimWord:"दावी गर्नुहोस्", rewardWord:"पुरस्कार", closeBtn:"बन्द गर्नुहोस्",
+        shareThisAd:"यो विज्ञापन साझा गर्नुहोस्", referAndEarn:"रेफर गर्नुहोस् र कमाउनुहोस्", referralCode:"रेफरल कोड",
+        copyCode:"कोड कपी गर्नुहोस्", shareViaWhatsApp:"ह्वाट्सएप मार्फत साझा गर्नुहोस्",
+        commentsTitle:"टिप्पणीहरू", vendorLocation:"विक्रेताको स्थान", noCommentsYet:"अहिलेसम्म कुनै टिप्पणी छैन। पहिलो हुनुहोस्!",
+        locationNotAvailable:"स्थान उपलब्ध छैन", vendorNoLocation:"यस विक्रेताले यो विज्ञापनको लागि अझै स्थान उपलब्ध गराएको छैन।",
+        openInGoogleMaps:"गुगल म्यापमा खोल्नुहोस्", couldntLoadAds:"अहिले विज्ञापनहरू लोड हुन सकेन।",
+        tryAgainShortly:"कृपया केही समय पछि फेरि प्रयास गर्नुहोस्।", checkBackSoon:"चाँडै फेरि जाँच गर्नुहोस्!",
+        claimedTag:"दावी गरियो", viewAgain:"फेरि हेर्नुहोस्", watchAndEarn:"हेर्नुहोस् र कमाउनुहोस्",
+        noFrameAdsFound:"कुनै सक्रिय फ्रेम विज्ञापन फेला परेन।", noVideoAdsFound:"कुनै भिडियो विज्ञापन फेला परेन।",
+        videoNotReady:"भिडियो तयार छैन", earnedSoFar:"अहिलेसम्म कमाइयो", fullWord:"पूर्ण", soFarWord:"अहिलेसम्म",
+        videoFormatUnsupported:"यो भिडियो ढाँचा तपाईंको यन्त्रमा समर्थित छैन — यसलाई हेर्न तल ट्याप गर्नुहोस्, तपाईंले अझै आफ्नो पुरस्कार कमाउन सक्नुहुन्छ।"
     }
 };
 
