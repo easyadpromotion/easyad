@@ -114,7 +114,18 @@ var DICT = {
         claimedTag:"Claimed", viewAgain:"View Again", watchAndEarn:"Watch & Earn",
         noFrameAdsFound:"No active frame ads found.", noVideoAdsFound:"No video ads found.",
         videoNotReady:"Video Not Ready", earnedSoFar:"Earned so far", fullWord:"Full", soFarWord:"So Far",
-        videoFormatUnsupported:"This video's format isn't supported on your device — tap below to watch it, you can still earn your reward."
+        videoFormatUnsupported:"This video's format isn't supported on your device — tap below to watch it, you can still earn your reward.",
+        // surveys.html
+        surveyVerified:"Verified Survey", alreadyCompleted:"Already Completed", completedTag:"Completed",
+        giveFeedbackAbout:"Give feedback about", notReadyYet:"Not Ready Yet",
+        questionLabel:"Question", questionsLabel:"Questions", ofWord:"of",
+        loadingQuestions:"Loading questions…", noQuestionsFound:"No questions found for this survey.",
+        noAnswerRecorded:"No answer recorded", typeYourAnswerPlaceholder:"Type your answer…",
+        nextQuestionBtn:"Next Question →", couldntLoadSurveys:"Couldn't load surveys right now.",
+        noActiveSurveysFound:"No active surveys found.", shareThisSurvey:"Share This Survey",
+        vendorNoLocationSurvey:"This vendor has not provided a location for this survey yet.",
+        creditingReward:"Crediting reward…", surveySubmittedExcl:"Survey Submitted!", addedWord:"Added.",
+        couldntSubmitSurvey:"Couldn't submit — check connection and try again."
     },
     hi: {
         langModal:"भाषा चुनें", welcomeTitle:"EAP में आपका स्वागत है", welcomeSub:"शुरू करने के लिए अपनी भूमिका चुनें:",
@@ -141,7 +152,17 @@ var DICT = {
         claimedTag:"प्राप्त किया गया", viewAgain:"फिर देखें", watchAndEarn:"देखें और कमाएं",
         noFrameAdsFound:"कोई सक्रिय फ्रेम विज्ञापन नहीं मिला।", noVideoAdsFound:"कोई वीडियो विज्ञापन नहीं मिला।",
         videoNotReady:"वीडियो तैयार नहीं है", earnedSoFar:"अब तक कमाया", fullWord:"पूर्ण", soFarWord:"अब तक",
-        videoFormatUnsupported:"यह वीडियो फॉर्मेट आपके डिवाइस पर समर्थित नहीं है — इसे देखने के लिए नीचे टैप करें, आप फिर भी अपना इनाम कमा सकते हैं।"
+        videoFormatUnsupported:"यह वीडियो फॉर्मेट आपके डिवाइस पर समर्थित नहीं है — इसे देखने के लिए नीचे टैप करें, आप फिर भी अपना इनाम कमा सकते हैं।",
+        surveyVerified:"सत्यापित सर्वेक्षण", alreadyCompleted:"पहले से पूर्ण", completedTag:"पूर्ण",
+        giveFeedbackAbout:"के बारे में प्रतिक्रिया दें", notReadyYet:"अभी तैयार नहीं",
+        questionLabel:"प्रश्न", questionsLabel:"प्रश्न", ofWord:"का",
+        loadingQuestions:"प्रश्न लोड हो रहे हैं…", noQuestionsFound:"इस सर्वेक्षण के लिए कोई प्रश्न नहीं मिला।",
+        noAnswerRecorded:"कोई उत्तर दर्ज नहीं", typeYourAnswerPlaceholder:"अपना उत्तर लिखें…",
+        nextQuestionBtn:"अगला प्रश्न →", couldntLoadSurveys:"अभी सर्वेक्षण लोड नहीं हो सके।",
+        noActiveSurveysFound:"कोई सक्रिय सर्वेक्षण नहीं मिला।", shareThisSurvey:"इस सर्वेक्षण को शेयर करें",
+        vendorNoLocationSurvey:"इस विक्रेता ने अभी तक इस सर्वेक्षण के लिए स्थान प्रदान नहीं किया है।",
+        creditingReward:"इनाम जमा किया जा रहा है…", surveySubmittedExcl:"सर्वेक्षण जमा किया गया!", addedWord:"जोड़ा गया।",
+        couldntSubmitSurvey:"सबमिट नहीं हो सका — कनेक्शन जांचें और पुनः प्रयास करें।"
     },
     bn: {
         langModal:"ভাষা নির্বাচন করুন", welcomeTitle:"EAP-এ স্বাগতম", welcomeSub:"শুরু করতে আপনার ভূমিকা বেছে নিন:",
@@ -168,7 +189,17 @@ var DICT = {
         claimedTag:"দাবি করা হয়েছে", viewAgain:"আবার দেখুন", watchAndEarn:"দেখুন এবং আয় করুন",
         noFrameAdsFound:"কোনো সক্রিয় ফ্রেম বিজ্ঞাপন পাওয়া যায়নি।", noVideoAdsFound:"কোনো ভিডিও বিজ্ঞাপন পাওয়া যায়নি।",
         videoNotReady:"ভিডিও প্রস্তুত নয়", earnedSoFar:"এখন পর্যন্ত আয় হয়েছে", fullWord:"সম্পূর্ণ", soFarWord:"এখন পর্যন্ত",
-        videoFormatUnsupported:"এই ভিডিওর ফরম্যাট আপনার ডিভাইসে সমর্থিত নয় — এটি দেখতে নিচে ট্যাপ করুন, আপনি তবুও আপনার পুরস্কার পেতে পারেন।"
+        videoFormatUnsupported:"এই ভিডিওর ফরম্যাট আপনার ডিভাইসে সমর্থিত নয় — এটি দেখতে নিচে ট্যাপ করুন, আপনি তবুও আপনার পুরস্কার পেতে পারেন।",
+        surveyVerified:"যাচাইকৃত সমীক্ষা", alreadyCompleted:"ইতিমধ্যে সম্পন্ন", completedTag:"সম্পন্ন",
+        giveFeedbackAbout:"সম্পর্কে মতামত দিন", notReadyYet:"এখনও প্রস্তুত নয়",
+        questionLabel:"প্রশ্ন", questionsLabel:"প্রশ্নসমূহ", ofWord:"এর",
+        loadingQuestions:"প্রশ্ন লোড হচ্ছে…", noQuestionsFound:"এই সমীক্ষার জন্য কোনো প্রশ্ন পাওয়া যায়নি।",
+        noAnswerRecorded:"কোনো উত্তর রেকর্ড করা হয়নি", typeYourAnswerPlaceholder:"আপনার উত্তর লিখুন…",
+        nextQuestionBtn:"পরবর্তী প্রশ্ন →", couldntLoadSurveys:"এই মুহূর্তে সমীক্ষা লোড করা যায়নি।",
+        noActiveSurveysFound:"কোনো সক্রিয় সমীক্ষা পাওয়া যায়নি।", shareThisSurvey:"এই সমীক্ষাটি শেয়ার করুন",
+        vendorNoLocationSurvey:"এই বিক্রেতা এখনও এই সমীক্ষার জন্য কোনো অবস্থান প্রদান করেননি।",
+        creditingReward:"পুরস্কার জমা হচ্ছে…", surveySubmittedExcl:"সমীক্ষা জমা দেওয়া হয়েছে!", addedWord:"যোগ হয়েছে।",
+        couldntSubmitSurvey:"জমা দেওয়া যায়নি — সংযোগ পরীক্ষা করুন এবং আবার চেষ্টা করুন।"
     },
     te: {
         langModal:"భాషను ఎంచుకోండి", welcomeTitle:"EAPకి స్వాగతం", welcomeSub:"ప్రారంభించడానికి మీ పాత్రను ఎంచుకోండి:",
@@ -195,7 +226,17 @@ var DICT = {
         claimedTag:"క్లెయిమ్ చేయబడింది", viewAgain:"మళ్ళీ చూడండి", watchAndEarn:"చూడండి & సంపాదించండి",
         noFrameAdsFound:"సక్రియ ఫ్రేమ్ ప్రకటనలు కనుగొనబడలేదు.", noVideoAdsFound:"వీడియో ప్రకటనలు కనుగొనబడలేదు.",
         videoNotReady:"వీడియో సిద్ధంగా లేదు", earnedSoFar:"ఇప్పటివరకు సంపాదించింది", fullWord:"పూర్తి", soFarWord:"ఇప్పటివరకు",
-        videoFormatUnsupported:"ఈ వీడియో ఫార్మాట్ మీ పరికరంలో మద్దతు లేదు — దీన్ని చూడటానికి క్రింద నొక్కండి, మీరు ఇప్పటికీ మీ రివార్డ్ సంపాదించవచ్చు."
+        videoFormatUnsupported:"ఈ వీడియో ఫార్మాట్ మీ పరికరంలో మద్దతు లేదు — దీన్ని చూడటానికి క్రింద నొక్కండి, మీరు ఇప్పటికీ మీ రివార్డ్ సంపాదించవచ్చు.",
+        surveyVerified:"ధృవీకరించిన సర్వే", alreadyCompleted:"ఇప్పటికే పూర్తయింది", completedTag:"పూర్తయింది",
+        giveFeedbackAbout:"గురించి అభిప్రాయం తెలియజేయండి", notReadyYet:"ఇంకా సిద్ధంగా లేదు",
+        questionLabel:"ప్రశ్న", questionsLabel:"ప్రశ్నలు", ofWord:"లో",
+        loadingQuestions:"ప్రశ్నలు లోడ్ అవుతున్నాయి…", noQuestionsFound:"ఈ సర్వే కోసం ప్రశ్నలు కనుగొనబడలేదు.",
+        noAnswerRecorded:"సమాధానం నమోదు కాలేదు", typeYourAnswerPlaceholder:"మీ సమాధానం టైప్ చేయండి…",
+        nextQuestionBtn:"తదుపరి ప్రశ్న →", couldntLoadSurveys:"ప్రస్తుతం సర్వేలను లోడ్ చేయలేకపోయాము.",
+        noActiveSurveysFound:"సక్రియ సర్వేలు కనుగొనబడలేదు.", shareThisSurvey:"ఈ సర్వేను షేర్ చేయండి",
+        vendorNoLocationSurvey:"ఈ వెండర్ ఈ సర్వే కోసం ఇంకా లొకేషన్ ఇవ్వలేదు.",
+        creditingReward:"రివార్డ్ జమ చేస్తున్నాము…", surveySubmittedExcl:"సర్వే సమర్పించబడింది!", addedWord:"జోడించబడింది.",
+        couldntSubmitSurvey:"సమర్పించలేకపోయాము — కనెక్షన్ చెక్ చేసి మళ్ళీ ప్రయత్నించండి."
     },
     mr: {
         langModal:"भाषा निवडा", welcomeTitle:"EAP मध्ये आपले स्वागत आहे", welcomeSub:"सुरू करण्यासाठी आपली भूमिका निवडा:",
@@ -222,7 +263,17 @@ var DICT = {
         claimedTag:"दावा केला", viewAgain:"पुन्हा पहा", watchAndEarn:"पहा आणि कमवा",
         noFrameAdsFound:"कोणतीही सक्रिय फ्रेम जाहिरात आढळली नाही.", noVideoAdsFound:"कोणतीही व्हिडिओ जाहिरात आढळली नाही.",
         videoNotReady:"व्हिडिओ तयार नाही", earnedSoFar:"आतापर्यंत कमावले", fullWord:"पूर्ण", soFarWord:"आतापर्यंत",
-        videoFormatUnsupported:"हा व्हिडिओ फॉरमॅट तुमच्या डिव्हाइसवर समर्थित नाही — तो पाहण्यासाठी खाली टॅप करा, तुम्ही तरीही तुमचे बक्षीस मिळवू शकता."
+        videoFormatUnsupported:"हा व्हिडिओ फॉरमॅट तुमच्या डिव्हाइसवर समर्थित नाही — तो पाहण्यासाठी खाली टॅप करा, तुम्ही तरीही तुमचे बक्षीस मिळवू शकता.",
+        surveyVerified:"सत्यापित सर्वेक्षण", alreadyCompleted:"आधीच पूर्ण झाले", completedTag:"पूर्ण झाले",
+        giveFeedbackAbout:"याबद्दल अभिप्राय द्या", notReadyYet:"अजून तयार नाही",
+        questionLabel:"प्रश्न", questionsLabel:"प्रश्न", ofWord:"पैकी",
+        loadingQuestions:"प्रश्न लोड होत आहेत…", noQuestionsFound:"या सर्वेक्षणासाठी कोणतेही प्रश्न आढळले नाहीत.",
+        noAnswerRecorded:"कोणतेही उत्तर नोंदवले नाही", typeYourAnswerPlaceholder:"तुमचे उत्तर टाइप करा…",
+        nextQuestionBtn:"पुढील प्रश्न →", couldntLoadSurveys:"सध्या सर्वेक्षणे लोड करता आली नाहीत.",
+        noActiveSurveysFound:"कोणतेही सक्रिय सर्वेक्षण आढळले नाही.", shareThisSurvey:"हे सर्वेक्षण शेअर करा",
+        vendorNoLocationSurvey:"या विक्रेत्याने या सर्वेक्षणासाठी अद्याप स्थान दिलेले नाही.",
+        creditingReward:"बक्षीस जमा होत आहे…", surveySubmittedExcl:"सर्वेक्षण सादर केले!", addedWord:"जोडले गेले.",
+        couldntSubmitSurvey:"सबमिट करता आले नाही — कनेक्शन तपासा आणि पुन्हा प्रयत्न करा."
     },
     ta: {
         langModal:"மொழியைத் தேர்ந்தெடுக்கவும்", welcomeTitle:"EAP-க்கு வரவேற்கிறோம்", welcomeSub:"தொடங்க உங்கள் பங்கைத் தேர்ந்தெடுக்கவும்:",
@@ -249,7 +300,17 @@ var DICT = {
         claimedTag:"பெறப்பட்டது", viewAgain:"மீண்டும் காண்க", watchAndEarn:"பாருங்கள் & சம்பாதியுங்கள்",
         noFrameAdsFound:"செயலில் உள்ள ஃப்ரேம் விளம்பரங்கள் இல்லை.", noVideoAdsFound:"வீடியோ விளம்பரங்கள் இல்லை.",
         videoNotReady:"வீடியோ தயாராக இல்லை", earnedSoFar:"இதுவரை சம்பாதித்தது", fullWord:"முழு", soFarWord:"இதுவரை",
-        videoFormatUnsupported:"இந்த வீடியோ வடிவம் உங்கள் சாதனத்தில் ஆதரிக்கப்படவில்லை — இதைப் பார்க்க கீழே தட்டவும், நீங்கள் இன்னும் உங்கள் வெகுமதியைப் பெறலாம்."
+        videoFormatUnsupported:"இந்த வீடியோ வடிவம் உங்கள் சாதனத்தில் ஆதரிக்கப்படவில்லை — இதைப் பார்க்க கீழே தட்டவும், நீங்கள் இன்னும் உங்கள் வெகுமதியைப் பெறலாம்.",
+        surveyVerified:"சரிபார்க்கப்பட்ட கணக்கெடுப்பு", alreadyCompleted:"ஏற்கனவே முடிக்கப்பட்டது", completedTag:"முடிந்தது",
+        giveFeedbackAbout:"பற்றி கருத்து தெரிவிக்கவும்", notReadyYet:"இன்னும் தயாராக இல்லை",
+        questionLabel:"கேள்வி", questionsLabel:"கேள்விகள்", ofWord:"இல்",
+        loadingQuestions:"கேள்விகள் ஏற்றப்படுகின்றன…", noQuestionsFound:"இந்த கணக்கெடுப்புக்கு கேள்விகள் இல்லை.",
+        noAnswerRecorded:"பதில் பதிவு செய்யப்படவில்லை", typeYourAnswerPlaceholder:"உங்கள் பதிலை தட்டச்சு செய்யவும்…",
+        nextQuestionBtn:"அடுத்த கேள்வி →", couldntLoadSurveys:"இப்போது கணக்கெடுப்புகளை ஏற்ற முடியவில்லை.",
+        noActiveSurveysFound:"செயலில் உள்ள கணக்கெடுப்புகள் இல்லை.", shareThisSurvey:"இந்த கணக்கெடுப்பைப் பகிரவும்",
+        vendorNoLocationSurvey:"இந்த விற்பனையாளர் இந்த கணக்கெடுப்புக்கு இன்னும் இருப்பிடத்தை வழங்கவில்லை.",
+        creditingReward:"வெகுமதி வரவு வைக்கப்படுகிறது…", surveySubmittedExcl:"கணக்கெடுப்பு சமர்ப்பிக்கப்பட்டது!", addedWord:"சேர்க்கப்பட்டது.",
+        couldntSubmitSurvey:"சமர்ப்பிக்க முடியவில்லை — இணைப்பைச் சரிபார்த்து மீண்டும் முயற்சிக்கவும்."
     },
     ur: {
         langModal:"زبان منتخب کریں", welcomeTitle:"EAP میں خوش آمدید", welcomeSub:"شروع کرنے کے لیے اپنا کردار منتخب کریں:",
@@ -276,7 +337,17 @@ var DICT = {
         claimedTag:"کلیم ہو چکا", viewAgain:"دوبارہ دیکھیں", watchAndEarn:"دیکھیں اور کمائیں",
         noFrameAdsFound:"کوئی فعال فریم اشتہار نہیں ملا۔", noVideoAdsFound:"کوئی ویڈیو اشتہار نہیں ملا۔",
         videoNotReady:"ویڈیو تیار نہیں ہے", earnedSoFar:"اب تک کمایا", fullWord:"مکمل", soFarWord:"اب تک",
-        videoFormatUnsupported:"یہ ویڈیو فارمیٹ آپ کے ڈیوائس پر سپورٹ نہیں ہے — اسے دیکھنے کے لیے نیچے ٹیپ کریں، آپ پھر بھی اپنا انعام حاصل کر سکتے ہیں۔"
+        videoFormatUnsupported:"یہ ویڈیو فارمیٹ آپ کے ڈیوائس پر سپورٹ نہیں ہے — اسے دیکھنے کے لیے نیچے ٹیپ کریں، آپ پھر بھی اپنا انعام حاصل کر سکتے ہیں۔",
+        surveyVerified:"تصدیق شدہ سروے", alreadyCompleted:"پہلے ہی مکمل", completedTag:"مکمل",
+        giveFeedbackAbout:"کے بارے میں رائے دیں", notReadyYet:"ابھی تیار نہیں",
+        questionLabel:"سوال", questionsLabel:"سوالات", ofWord:"کا",
+        loadingQuestions:"سوالات لوڈ ہو رہے ہیں…", noQuestionsFound:"اس سروے کے لیے کوئی سوال نہیں ملا۔",
+        noAnswerRecorded:"کوئی جواب ریکارڈ نہیں", typeYourAnswerPlaceholder:"اپنا جواب لکھیں…",
+        nextQuestionBtn:"اگلا سوال →", couldntLoadSurveys:"ابھی سروے لوڈ نہیں ہو سکے۔",
+        noActiveSurveysFound:"کوئی فعال سروے نہیں ملا۔", shareThisSurvey:"یہ سروے شیئر کریں",
+        vendorNoLocationSurvey:"اس وینڈر نے ابھی تک اس سروے کے لیے کوئی مقام فراہم نہیں کیا۔",
+        creditingReward:"انعام جمع کیا جا رہا ہے…", surveySubmittedExcl:"سروے جمع کر دیا گیا!", addedWord:"شامل کر دیا گیا۔",
+        couldntSubmitSurvey:"جمع نہیں ہو سکا — کنکشن چیک کریں اور دوبارہ کوشش کریں۔"
     },
     gu: {
         langModal:"ભાષા પસંદ કરો", welcomeTitle:"EAP માં તમારું સ્વાગત છે", welcomeSub:"શરૂ કરવા માટે તમારી ભૂમિકા પસંદ કરો:",
@@ -303,7 +374,17 @@ var DICT = {
         claimedTag:"ક્લેમ થયું", viewAgain:"ફરી જુઓ", watchAndEarn:"જુઓ અને કમાઓ",
         noFrameAdsFound:"કોઈ સક્રિય ફ્રેમ જાહેરાત મળી નથી.", noVideoAdsFound:"કોઈ વિડિયો જાહેરાત મળી નથી.",
         videoNotReady:"વિડિયો તૈયાર નથી", earnedSoFar:"અત્યાર સુધી કમાયું", fullWord:"સંપૂર્ણ", soFarWord:"અત્યાર સુધી",
-        videoFormatUnsupported:"આ વિડિયો ફોર્મેટ તમારા ડિવાઇસ પર સપોર્ટેડ નથી — તેને જોવા માટે નીચે ટેપ કરો, તમે હજુ પણ તમારું ઈનામ મેળવી શકો છો."
+        videoFormatUnsupported:"આ વિડિયો ફોર્મેટ તમારા ડિવાઇસ પર સપોર્ટેડ નથી — તેને જોવા માટે નીચે ટેપ કરો, તમે હજુ પણ તમારું ઈનામ મેળવી શકો છો.",
+        surveyVerified:"ચકાસાયેલ સર્વેક્ષણ", alreadyCompleted:"પહેલેથી જ પૂર્ણ", completedTag:"પૂર્ણ",
+        giveFeedbackAbout:"વિશે પ્રતિસાદ આપો", notReadyYet:"હજુ તૈયાર નથી",
+        questionLabel:"પ્રશ્ન", questionsLabel:"પ્રશ્નો", ofWord:"નું",
+        loadingQuestions:"પ્રશ્નો લોડ થઈ રહ્યા છે…", noQuestionsFound:"આ સર્વેક્ષણ માટે કોઈ પ્રશ્નો મળ્યા નથી.",
+        noAnswerRecorded:"કોઈ જવાબ નોંધાયો નથી", typeYourAnswerPlaceholder:"તમારો જવાબ ટાઇપ કરો…",
+        nextQuestionBtn:"આગલો પ્રશ્ન →", couldntLoadSurveys:"અત્યારે સર્વેક્ષણો લોડ કરી શકાયા નથી.",
+        noActiveSurveysFound:"કોઈ સક્રિય સર્વેક્ષણ મળ્યું નથી.", shareThisSurvey:"આ સર્વેક્ષણ શેર કરો",
+        vendorNoLocationSurvey:"આ વિક્રેતાએ હજુ સુધી આ સર્વેક્ષણ માટે સ્થાન આપ્યું નથી.",
+        creditingReward:"ઈનામ જમા થઈ રહ્યું છે…", surveySubmittedExcl:"સર્વેક્ષણ સબમિટ થયું!", addedWord:"ઉમેરાયું.",
+        couldntSubmitSurvey:"સબમિટ થઈ શક્યું નથી — કનેક્શન તપાસો અને ફરી પ્રયાસ કરો."
     },
     kn: {
         langModal:"ಭಾಷೆಯನ್ನು ಆಯ್ಕೆಮಾಡಿ", welcomeTitle:"EAP ಗೆ ಸ್ವಾಗತ", welcomeSub:"ಪ್ರಾರಂಭಿಸಲು ನಿಮ್ಮ ಪಾತ್ರವನ್ನು ಆಯ್ಕೆಮಾಡಿ:",
@@ -330,7 +411,17 @@ var DICT = {
         claimedTag:"ಪಡೆಯಲಾಗಿದೆ", viewAgain:"ಮತ್ತೆ ವೀಕ್ಷಿಸಿ", watchAndEarn:"ವೀಕ್ಷಿಸಿ ಮತ್ತು ಗಳಿಸಿ",
         noFrameAdsFound:"ಯಾವುದೇ ಸಕ್ರಿಯ ಫ್ರೇಮ್ ಜಾಹೀರಾತು ಕಂಡುಬಂದಿಲ್ಲ.", noVideoAdsFound:"ಯಾವುದೇ ವೀಡಿಯೋ ಜಾಹೀರಾತು ಕಂಡುಬಂದಿಲ್ಲ.",
         videoNotReady:"ವೀಡಿಯೋ ಸಿದ್ಧವಾಗಿಲ್ಲ", earnedSoFar:"ಈವರೆಗೆ ಗಳಿಸಿದ್ದು", fullWord:"ಪೂರ್ಣ", soFarWord:"ಈವರೆಗೆ",
-        videoFormatUnsupported:"ಈ ವೀಡಿಯೋ ಫಾರ್ಮ್ಯಾಟ್ ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ — ಇದನ್ನು ವೀಕ್ಷಿಸಲು ಕೆಳಗೆ ಟ್ಯಾಪ್ ಮಾಡಿ, ನೀವು ಇನ್ನೂ ನಿಮ್ಮ ಬಹುಮಾನವನ್ನು ಗಳಿಸಬಹುದು."
+        videoFormatUnsupported:"ಈ ವೀಡಿಯೋ ಫಾರ್ಮ್ಯಾಟ್ ನಿಮ್ಮ ಸಾಧನದಲ್ಲಿ ಬೆಂಬಲಿತವಾಗಿಲ್ಲ — ಇದನ್ನು ವೀಕ್ಷಿಸಲು ಕೆಳಗೆ ಟ್ಯಾಪ್ ಮಾಡಿ, ನೀವು ಇನ್ನೂ ನಿಮ್ಮ ಬಹುಮಾನವನ್ನು ಗಳಿಸಬಹುದು.",
+        surveyVerified:"ಪರಿಶೀಲಿತ ಸಮೀಕ್ಷೆ", alreadyCompleted:"ಈಗಾಗಲೇ ಪೂರ್ಣಗೊಂಡಿದೆ", completedTag:"ಪೂರ್ಣಗೊಂಡಿದೆ",
+        giveFeedbackAbout:"ಬಗ್ಗೆ ಪ್ರತಿಕ್ರಿಯೆ ನೀಡಿ", notReadyYet:"ಇನ್ನೂ ಸಿದ್ಧವಾಗಿಲ್ಲ",
+        questionLabel:"ಪ್ರಶ್ನೆ", questionsLabel:"ಪ್ರಶ್ನೆಗಳು", ofWord:"ರ",
+        loadingQuestions:"ಪ್ರಶ್ನೆಗಳು ಲೋಡ್ ಆಗುತ್ತಿವೆ…", noQuestionsFound:"ಈ ಸಮೀಕ್ಷೆಗೆ ಯಾವುದೇ ಪ್ರಶ್ನೆಗಳು ಕಂಡುಬಂದಿಲ್ಲ.",
+        noAnswerRecorded:"ಯಾವುದೇ ಉತ್ತರ ದಾಖಲಾಗಿಲ್ಲ", typeYourAnswerPlaceholder:"ನಿಮ್ಮ ಉತ್ತರವನ್ನು ಟೈಪ್ ಮಾಡಿ…",
+        nextQuestionBtn:"ಮುಂದಿನ ಪ್ರಶ್ನೆ →", couldntLoadSurveys:"ಈಗ ಸಮೀಕ್ಷೆಗಳನ್ನು ಲೋಡ್ ಮಾಡಲಾಗಲಿಲ್ಲ.",
+        noActiveSurveysFound:"ಯಾವುದೇ ಸಕ್ರಿಯ ಸಮೀಕ್ಷೆ ಕಂಡುಬಂದಿಲ್ಲ.", shareThisSurvey:"ಈ ಸಮೀಕ್ಷೆಯನ್ನು ಹಂಚಿಕೊಳ್ಳಿ",
+        vendorNoLocationSurvey:"ಈ ಮಾರಾಟಗಾರರು ಈ ಸಮೀಕ್ಷೆಗೆ ಇನ್ನೂ ಸ್ಥಳವನ್ನು ಒದಗಿಸಿಲ್ಲ.",
+        creditingReward:"ಬಹುಮಾನ ಜಮಾ ಆಗುತ್ತಿದೆ…", surveySubmittedExcl:"ಸಮೀಕ್ಷೆ ಸಲ್ಲಿಸಲಾಗಿದೆ!", addedWord:"ಸೇರಿಸಲಾಗಿದೆ.",
+        couldntSubmitSurvey:"ಸಲ್ಲಿಸಲು ಸಾಧ್ಯವಾಗಲಿಲ್ಲ — ಸಂಪರ್ಕವನ್ನು ಪರಿಶೀಲಿಸಿ ಮತ್ತೆ ಪ್ರಯತ್ನಿಸಿ."
     },
     or: {
         langModal:"ଭାଷା ବାଛନ୍ତୁ", welcomeTitle:"EAP କୁ ସ୍ୱାଗତ", welcomeSub:"ଆରମ୍ଭ କରିବାକୁ ଆପଣଙ୍କର ଭୂମିକା ବାଛନ୍ତୁ:",
@@ -357,7 +448,17 @@ var DICT = {
         claimedTag:"କ୍ଲେମ୍ ହୋଇଛି", viewAgain:"ପୁଣି ଦେଖନ୍ତୁ", watchAndEarn:"ଦେଖନ୍ତୁ ଏବଂ ରୋଜଗାର କରନ୍ତୁ",
         noFrameAdsFound:"କୌଣସି ସକ୍ରିୟ ଫ୍ରେମ୍ ବିଜ୍ଞାପନ ମିଳିଲା ନାହିଁ।", noVideoAdsFound:"କୌଣସି ଭିଡିଓ ବିଜ୍ଞାପନ ମିଳିଲା ନାହିଁ।",
         videoNotReady:"ଭିଡିଓ ପ୍ରସ୍ତୁତ ନାହିଁ", earnedSoFar:"ଏପର୍ଯ୍ୟନ୍ତ ରୋଜଗାର", fullWord:"ପୂର୍ଣ୍ଣ", soFarWord:"ଏପର୍ଯ୍ୟନ୍ତ",
-        videoFormatUnsupported:"ଏହି ଭିଡିଓ ଫର୍ମାଟ୍ ଆପଣଙ୍କ ଡିଭାଇସରେ ସମର୍ଥିତ ନାହିଁ — ଏହାକୁ ଦେଖିବାକୁ ତଳେ ଟ୍ୟାପ୍ କରନ୍ତୁ, ଆପଣ ତଥାପି ଆପଣଙ୍କ ପୁରସ୍କାର ରୋଜଗାର କରିପାରିବେ।"
+        videoFormatUnsupported:"ଏହି ଭିଡିଓ ଫର୍ମାଟ୍ ଆପଣଙ୍କ ଡିଭାଇସରେ ସମର୍ଥିତ ନାହିଁ — ଏହାକୁ ଦେଖିବାକୁ ତଳେ ଟ୍ୟାପ୍ କରନ୍ତୁ, ଆପଣ ତଥାପି ଆପଣଙ୍କ ପୁରସ୍କାର ରୋଜଗାର କରିପାରିବେ।",
+        surveyVerified:"ଯାଞ୍ଚିତ ସର୍ଭେ", alreadyCompleted:"ପୂର୍ବରୁ ସମ୍ପୂର୍ଣ୍ଣ", completedTag:"ସମ୍ପୂର୍ଣ୍ଣ",
+        giveFeedbackAbout:"ବିଷୟରେ ମତାମତ ଦିଅନ୍ତୁ", notReadyYet:"ଏପର୍ଯ୍ୟନ୍ତ ପ୍ରସ୍ତୁତ ନାହିଁ",
+        questionLabel:"ପ୍ରଶ୍ନ", questionsLabel:"ପ୍ରଶ୍ନଗୁଡ଼ିକ", ofWord:"ର",
+        loadingQuestions:"ପ୍ରଶ୍ନ ଲୋଡ୍ ହେଉଛି…", noQuestionsFound:"ଏହି ସର୍ଭେ ପାଇଁ କୌଣସି ପ୍ରଶ୍ନ ମିଳିଲା ନାହିଁ।",
+        noAnswerRecorded:"କୌଣସି ଉତ୍ତର ରେକର୍ଡ ହୋଇନାହିଁ", typeYourAnswerPlaceholder:"ଆପଣଙ୍କ ଉତ୍ତର ଟାଇପ୍ କରନ୍ତୁ…",
+        nextQuestionBtn:"ପରବର୍ତ୍ତୀ ପ୍ରଶ୍ନ →", couldntLoadSurveys:"ବର୍ତ୍ତମାନ ସର୍ଭେ ଲୋଡ୍ ହୋଇପାରିଲା ନାହିଁ।",
+        noActiveSurveysFound:"କୌଣସି ସକ୍ରିୟ ସର୍ଭେ ମିଳିଲା ନାହିଁ।", shareThisSurvey:"ଏହି ସର୍ଭେ ସେୟାର କରନ୍ତୁ",
+        vendorNoLocationSurvey:"ଏହି ବିକ୍ରେତା ଏହି ସର୍ଭେ ପାଇଁ ଏପର୍ଯ୍ୟନ୍ତ ଅବସ୍ଥାନ ପ୍ରଦାନ କରିନାହାଁନ୍ତି।",
+        creditingReward:"ପୁରସ୍କାର ଜମା ହେଉଛି…", surveySubmittedExcl:"ସର୍ଭେ ଦାଖଲ ହୋଇଛି!", addedWord:"ଯୋଡାଗଲା।",
+        couldntSubmitSurvey:"ଦାଖଲ ହୋଇପାରିଲା ନାହିଁ — ସଂଯୋଗ ଯାଞ୍ଚ କରନ୍ତୁ ଏବଂ ପୁଣି ଚେଷ୍ଟା କରନ୍ତୁ।"
     },
     ml: {
         langModal:"ഭാഷ തിരഞ്ഞെടുക്കുക", welcomeTitle:"EAP-ലേക്ക് സ്വാഗതം", welcomeSub:"ആരംഭിക്കാൻ നിങ്ങളുടെ റോൾ തിരഞ്ഞെടുക്കുക:",
@@ -384,7 +485,17 @@ var DICT = {
         claimedTag:"ക്ലെയിം ചെയ്തു", viewAgain:"വീണ്ടും കാണുക", watchAndEarn:"കാണുക & സമ്പാദിക്കുക",
         noFrameAdsFound:"സജീവമായ ഫ്രെയിം പരസ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല.", noVideoAdsFound:"വീഡിയോ പരസ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല.",
         videoNotReady:"വീഡിയോ തയ്യാറല്ല", earnedSoFar:"ഇതുവരെ സമ്പാദിച്ചത്", fullWord:"പൂർണ്ണം", soFarWord:"ഇതുവരെ",
-        videoFormatUnsupported:"ഈ വീഡിയോ ഫോർമാറ്റ് നിങ്ങളുടെ ഉപകരണത്തിൽ പിന്തുണയ്ക്കുന്നില്ല — ഇത് കാണാൻ താഴെ ടാപ്പ് ചെയ്യുക, നിങ്ങൾക്ക് ഇപ്പോഴും നിങ്ങളുടെ റിവാർഡ് നേടാം."
+        videoFormatUnsupported:"ഈ വീഡിയോ ഫോർമാറ്റ് നിങ്ങളുടെ ഉപകരണത്തിൽ പിന്തുണയ്ക്കുന്നില്ല — ഇത് കാണാൻ താഴെ ടാപ്പ് ചെയ്യുക, നിങ്ങൾക്ക് ഇപ്പോഴും നിങ്ങളുടെ റിവാർഡ് നേടാം.",
+        surveyVerified:"പരിശോധിച്ച സർവേ", alreadyCompleted:"ഇതിനകം പൂർത്തിയായി", completedTag:"പൂർത്തിയായി",
+        giveFeedbackAbout:"കുറിച്ച് ഫീഡ്‌ബാക്ക് നൽകുക", notReadyYet:"ഇതുവരെ തയ്യാറായിട്ടില്ല",
+        questionLabel:"ചോദ്യം", questionsLabel:"ചോദ്യങ്ങൾ", ofWord:"ന്റെ",
+        loadingQuestions:"ചോദ്യങ്ങൾ ലോഡ് ചെയ്യുന്നു…", noQuestionsFound:"ഈ സർവേയ്ക്ക് ചോദ്യങ്ങളൊന്നും കണ്ടെത്തിയില്ല.",
+        noAnswerRecorded:"ഉത്തരം രേഖപ്പെടുത്തിയിട്ടില്ല", typeYourAnswerPlaceholder:"നിങ്ങളുടെ ഉത്തരം ടൈപ്പ് ചെയ്യുക…",
+        nextQuestionBtn:"അടുത്ത ചോദ്യം →", couldntLoadSurveys:"ഇപ്പോൾ സർവേകൾ ലോഡ് ചെയ്യാനായില്ല.",
+        noActiveSurveysFound:"സജീവമായ സർവേകളൊന്നും കണ്ടെത്തിയില്ല.", shareThisSurvey:"ഈ സർവേ പങ്കിടുക",
+        vendorNoLocationSurvey:"ഈ വെണ്ടർ ഈ സർവേയ്ക്ക് ഇതുവരെ ലൊക്കേഷൻ നൽകിയിട്ടില്ല.",
+        creditingReward:"റിവാർഡ് ക്രെഡിറ്റ് ചെയ്യുന്നു…", surveySubmittedExcl:"സർവേ സമർപ്പിച്ചു!", addedWord:"ചേർത്തു.",
+        couldntSubmitSurvey:"സമർപ്പിക്കാനായില്ല — കണക്ഷൻ പരിശോധിച്ച് വീണ്ടും ശ്രമിക്കുക."
     },
     pa: {
         langModal:"ਭਾਸ਼ਾ ਚੁਣੋ", welcomeTitle:"EAP ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ", welcomeSub:"ਸ਼ੁਰੂ ਕਰਨ ਲਈ ਆਪਣੀ ਭੂਮਿਕਾ ਚੁਣੋ:",
@@ -411,7 +522,17 @@ var DICT = {
         claimedTag:"ਕਲੇਮ ਕੀਤਾ ਗਿਆ", viewAgain:"ਦੁਬਾਰਾ ਦੇਖੋ", watchAndEarn:"ਦੇਖੋ ਅਤੇ ਕਮਾਓ",
         noFrameAdsFound:"ਕੋਈ ਸਰਗਰਮ ਫਰੇਮ ਇਸ਼ਤਿਹਾਰ ਨਹੀਂ ਮਿਲਿਆ।", noVideoAdsFound:"ਕੋਈ ਵੀਡੀਓ ਇਸ਼ਤਿਹਾਰ ਨਹੀਂ ਮਿਲਿਆ।",
         videoNotReady:"ਵੀਡੀਓ ਤਿਆਰ ਨਹੀਂ ਹੈ", earnedSoFar:"ਹੁਣ ਤੱਕ ਕਮਾਇਆ", fullWord:"ਪੂਰਾ", soFarWord:"ਹੁਣ ਤੱਕ",
-        videoFormatUnsupported:"ਇਹ ਵੀਡੀਓ ਫਾਰਮੈਟ ਤੁਹਾਡੀ ਡਿਵਾਈਸ 'ਤੇ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ — ਇਸਨੂੰ ਦੇਖਣ ਲਈ ਹੇਠਾਂ ਟੈਪ ਕਰੋ, ਤੁਸੀਂ ਫਿਰ ਵੀ ਆਪਣਾ ਇਨਾਮ ਕਮਾ ਸਕਦੇ ਹੋ।"
+        videoFormatUnsupported:"ਇਹ ਵੀਡੀਓ ਫਾਰਮੈਟ ਤੁਹਾਡੀ ਡਿਵਾਈਸ 'ਤੇ ਸਮਰਥਿਤ ਨਹੀਂ ਹੈ — ਇਸਨੂੰ ਦੇਖਣ ਲਈ ਹੇਠਾਂ ਟੈਪ ਕਰੋ, ਤੁਸੀਂ ਫਿਰ ਵੀ ਆਪਣਾ ਇਨਾਮ ਕਮਾ ਸਕਦੇ ਹੋ।",
+        surveyVerified:"ਤਸਦੀਕਸ਼ੁਦਾ ਸਰਵੇਖਣ", alreadyCompleted:"ਪਹਿਲਾਂ ਹੀ ਪੂਰਾ", completedTag:"ਪੂਰਾ",
+        giveFeedbackAbout:"ਬਾਰੇ ਫੀਡਬੈਕ ਦਿਓ", notReadyYet:"ਹਾਲੇ ਤਿਆਰ ਨਹੀਂ",
+        questionLabel:"ਸਵਾਲ", questionsLabel:"ਸਵਾਲ", ofWord:"ਦਾ",
+        loadingQuestions:"ਸਵਾਲ ਲੋਡ ਹੋ ਰਹੇ ਹਨ…", noQuestionsFound:"ਇਸ ਸਰਵੇਖਣ ਲਈ ਕੋਈ ਸਵਾਲ ਨਹੀਂ ਮਿਲਿਆ।",
+        noAnswerRecorded:"ਕੋਈ ਜਵਾਬ ਦਰਜ ਨਹੀਂ", typeYourAnswerPlaceholder:"ਆਪਣਾ ਜਵਾਬ ਟਾਈਪ ਕਰੋ…",
+        nextQuestionBtn:"ਅਗਲਾ ਸਵਾਲ →", couldntLoadSurveys:"ਹੁਣੇ ਸਰਵੇਖਣ ਲੋਡ ਨਹੀਂ ਹੋ ਸਕੇ।",
+        noActiveSurveysFound:"ਕੋਈ ਸਰਗਰਮ ਸਰਵੇਖਣ ਨਹੀਂ ਮਿਲਿਆ।", shareThisSurvey:"ਇਹ ਸਰਵੇਖਣ ਸਾਂਝਾ ਕਰੋ",
+        vendorNoLocationSurvey:"ਇਸ ਵੈਂਡਰ ਨੇ ਹਾਲੇ ਤੱਕ ਇਸ ਸਰਵੇਖਣ ਲਈ ਟਿਕਾਣਾ ਨਹੀਂ ਦਿੱਤਾ।",
+        creditingReward:"ਇਨਾਮ ਜਮ੍ਹਾਂ ਹੋ ਰਿਹਾ ਹੈ…", surveySubmittedExcl:"ਸਰਵੇਖਣ ਜਮ੍ਹਾਂ ਕੀਤਾ ਗਿਆ!", addedWord:"ਸ਼ਾਮਲ ਕੀਤਾ ਗਿਆ।",
+        couldntSubmitSurvey:"ਜਮ੍ਹਾਂ ਨਹੀਂ ਹੋ ਸਕਿਆ — ਕਨੈਕਸ਼ਨ ਚੈੱਕ ਕਰੋ ਅਤੇ ਦੁਬਾਰਾ ਕੋਸ਼ਿਸ਼ ਕਰੋ।"
     },
     as: {
         langModal:"ভাষা বাছনি কৰক", welcomeTitle:"EAP লৈ স্বাগতম", welcomeSub:"আৰম্ভ কৰিবলৈ আপোনাৰ ভূমিকা বাছনি কৰক:",
@@ -438,7 +559,17 @@ var DICT = {
         claimedTag:"দাবী কৰা হৈছে", viewAgain:"পুনৰ চাওক", watchAndEarn:"চাওক আৰু উপাৰ্জন কৰক",
         noFrameAdsFound:"কোনো সক্ৰিয় ফ্ৰেম বিজ্ঞাপন পোৱা নগ'ল।", noVideoAdsFound:"কোনো ভিডিঅ' বিজ্ঞাপন পোৱা নগ'ল।",
         videoNotReady:"ভিডিঅ' সাজু নাই", earnedSoFar:"এতিয়ালৈকে উপাৰ্জন কৰা", fullWord:"সম্পূৰ্ণ", soFarWord:"এতিয়ালৈকে",
-        videoFormatUnsupported:"এই ভিডিঅ'ৰ ফৰ্মেট আপোনাৰ ডিভাইচত সমৰ্থিত নহয় — ইয়াক চাবলৈ তলত টেপ কৰক, আপুনি তথাপিও আপোনাৰ পুৰস্কাৰ উপাৰ্জন কৰিব পাৰে।"
+        videoFormatUnsupported:"এই ভিডিঅ'ৰ ফৰ্মেট আপোনাৰ ডিভাইচত সমৰ্থিত নহয় — ইয়াক চাবলৈ তলত টেপ কৰক, আপুনি তথাপিও আপোনাৰ পুৰস্কাৰ উপাৰ্জন কৰিব পাৰে।",
+        surveyVerified:"প্ৰমাণিত চাৰ্ভে", alreadyCompleted:"ইতিমধ্যে সম্পূৰ্ণ", completedTag:"সম্পূৰ্ণ",
+        giveFeedbackAbout:"ৰ বিষয়ে মতামত দিয়ক", notReadyYet:"এতিয়াও সাজু নাই",
+        questionLabel:"প্ৰশ্ন", questionsLabel:"প্ৰশ্নসমূহ", ofWord:"ৰ",
+        loadingQuestions:"প্ৰশ্ন ল'ড হৈ আছে…", noQuestionsFound:"এই চাৰ্ভেৰ বাবে কোনো প্ৰশ্ন পোৱা নগ'ল।",
+        noAnswerRecorded:"কোনো উত্তৰ লিপিবদ্ধ কৰা হোৱা নাই", typeYourAnswerPlaceholder:"আপোনাৰ উত্তৰ টাইপ কৰক…",
+        nextQuestionBtn:"পৰৱৰ্তী প্ৰশ্ন →", couldntLoadSurveys:"এতিয়া চাৰ্ভে ল'ড কৰিব পৰা নগ'ল।",
+        noActiveSurveysFound:"কোনো সক্ৰিয় চাৰ্ভে পোৱা নগ'ল।", shareThisSurvey:"এই চাৰ্ভেটো শ্বেয়াৰ কৰক",
+        vendorNoLocationSurvey:"এই বিক্ৰেতাই এই চাৰ্ভেৰ বাবে এতিয়াও অৱস্থান প্ৰদান কৰা নাই।",
+        creditingReward:"পুৰস্কাৰ জমা হৈ আছে…", surveySubmittedExcl:"চাৰ্ভে দাখিল কৰা হ'ল!", addedWord:"যোগ কৰা হ'ল।",
+        couldntSubmitSurvey:"দাখিল কৰিব পৰা নগ'ল — সংযোগ পৰীক্ষা কৰক আৰু পুনৰ চেষ্টা কৰক।"
     },
     ne: {
         langModal:"भाषा छान्नुहोस्", welcomeTitle:"EAP मा स्वागत छ", welcomeSub:"सुरु गर्न आफ्नो भूमिका छान्नुहोस्:",
@@ -465,7 +596,17 @@ var DICT = {
         claimedTag:"दावी गरियो", viewAgain:"फेरि हेर्नुहोस्", watchAndEarn:"हेर्नुहोस् र कमाउनुहोस्",
         noFrameAdsFound:"कुनै सक्रिय फ्रेम विज्ञापन फेला परेन।", noVideoAdsFound:"कुनै भिडियो विज्ञापन फेला परेन।",
         videoNotReady:"भिडियो तयार छैन", earnedSoFar:"अहिलेसम्म कमाइयो", fullWord:"पूर्ण", soFarWord:"अहिलेसम्म",
-        videoFormatUnsupported:"यो भिडियो ढाँचा तपाईंको यन्त्रमा समर्थित छैन — यसलाई हेर्न तल ट्याप गर्नुहोस्, तपाईंले अझै आफ्नो पुरस्कार कमाउन सक्नुहुन्छ।"
+        videoFormatUnsupported:"यो भिडियो ढाँचा तपाईंको यन्त्रमा समर्थित छैन — यसलाई हेर्न तल ट्याप गर्नुहोस्, तपाईंले अझै आफ्नो पुरस्कार कमाउन सक्नुहुन्छ।",
+        surveyVerified:"प्रमाणित सर्वेक्षण", alreadyCompleted:"पहिले नै पूरा भयो", completedTag:"पूरा भयो",
+        giveFeedbackAbout:"बारे प्रतिक्रिया दिनुहोस्", notReadyYet:"अझै तयार छैन",
+        questionLabel:"प्रश्न", questionsLabel:"प्रश्नहरू", ofWord:"को",
+        loadingQuestions:"प्रश्नहरू लोड हुँदैछ…", noQuestionsFound:"यो सर्वेक्षणको लागि कुनै प्रश्न फेला परेन।",
+        noAnswerRecorded:"कुनै जवाफ रेकर्ड गरिएन", typeYourAnswerPlaceholder:"तपाईंको जवाफ टाइप गर्नुहोस्…",
+        nextQuestionBtn:"अर्को प्रश्न →", couldntLoadSurveys:"अहिले सर्वेक्षणहरू लोड हुन सकेन।",
+        noActiveSurveysFound:"कुनै सक्रिय सर्वेक्षण फेला परेन।", shareThisSurvey:"यो सर्वेक्षण साझा गर्नुहोस्",
+        vendorNoLocationSurvey:"यस विक्रेताले यो सर्वेक्षणको लागि अझै स्थान उपलब्ध गराएको छैन।",
+        creditingReward:"पुरस्कार जम्मा हुँदैछ…", surveySubmittedExcl:"सर्वेक्षण पेश गरियो!", addedWord:"थपियो।",
+        couldntSubmitSurvey:"पेश गर्न सकिएन — जडान जाँच गर्नुहोस् र फेरि प्रयास गर्नुहोस्।"
     }
 };
 
