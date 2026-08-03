@@ -4,6 +4,10 @@
   <meta charset="UTF-8">
   <title>Video Ads</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- ✅ Warms up the connection (DNS + TLS handshake) to the video/storage
+       host before any video is actually requested, shaving time off the
+       first bytes of playback — one small contributor to buffering. -->
+  <link rel="preconnect" href="https://ofluxzckhnydqgwtzjth.supabase.co" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -84,6 +88,9 @@
     @supports not (aspect-ratio: 9/16) { .ov-video-section { height: 60vh; } }
     .ov-video-bg { position: absolute; top: -15%; left: -15%; width: 130%; height: 130%; background-size: cover; background-position: center; filter: blur(20px) brightness(0.35); }
     .full-video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain; background: transparent; z-index: 2; display: block; }
+    .ov-buffer-spinner { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; display: flex; align-items: center; justify-content: center; pointer-events: none; background: rgba(0,0,0,0.15); }
+    .ov-spinner-ring { width: 42px; height: 42px; border-radius: 50%; border: 4px solid rgba(255,255,255,0.3); border-top-color: #fff; animation: ovSpin 0.8s linear infinite; }
+    @keyframes ovSpin { to { transform: rotate(360deg); } }
     .ov-cat-badge { position: absolute; bottom: 10px; left: 12px; background: rgba(229,57,53,0.92); color: white; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 10px; z-index: 10; text-transform: uppercase; letter-spacing: 0.5px; }
     .ov-external-note { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 3; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; text-align: center; padding: 0 24px; }
     .ov-external-btn { background: #e53935; color: white; border: none; padding: 10px 22px; border-radius: 20px; font-weight: 800; cursor: pointer; font-size: 12px; font-family: 'Poppins', sans-serif; }
@@ -201,7 +208,7 @@
     <!-- True 9:16 (1080x1920) video stage -->
     <div class="ov-video-section">
       <div class="ov-video-bg" id="overlayBg"></div>
-      <video class="full-video" id="overlayVideo" width="360" height="640" playsinline webkit-playsinline controls></video>
+      <video class="full-video" id="overlayVideo" width="360" height="640" playsinline webkit-playsinline controls preload="auto"></video>
       <iframe class="full-video" id="overlayIframe" style="display:none;border:0;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       <div class="ov-external-note" id="ovExternalNote" style="display:none;">
         <div style="font-size:34px;margin-bottom:8px;">🔗</div>
@@ -209,6 +216,14 @@
         <button class="ov-external-btn" id="ovExternalBtn" onclick="openExternalVideo()">Watch Now ↗</button>
       </div>
       <div class="ov-cat-badge" id="ovCat">General</div>
+      <!-- ✅ Buffering spinner — shown whenever the video stalls waiting for
+           more data (the 'waiting' event), hidden once playback resumes
+           ('playing'/'canplay'). Without this the video just freezes on a
+           frame with no explanation, which reads as broken rather than
+           "still loading". -->
+      <div class="ov-buffer-spinner" id="ovBufferSpinner" style="display:none;">
+        <div class="ov-spinner-ring"></div>
+      </div>
     </div>
 
     <div class="ov-content">
@@ -655,6 +670,7 @@
     v.pause(); v.removeAttribute("src"); v.load(); v.style.display = "none";
     f.src = "about:blank"; f.style.display = "none";
     note.style.display = "none";
+    document.getElementById("ovBufferSpinner").style.display = "none";
 
     var vc = classifyVideoUrl(ad.video);
     activeVideoClass = vc;
@@ -717,6 +733,10 @@
     v.onended = null;
     v.ontimeupdate = null;
     v.onloadedmetadata = null;
+    v.onwaiting = null;
+    v.onplaying = null;
+    v.oncanplay = null;
+    document.getElementById("ovBufferSpinner").style.display = "none";
   }
 
   // ── Live-updates the countdown + earned-so-far amount for file-type
@@ -859,6 +879,17 @@
         if (activeDuration) watchedSeconds = activeDuration;
         updateEarnUI();
       };
+
+      // ✅ Buffering spinner: 'waiting' fires whenever playback stalls
+      // because the browser doesn't have enough downloaded data yet
+      // (exactly what "buffering" looks like to the person watching).
+      // 'playing'/'canplay' fire once it has enough to continue, so we
+      // hide the spinner then. 'seeking' also triggers a brief re-buffer
+      // when scrubbing, so it's covered by the same waiting/playing pair.
+      var spinner = document.getElementById("ovBufferSpinner");
+      v.onwaiting = function () { spinner.style.display = "flex"; };
+      v.onplaying = function () { spinner.style.display = "none"; };
+      v.oncanplay = function () { spinner.style.display = "none"; };
 
       v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
       attachVideoHealthCheck(v);
