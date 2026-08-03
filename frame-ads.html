@@ -509,8 +509,12 @@
       return;
     }
     window._frameAds = frameAds;
-    container.innerHTML = "";
     var viewed = user.viewedAds||[];
+    // ✅ Build into a buffer and assign container.innerHTML ONCE at the end
+    // (see below) instead of using += per ad — repeated += re-parses and
+    // re-creates every element already rendered, including earlier ads'
+    // images, which caused a visible flash each time a new ad was appended.
+    var cardsHtml = "";
 
     for (var i = 0; i < frameAds.length; i++) {
       var ad = frameAds[i];
@@ -546,7 +550,7 @@
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
       var webClick = webLink ? 'onclick="openWeb(\''+encodeURIComponent(webLink)+'\')"' : "";
 
-      container.innerHTML +=
+      cardsHtml +=
         '<div class="ad-card" id="card_'+ad.id+'">'
           +'<div class="ad-img-box">'+imgHtml
             +(img?'<div class="black-overlay"><div class="overlay-desc">'+desc+'</div><div class="overlay-cat">'+category+' • ' + t('ovVerified') + '</div></div>':'')
@@ -564,6 +568,9 @@
           +'</div>'
         +'</div>';
     }
+
+    // ✅ Single DOM write for the whole list.
+    container.innerHTML = cardsHtml;
   }
 
   // ✅ Set both image and blurred bg
