@@ -201,7 +201,7 @@
     <!-- True 9:16 (1080x1920) video stage -->
     <div class="ov-video-section">
       <div class="ov-video-bg" id="overlayBg"></div>
-      <video class="full-video" id="overlayVideo" playsinline webkit-playsinline controls></video>
+      <video class="full-video" id="overlayVideo" width="360" height="640" playsinline webkit-playsinline controls></video>
       <iframe class="full-video" id="overlayIframe" style="display:none;border:0;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       <div class="ov-external-note" id="ovExternalNote" style="display:none;">
         <div style="font-size:34px;margin-bottom:8px;">🔗</div>
@@ -456,6 +456,27 @@
     if (btn && !btn.disabled) btn.innerText = t('watchAndEarn') + ' ₹' + amount.toFixed(2);
   }
 
+  // ── NEW: swaps a broken/black list-thumbnail <video> out for the
+  // poster image (or a generic placeholder if there's no poster), so a
+  // codec failure never shows a silent black box in the feed. ──
+  function swapThumbToPoster(ad, tvid) {
+    var parent = tvid.parentElement;
+    if (!parent) return;
+    tvid.pause();
+    tvid.style.display = 'none';
+    if (ad.poster) {
+      var img = document.createElement('img');
+      img.className = 'thumb-poster-img';
+      img.src = ad.poster;
+      parent.insertBefore(img, tvid);
+    } else {
+      var ph = document.createElement('div');
+      ph.className = 'thumb-placeholder';
+      ph.innerHTML = '🎬<span>Tap to watch</span>';
+      parent.insertBefore(ph, tvid);
+    }
+  }
+
   // ── Supabase-backed loadAds() ── type=Video, status=Active only.
   // NOTE: assumes campaigns has a `video_url` column holding the uploaded
   // video file (1080x1920 / 9:16). `image_url` is used as the poster/thumb.
@@ -580,18 +601,36 @@
     }
 
     // Once each list-view thumbnail reads its own metadata, fill in the
-    // real ₹ figure instead of the '₹—' placeholder.
+    // real ₹ figure instead of the '₹—' placeholder — and separately watch
+    // for a codec failure (audio-capable but 0-width video) so we can swap
+    // in the poster image instead of leaving a silent black box.
     videoAds.forEach(function (ad) {
       var vc = classifyVideoUrl(ad.video);
       if (vc.type !== 'file') return;
       var tvid = document.getElementById('thumbvid_' + ad.id);
       if (!tvid) return;
+
       tvid.addEventListener('loadedmetadata', function () {
         if (isFinite(tvid.duration) && tvid.duration > 0) {
           ad.duration = tvid.duration;
           updateCardRewardText(ad.id, calcReward(tvid.duration));
         }
       });
+
+      var thumbHealthChecked = false;
+      function checkThumbHealth() {
+        if (thumbHealthChecked) return;
+        // readyState >= 2 (HAVE_CURRENT_DATA) means a frame really should be
+        // decoded by now — if videoWidth is still 0 at that point, it's a
+        // genuine unsupported-codec case, not just normal buffering.
+        if (tvid.currentTime > 0.15 && tvid.videoWidth === 0 && tvid.readyState >= 2) {
+          thumbHealthChecked = true;
+          swapThumbToPoster(ad, tvid);
+        }
+      }
+      tvid.addEventListener('timeupdate', checkThumbHealth);
+      tvid.addEventListener('loadeddata', checkThumbHealth);
+      setTimeout(checkThumbHealth, 2000);
     });
   }
 
@@ -695,6 +734,76 @@
     }
   }
 
+  // ── Video health check (full-screen overlay) ────────────────────────
+  // The single most common reason a video plays audio but shows nothing:
+  // it's encoded in HEVC/H.265 (the default format iPhones record in),
+  // which most non-Apple devices/browsers can decode audio for but can't
+  // render the video track of. There's no client-side fix for the file
+  // itself (that needs server-side transcoding to H.264), but we CAN
+  // detect it happening and recover instead of silently showing a dead
+  // black box with sound: currentTime advancing with videoWidth still 0
+  // is the tell — but ONLY once readyState confirms a frame should
+  // already have been decoded, so normal slow-network buffering doesn't
+  // get misdiagnosed as a codec failure. When caught, we hide the broken
+  // player, offer an external "Watch Now" link (opens the raw file — some
+  // devices' native handlers succeed where the in-page <video> tag
+  // didn't), and still let the person earn via the same flat-reward
+  // fallback timer already used for YouTube/Instagram/external links.
+  var videoHealthTimer = null;
+  var videoHealthChecked = false;
+
+  function attachVideoHealthCheck(v) {
+    videoHealthChecked = false;
+    clearTimeout(videoHealthTimer);
+    function check() {
+      if (videoHealthChecked) return;
+      if (v.currentTime > 0.4 && v.videoWidth === 0 && v.readyState >= 2) {
+        videoHealthChecked = true;
+        handleVideoRenderFailure(v);
+      }
+    }
+    v.addEventListener("timeupdate", check);
+    v.addEventListener("loadeddata", check); // catches it earlier on fast connections
+    // timeupdate/loadeddata can be sparse or skipped on some devices — a
+    // direct timeout backstop catches cases where neither fires in time.
+    videoHealthTimer = setTimeout(check, 2500);
+  }
+
+  function handleVideoRenderFailure(v) {
+    stopWatchTracking();
+    var rawSrc = v.currentSrc || v.src;
+    v.pause();
+    v.style.display = "none";
+
+    var note = document.getElementById("ovExternalNote");
+    note.style.display = "flex";
+    document.getElementById("ovExternalText").innerText =
+      currentLang !== "en" ? t("videoFormatUnsupported") : "This video's format isn't supported on your device — tap below to watch it, you can still earn your reward.";
+    document.getElementById("ovExternalBtn").style.display = "inline-block";
+
+    // Route the "Watch Now" button at the raw file, and switch this ad
+    // into the same flat-reward flow already used for external links.
+    activeVideoClass = { type: "external", watchUrl: rawSrc };
+    startFallbackEarnFlow();
+  }
+
+  // Shared by non-file media (YouTube/Instagram/external) AND by any
+  // file-type video that fails the health check above — same fixed
+  // countdown + flat reward either way.
+  function startFallbackEarnFlow() {
+    document.getElementById("timerWrap").style.display = "flex";
+    document.getElementById("timerLabel").innerText = t('watchToEarn') + " ₹" + FALLBACK_REWARD.toFixed(2);
+    document.getElementById("timerDisplay").innerText = FALLBACK_MIN_SECONDS;
+    watchElapsed = 0;
+    clearInterval(watchTimer);
+    watchTimer = setInterval(function () {
+      watchElapsed++;
+      var remaining = Math.max(FALLBACK_MIN_SECONDS - watchElapsed, 0);
+      document.getElementById("timerDisplay").innerText = remaining;
+      if (remaining <= 0) unlockFallbackClaim();
+    }, 1000);
+  }
+
   function openAd(id) {
     var ad = getAds().find(function (a) { return a.id === id; });
     if (!ad) return;
@@ -742,17 +851,11 @@
       };
 
       v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
+      attachVideoHealthCheck(v);
     } else {
       // Non-file media (YouTube/Instagram/external) — can't measure real
       // watch time, so fall back to the old fixed countdown + flat reward.
-      document.getElementById("timerLabel").innerText = t('watchToEarn') + " ₹" + FALLBACK_REWARD.toFixed(2);
-      document.getElementById("timerDisplay").innerText = FALLBACK_MIN_SECONDS;
-      watchTimer = setInterval(function () {
-        watchElapsed++;
-        var remaining = Math.max(FALLBACK_MIN_SECONDS - watchElapsed, 0);
-        document.getElementById("timerDisplay").innerText = remaining;
-        if (remaining <= 0) unlockFallbackClaim();
-      }, 1000);
+      startFallbackEarnFlow();
     }
   }
 
