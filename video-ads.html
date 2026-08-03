@@ -167,7 +167,6 @@
     .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
 <script src="i18n.js"></script>
 <script>
   const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
@@ -202,7 +201,7 @@
     <!-- True 9:16 (1080x1920) video stage -->
     <div class="ov-video-section">
       <div class="ov-video-bg" id="overlayBg"></div>
-      <video class="full-video" id="overlayVideo" playsinline webkit-playsinline x5-playsinline preload="metadata" controls></video>
+      <video class="full-video" id="overlayVideo" playsinline webkit-playsinline controls></video>
       <iframe class="full-video" id="overlayIframe" style="display:none;border:0;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       <div class="ov-external-note" id="ovExternalNote" style="display:none;">
         <div style="font-size:34px;margin-bottom:8px;">🔗</div>
@@ -341,13 +340,9 @@
   // YouTube / Instagram page link. A <video> tag can only play the former —
   // YouTube/Instagram need an iframe embed instead, and if we can't safely
   // embed at all we fall back to an "open externally" link.
-  function normalizeMediaUrl(url) {
-    return (url || "").trim().replace(/ /g, "%20");
-  }
-
   function classifyVideoUrl(url) {
     if (!url) return { type: "none" };
-    var u = normalizeMediaUrl(url);
+    var u = url.trim();
 
     var yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{6,})/);
     if (yt) {
@@ -360,7 +355,7 @@
     }
 
     if (/\.(mp4|webm|mov|m3u8|ogg)(\?|#|$)/i.test(u) || u.indexOf("/storage/v1/object/public/") !== -1) {
-      return { type: "file", src: u, watchUrl: u, isHls: /\.m3u8(\?|#|$)/i.test(u) };
+      return { type: "file", src: u };
     }
 
     // Unknown link type (some other page URL) — can't embed reliably, offer an external link instead.
@@ -368,7 +363,6 @@
   }
 
   var activeAdId = null, activeAdObj = null, canEarn = false;
-  var activeHls = null;
   var watchTimer = null;      // fallback interval (YouTube/Instagram/external only)
   var watchElapsed = 0;       // fallback seconds counter (YouTube/Instagram/external only)
   var watchedSeconds = 0;     // real accumulated watched seconds (file-type videos)
@@ -377,47 +371,6 @@
   var _shareAdId = null, _referCode = null, _commentAdId = null;
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
-
-  function teardownActiveHls() {
-    if (activeHls) {
-      activeHls.destroy();
-      activeHls = null;
-    }
-  }
-
-  function safePlay(videoEl) {
-    if (!videoEl || typeof videoEl.play !== "function") return;
-    videoEl.play().catch(function () { /* autoplay may be blocked until user interacts */ });
-  }
-
-  function attachVideoSource(videoEl, vc, posterUrl) {
-    teardownActiveHls();
-    videoEl.pause();
-    videoEl.removeAttribute("src");
-    videoEl.load();
-    videoEl.playsInline = true;
-    videoEl.setAttribute("playsinline", "");
-    videoEl.setAttribute("webkit-playsinline", "");
-    videoEl.setAttribute("x5-playsinline", "");
-    videoEl.setAttribute("preload", "metadata");
-    if (posterUrl) videoEl.poster = posterUrl;
-    else videoEl.removeAttribute("poster");
-
-    if (vc.isHls && window.Hls && window.Hls.isSupported()) {
-      activeHls = new window.Hls({ enableWorker: true });
-      activeHls.loadSource(vc.src);
-      activeHls.attachMedia(videoEl);
-      activeHls.on(window.Hls.Events.ERROR, function (_, data) {
-        if (data && data.fatal) {
-          teardownActiveHls();
-          videoEl.src = vc.src;
-        }
-      });
-      return;
-    }
-
-    videoEl.src = vc.src;
-  }
 
   // ── CLOUD USER SYNC ── wallet + claimed-ad history now live in Supabase
   // ("users" + "user_ad_history"), keyed by mobile — not just this
@@ -458,7 +411,7 @@
       name: (userRow && (userRow.first_name || userRow.last_name)) ? [userRow.first_name, userRow.last_name].filter(Boolean).join(" ") : local.name,
       adHistory: adHistory,
       viewedAds: viewedAds
-    }
+    });
     localStorage.setItem("userProfile_" + mobile, JSON.stringify(merged));
     return merged;
   }
@@ -576,9 +529,9 @@
 
       var thumbHtml;
       if (vc.type === "file") {
-        thumbHtml = '<video id="thumbvid_' + ad.id + '" class="thumb-video" preload="metadata" muted playsinline webkit-playsinline x5-playsinline autoplay loop'
+        thumbHtml = '<video id="thumbvid_' + ad.id + '" class="thumb-video" preload="metadata" muted playsinline'
           + (ad.poster ? ' poster="' + ad.poster + '"' : '')
-          + ' src="' + vc.src + '#t=0.1"></video>'
+          + '><source src="' + vc.src + '#t=0.1"></video>'
           + '<div class="play-icon">▶</div>';
       } else if (vc.type === "youtube") {
         thumbHtml = '<img class="thumb-poster-img" src="' + vc.thumb + '" alt="">'
@@ -650,7 +603,6 @@
     var note = document.getElementById("ovExternalNote");
     var bg = document.getElementById("overlayBg");
 
-    teardownActiveHls();
     v.pause(); v.removeAttribute("src"); v.load(); v.style.display = "none";
     f.src = "about:blank"; f.style.display = "none";
     note.style.display = "none";
@@ -661,13 +613,8 @@
 
     if (vc.type === "file") {
       v.style.display = "block";
-      attachVideoSource(v, vc, ad.poster);
-      v.onerror = function () {
-        v.style.display = "none";
-        note.style.display = "flex";
-        document.getElementById("ovExternalText").innerText = "This video could not play on this device. Use the button below to open it directly.";
-        document.getElementById("ovExternalBtn").style.display = "inline-block";
-      };
+      if (ad.poster) v.poster = ad.poster;
+      v.src = vc.src;
     } else if (vc.type === "youtube" || vc.type === "instagram") {
       f.style.display = "block";
       f.src = vc.embedUrl;
@@ -688,15 +635,30 @@
     document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300);
   }
 
-  function fillOverlay(ad) {
+  async function fillOverlay(ad) {
     var title = ad.title || ad.name || "Ad";
     var cat = ad.category || "General";
-    setOverlayMedia(ad);
+    var desc = ad.desc || ad.description || "";
+    setOverlayMedia(ad); // start the video loading immediately, don't wait on translation
+
+    // Show the original text right away so nothing sits blank/"Loading…"
+    // during the translation round-trip; swap it in once ready.
     document.getElementById("ovTopTitle").innerText = title;
     document.getElementById("ovTitle").innerText = title;
-    document.getElementById("ovDesc").innerText = ad.desc || ad.description || "";
+    document.getElementById("ovDesc").innerText = desc;
     document.getElementById("ovCat").innerText = cat;
     document.getElementById("ovCatLabel").innerText = cat;
+
+    if (currentLang !== "en") {
+      var tTitle = await translateDynamic(title, currentLang);
+      var tCat = await translateDynamic(cat, currentLang);
+      var tDesc = desc ? await translateDynamic(desc, currentLang) : desc;
+      document.getElementById("ovTopTitle").innerText = tTitle;
+      document.getElementById("ovTitle").innerText = tTitle;
+      document.getElementById("ovDesc").innerText = tDesc;
+      document.getElementById("ovCat").innerText = tCat;
+      document.getElementById("ovCatLabel").innerText = tCat;
+    }
   }
 
   function stopWatchTracking() {
@@ -747,7 +709,6 @@
     document.getElementById("timerWrap").style.display = "flex";
     document.getElementById("claimBtn").style.display = "none";
     document.getElementById("closeBtn").style.display = "none";
-    document.getElementById("adOverlay").style.display = "flex";
 
     stopWatchTracking();
     var v = document.getElementById("overlayVideo");
@@ -780,7 +741,7 @@
         updateEarnUI();
       };
 
-      safePlay(v);
+      v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
     } else {
       // Non-file media (YouTube/Instagram/external) — can't measure real
       // watch time, so fall back to the old fixed countdown + flat reward.
@@ -815,7 +776,7 @@
     document.getElementById("adOverlay").style.display = "flex";
     stopWatchTracking();
     if (activeVideoClass.type === "file") {
-      safePlay(document.getElementById("overlayVideo"));
+      document.getElementById("overlayVideo").play().catch(function () {});
     }
   }
 
@@ -823,7 +784,6 @@
     stopWatchTracking();
     var v = document.getElementById("overlayVideo");
     v.pause();
-    teardownActiveHls();
     document.getElementById("overlayIframe").src = "about:blank";
     document.getElementById("adOverlay").style.display = "none";
   }
