@@ -156,6 +156,8 @@
     .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- ✅ Added: same i18n helper frame-ads.html/video-ads.html use (currentLang, t(), translateDynamic()) -->
+<script src="i18n.js"></script>
 <script>
   const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
   const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
@@ -169,7 +171,7 @@
   <div class="header">
     <div style="display:flex;align-items:center;">
       <a href="home.html" class="back-btn">←</a>
-      <div class="page-title">Surveys</div>
+      <div class="page-title" data-i18n="menuSurveys">Surveys</div>
     </div>
     <div class="wallet-pill">💰 ₹<span id="headerBalance">0.00</span></div>
   </div>
@@ -179,18 +181,18 @@
   <!-- FULL SCREEN SURVEY OVERLAY — renders one real question at a time -->
   <div class="ad-overlay" id="surveyOverlay">
     <div class="ov-topbar">
-      <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
+      <div class="ov-topbar-title" id="ovTopTitle" data-i18n="loadingGeneric">Loading…</div>
       <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
     </div>
 
     <div class="ov-content">
       <div class="ov-title-area">
-        <div class="ov-title" id="ovTitle">Loading…</div>
+        <div class="ov-title" id="ovTitle" data-i18n="loadingGeneric">Loading…</div>
         <div class="ov-meta">
           <span class="ov-category" id="ovCatLabel">General</span>
           <span class="ov-dot">•</span>
-          <span class="ov-verified">Verified Survey</span>
-          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ Already Completed</span>
+          <span class="ov-verified" data-i18n="surveyVerified">Verified Survey</span>
+          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ <span data-i18n="alreadyCompleted">Already Completed</span></span>
         </div>
       </div>
 
@@ -201,7 +203,7 @@
          "Claim ₹X.XX" on the last question of an active attempt, or
          "Close" on the last question of a View Again (readonly) pass. -->
     <div class="ov-earn-zone">
-      <button class="submit-btn" id="ovActionBtn" onclick="handleActionClick()" disabled>Next Question →</button>
+      <button class="submit-btn" id="ovActionBtn" onclick="handleActionClick()" disabled data-i18n="nextQuestionBtn">Next Question →</button>
     </div>
   </div>
 
@@ -212,7 +214,7 @@
   <div class="bottom-sheet" id="shareSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">🔗 Share This Survey</div>
+      <div class="sheet-title">🔗 <span data-i18n="shareThisSurvey">Share This Survey</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="share-grid">
@@ -231,18 +233,18 @@
   <div class="bottom-sheet" id="referSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">🎁 Refer & Earn</div>
+      <div class="sheet-title">🎁 <span data-i18n="referAndEarn">Refer &amp; Earn</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="refer-body">
       <div style="font-size:42px;">🎁</div>
       <div style="font-size:12px;color:#888;text-align:center;line-height:1.5;">Share this code with friends.<br>Earn bonus when they join EAP!</div>
       <div class="refer-code-box">
-        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;">REFERRAL CODE</div>
+        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;" data-i18n="referralCode">REFERRAL CODE</div>
         <div class="refer-code" id="referCodeDisplay">EAP0000</div>
       </div>
-      <button class="full-btn btn-blue" onclick="copyReferCode()">📋 Copy Code</button>
-      <button class="full-btn btn-wa" onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
+      <button class="full-btn btn-blue" onclick="copyReferCode()">📋 <span data-i18n="copyCode">Copy Code</span></button>
+      <button class="full-btn btn-wa" onclick="shareReferWhatsApp()">💬 <span data-i18n="shareViaWhatsApp">Share via WhatsApp</span></button>
     </div>
   </div>
 
@@ -250,7 +252,7 @@
   <div class="bottom-sheet" id="commentSheet" style="max-height:70%;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">💬 Comments</div>
+      <div class="sheet-title">💬 <span data-i18n="commentsTitle">Comments</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="comment-body">
@@ -266,7 +268,7 @@
   <div class="bottom-sheet" id="locationSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">📍 Vendor Location</div>
+      <div class="sheet-title">📍 <span data-i18n="vendorLocation">Vendor Location</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="loc-body" id="locBody"></div>
@@ -276,10 +278,10 @@
   <div class="toast" id="toast"></div>
 
   <div class="bottom-nav">
-      <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
-      <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
-      <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
-      <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+      <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text" data-i18n="navHome">Home</span></a>
+      <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text" data-i18n="navAds">Ads</span></a>
+      <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text" data-i18n="navWallet">Wallet</span></a>
+      <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text" data-i18n="navSettings">Settings</span></a>
   </div>
 </div>
 
@@ -397,6 +399,13 @@
   // Also pulls a question-count per campaign in one extra query, so cards
   // can show "X Questions" and the ₹ reward (questions * 0.70), and disable
   // Start for surveys with no questions set up yet.
+  //
+  // ✅ i18n: each card's title/category is translated via translateDynamic()
+  // when a non-English language is active, same pattern as frame-ads.html.
+  // ✅ Also builds the whole list into a string buffer and writes
+  // container.innerHTML ONCE at the end, instead of using += per survey —
+  // repeated += re-parses and re-creates every already-rendered card each
+  // time, which is what caused visible flicker on the other ad pages.
   async function loadSurveys() {
     document.getElementById("headerBalance").innerText = parseFloat(user.wallet || 0).toFixed(2);
     var cloud = await syncUserFromCloud(activeMobile);
@@ -415,7 +424,7 @@
 
     if (error) {
       console.error('Supabase loadSurveys error:', error);
-      container.innerHTML = "<div class='empty-msg'>⚠️ Couldn't load surveys right now.<br>Please try again shortly.</div>";
+      container.innerHTML = "<div class='empty-msg'>⚠️ " + t('couldntLoadSurveys') + "<br>" + t('tryAgainShortly') + "</div>";
       return;
     }
 
@@ -434,7 +443,7 @@
     });
 
     if (!surveys.length) {
-      container.innerHTML = "<div class='empty-msg'>📭 No active surveys found.<br>Check back soon!</div>";
+      container.innerHTML = "<div class='empty-msg'>📭 " + t('noActiveSurveysFound') + "<br>" + t('checkBackSoon') + "</div>";
       return;
     }
     window._surveys = surveys;
@@ -453,13 +462,20 @@
     } catch (e) { console.error('question count fetch error:', e); }
     window._surveyQCounts = qCounts;
 
-    container.innerHTML = "";
     var viewed = user.viewedAds || [];
+    var cardsHtml = "";
 
-    surveys.forEach(function (ad) {
+    for (var i = 0; i < surveys.length; i++) {
+      var ad = surveys[i];
       var isClaimed = viewed.indexOf(ad.id) !== -1;
       var title = ad.title || ad.name || "Untitled Survey";
       var category = ad.category || "General";
+
+      if (currentLang !== "en") {
+        title = await translateDynamic(title, currentLang);
+        category = await translateDynamic(category, currentLang);
+      }
+
       var webLink = ad.webLink || "";
       var mapLink = ad.mapLink || "";
       var refCode = "EAP" + String(ad.id).slice(-4).toUpperCase();
@@ -467,27 +483,27 @@
       var reward = calcSurveyReward(qCount);
 
       var badgesHtml = isClaimed
-        ? '<span class="claimed-tag">✔ Completed</span>'
+        ? '<span class="claimed-tag">✔ ' + t('completedTag') + '</span>'
         : '<span class="reward-tag">+₹' + reward.toFixed(2) + '</span>';
-      badgesHtml += ' <span class="qcount-tag">' + qCount + ' Question' + (qCount === 1 ? '' : 's') + '</span>';
+      badgesHtml += ' <span class="qcount-tag">' + qCount + ' ' + (qCount === 1 ? t('questionLabel') : t('questionsLabel')) + '</span>';
 
       var btnHtml;
       if (isClaimed) {
-        btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>';
+        btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 ' + t('viewAgain') + '</button>';
       } else if (qCount === 0) {
-        btnHtml = '<button class="start-btn disabled" disabled>Not Ready Yet</button>';
+        btnHtml = '<button class="start-btn disabled" disabled>' + t('notReadyYet') + '</button>';
       } else {
-        btnHtml = '<button class="start-btn" onclick="openSurvey(\'' + ad.id + '\')">Start (+₹' + reward.toFixed(2) + ')</button>';
+        btnHtml = '<button class="start-btn" onclick="openSurvey(\'' + ad.id + '\')">' + t('startBtn') + ' (+₹' + reward.toFixed(2) + ')</button>';
       }
 
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
       var webClick = webLink ? 'onclick="openWeb(\'' + encodeURIComponent(webLink) + '\')"' : "";
 
-      container.innerHTML +=
+      cardsHtml +=
         '<div class="card" id="card_' + ad.id + '">'
           + '<div class="card-body">'
             + '<div class="s-title">' + title + '</div>'
-            + '<div class="s-desc">Give feedback about ' + category + '</div>'
+            + '<div class="s-desc">' + t('giveFeedbackAbout') + ' ' + category + '</div>'
             + '<div class="badges-row">' + badgesHtml + '</div>'
             + '<div class="action-row-flex">' + btnHtml + '</div>'
           + '</div>'
@@ -499,7 +515,10 @@
             + '<button class="eng-btn eng-map" onclick="openLocation(\'' + encodeURIComponent(mapLink) + '\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
           + '</div>'
         + '</div>';
-    });
+    }
+
+    // ✅ Single DOM write for the whole list.
+    container.innerHTML = cardsHtml;
   }
 
   // ── Fetches the REAL questions + options for one campaign_id.
@@ -537,31 +556,51 @@
   }
 
   // ── Renders ONLY the current question (one-at-a-time flow). ──
-  function renderCurrentQuestion() {
+  // ✅ i18n: question text, option text, placeholder, and the "no answer"
+  // fallback are translated when a non-English language is active. Since
+  // this needs to await translateDynamic() calls, rendering itself is now
+  // async — callers already treat it as fire-and-forget.
+  async function renderCurrentQuestion() {
     var area = document.getElementById("questionsArea");
     var total = activeQuestions.length;
 
     if (!total) {
-      area.innerHTML = '<div class="empty-q-msg">📭 No questions found for this survey.</div>';
+      area.innerHTML = '<div class="empty-q-msg">📭 ' + t('noQuestionsFound') + '</div>';
       return;
     }
 
     var q = activeQuestions[currentQIndex];
-    var numHtml = '<div class="q-num">Question ' + (currentQIndex + 1) + ' of ' + total + '</div>';
-    var textHtml = '<div class="q-text">' + q.text + '</div>';
+    var qText = q.text;
+    var optionTexts = (q.options || []).map(function (o) { return o.text; });
+    var answerText = activeReadonly ? (activeAnswers[q.id] || "") : "";
+
+    if (currentLang !== "en") {
+      qText = await translateDynamic(qText, currentLang);
+      for (var oi = 0; oi < optionTexts.length; oi++) {
+        optionTexts[oi] = await translateDynamic(optionTexts[oi], currentLang);
+      }
+      if (answerText) answerText = await translateDynamic(answerText, currentLang);
+    }
+
+    // Guard against a stale translation landing after the person has
+    // already moved to a different question while this was in flight.
+    if (activeQuestions[currentQIndex] !== q) return;
+
+    var numHtml = '<div class="q-num">' + t('questionLabel') + ' ' + (currentQIndex + 1) + ' ' + t('ofWord') + ' ' + total + '</div>';
+    var textHtml = '<div class="q-text">' + qText + '</div>';
     var bodyHtml = "";
 
     if (q.options && q.options.length) {
-      q.options.forEach(function (o) {
+      q.options.forEach(function (o, oi2) {
         var sel = activeAnswers[q.id] === o.id ? " sel" : "";
         bodyHtml += '<div class="opt' + sel + (activeReadonly ? ' readonly' : '') + '" '
           + (activeReadonly ? "" : 'onclick="selectOption(\'' + q.id + '\',\'' + o.id + '\',this)"')
-          + '>' + o.text + '</div>';
+          + '>' + optionTexts[oi2] + '</div>';
       });
     } else {
       bodyHtml = activeReadonly
-        ? '<div class="opt readonly">' + (activeAnswers[q.id] || "No answer recorded") + '</div>'
-        : '<textarea class="q-text-input" placeholder="Type your answer…" onInput="setTextAnswer(\'' + q.id + '\', this.value)">' + (activeAnswers[q.id] || '') + '</textarea>';
+        ? '<div class="opt readonly">' + (answerText || t('noAnswerRecorded')) + '</div>'
+        : '<textarea class="q-text-input" placeholder="' + t('typeYourAnswerPlaceholder') + '" onInput="setTextAnswer(\'' + q.id + '\', this.value)">' + (activeAnswers[q.id] || '') + '</textarea>';
     }
 
     area.innerHTML = '<div class="q-block">' + numHtml + textHtml + bodyHtml + '</div>';
@@ -586,11 +625,11 @@
     if (activeReadonly) {
       btn.className = "close-ov-btn";
       btn.disabled = false;
-      btn.innerText = isLast ? "Close" : "Next Question →";
+      btn.innerText = isLast ? t('closeBtn') : t('nextQuestionBtn');
       btn.onclick = isLast ? closeOverlay : goNextReadonly;
     } else {
       btn.className = "submit-btn";
-      btn.innerText = isLast ? ("Claim ₹" + reward.toFixed(2)) : "Next Question →";
+      btn.innerText = isLast ? (t('claimWord') + " ₹" + reward.toFixed(2)) : t('nextQuestionBtn');
       btn.onclick = isLast ? submitSurvey : goNextActive;
       btn.disabled = !isAnswered(q.id);
     }
@@ -632,13 +671,23 @@
     activeAdId = id; activeAdObj = ad; canEarn = true; activeAnswers = {};
     currentQIndex = 0; activeReadonly = false;
 
-    document.getElementById("ovTopTitle").innerText = ad.title || ad.name || "Survey";
-    document.getElementById("ovTitle").innerText = ad.title || ad.name || "Survey";
-    document.getElementById("ovCatLabel").innerText = ad.category || "General";
+    var title = ad.title || ad.name || "Survey";
+    var cat = ad.category || "General";
+    document.getElementById("ovTopTitle").innerText = title;
+    document.getElementById("ovTitle").innerText = title;
+    document.getElementById("ovCatLabel").innerText = cat;
     document.getElementById("ovBadge").style.display = "none";
-    document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">Loading questions…</div>';
+    document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">' + t('loadingQuestions') + '</div>';
     document.getElementById("ovActionBtn").style.display = "none";
     document.getElementById("surveyOverlay").style.display = "flex";
+
+    if (currentLang !== "en") {
+      var tTitle = await translateDynamic(title, currentLang);
+      var tCat = await translateDynamic(cat, currentLang);
+      document.getElementById("ovTopTitle").innerText = tTitle;
+      document.getElementById("ovTitle").innerText = tTitle;
+      document.getElementById("ovCatLabel").innerText = tCat;
+    }
 
     activeQuestions = await fetchSurveyQuestions(id);
     renderCurrentQuestion();
@@ -650,13 +699,23 @@
     activeAdId = id; activeAdObj = ad; canEarn = false;
     currentQIndex = 0; activeReadonly = true; activeAnswers = {};
 
-    document.getElementById("ovTopTitle").innerText = ad.title || ad.name || "Survey";
-    document.getElementById("ovTitle").innerText = ad.title || ad.name || "Survey";
-    document.getElementById("ovCatLabel").innerText = ad.category || "General";
+    var title = ad.title || ad.name || "Survey";
+    var cat = ad.category || "General";
+    document.getElementById("ovTopTitle").innerText = title;
+    document.getElementById("ovTitle").innerText = title;
+    document.getElementById("ovCatLabel").innerText = cat;
     document.getElementById("ovBadge").style.display = "inline-block";
-    document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">Loading questions…</div>';
+    document.getElementById("questionsArea").innerHTML = '<div class="empty-q-msg">' + t('loadingQuestions') + '</div>';
     document.getElementById("ovActionBtn").style.display = "none";
     document.getElementById("surveyOverlay").style.display = "flex";
+
+    if (currentLang !== "en") {
+      var tTitle2 = await translateDynamic(title, currentLang);
+      var tCat2 = await translateDynamic(cat, currentLang);
+      document.getElementById("ovTopTitle").innerText = tTitle2;
+      document.getElementById("ovTitle").innerText = tTitle2;
+      document.getElementById("ovCatLabel").innerText = tCat2;
+    }
 
     activeQuestions = await fetchSurveyQuestions(id);
     renderCurrentQuestion();
@@ -677,7 +736,7 @@
     var reward = calcSurveyReward(qSnapshot.length);
 
     closeOverlay();
-    showToast("Crediting reward…");
+    showToast(t('creditingReward'));
 
     try {
       const { error: insErr } = await supabaseClient.from('user_ad_history').insert({
@@ -696,12 +755,12 @@
       localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
 
       document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
-      loadSurveys(); showToast("Survey Submitted! ₹" + reward.toFixed(2) + " Added.");
+      loadSurveys(); showToast(t('surveySubmittedExcl') + " ₹" + reward.toFixed(2) + " " + t('addedWord'));
       recordAdView(idSnapshot);
       recordSurveyResponses(idSnapshot, qSnapshot, aSnapshot);
     } catch (e) {
       console.error('submitSurvey cloud error:', e);
-      showToast("Couldn't submit — check connection and try again.");
+      showToast(t('couldntSubmitSurvey'));
       canEarn = true;
     }
   }
@@ -751,7 +810,7 @@
   function renderComments(adId) {
     var comments = JSON.parse(localStorage.getItem("adComments_" + adId)) || [];
     var list = document.getElementById("commentList");
-    if (!comments.length) { list.innerHTML = '<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>'; return; }
+    if (!comments.length) { list.innerHTML = '<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">' + t('noCommentsYet') + ' 💬</div>'; return; }
     list.innerHTML = "";
     comments.forEach(function (c) { list.innerHTML += '<div class="comment-item"><div class="c-avatar">' + (c.name || "U").charAt(0).toUpperCase() + '</div><div class="c-body"><div class="c-name">' + c.name + '<span class="c-time">' + c.time + '</span></div><div class="c-text">' + c.text + '</div></div></div>'; });
     list.scrollTop = list.scrollHeight;
@@ -775,14 +834,14 @@
 
   function openLocation(enc) {
     var loc = decodeURIComponent(enc).trim(); var body = document.getElementById("locBody");
-    if (!loc) { body.innerHTML = '<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this survey yet.</div></div>'; }
+    if (!loc) { body.innerHTML = '<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">' + t('locationNotAvailable') + '</div><div class="loc-not-sub">' + t('vendorNoLocationSurvey') + '</div></div>'; }
     else {
       var isUrl = loc.startsWith("http");
       var mapsUrl = isUrl ? loc : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(loc);
       var embedUrl = isUrl ? "" : "https://www.google.com/maps/embed/v1/place?key=" + EMBED_API_KEY + "&q=" + encodeURIComponent(loc);
       body.innerHTML = (embedUrl ? '<iframe class="loc-map-frame" src="' + embedUrl + '" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>' : '')
         + '<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">' + loc + '</div></div>'
-        + '<button class="open-maps-btn" onclick="openViaA(\'' + mapsUrl + '\')">🗺️ Open in Google Maps</button>';
+        + '<button class="open-maps-btn" onclick="openViaA(\'' + mapsUrl + '\')">🗺️ ' + t('openInGoogleMaps') + '</button>';
     }
     openSheet("locationSheet");
   }
@@ -808,6 +867,20 @@
     if (viewed.indexOf(id) !== -1) openViewAgain(id);
     else openSurvey(id);
   }
+
+  // ── Live language switching, no refresh needed ──────────────────────
+  // Same pattern as frame-ads.html/video-ads.html: i18n.js's applyLang()
+  // updates static data-i18n text instantly, then calls
+  // window.onLangChanged(code) if defined. The survey cards and the
+  // current question are built from dynamic content (translateDynamic()),
+  // so re-running loadSurveys() — and re-rendering the current question if
+  // the overlay is open — is what applies the new language immediately.
+  window.onLangChanged = function () {
+    loadSurveys();
+    if (document.getElementById("surveyOverlay").style.display === "flex" && activeQuestions.length) {
+      renderCurrentQuestion();
+    }
+  };
 </script>
 </body>
 </html>
