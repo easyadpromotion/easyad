@@ -524,8 +524,14 @@
       return;
     }
     window._videoAds = videoAds;
-    container.innerHTML = "";
     var viewed = user.viewedAds || [];
+    // ✅ Build every card into this buffer and assign container.innerHTML
+    // ONCE at the end (see below), instead of using += per ad. Repeatedly
+    // appending to innerHTML re-parses and re-creates the ENTIRE subtree
+    // each time — including every <video> element already rendered from
+    // earlier ads — which is exactly what caused the visible blinking:
+    // each ad added made every prior video reload from scratch.
+    var cardsHtml = "";
 
     for (var vi = 0; vi < videoAds.length; vi++) {
       var ad = videoAds[vi];
@@ -583,7 +589,7 @@
       var webClick = webLink ? 'onclick="openWeb(\'' + encodeURIComponent(webLink) + '\')"' : "";
       var mapClass = "eng-btn eng-map";
 
-      container.innerHTML +=
+      cardsHtml +=
         '<div class="ad-card" id="card_' + ad.id + '">'
           + '<div class="video-thumb" onclick="' + (isClaimed ? 'openViewAgain' : 'openAd') + '(\'' + ad.id + '\')">' + thumbHtml + '</div>'
           + '<div class="action-row">'
@@ -599,6 +605,10 @@
           + '</div>'
         + '</div>';
     }
+
+    // ✅ Single DOM write for the whole list — every video element is
+    // created exactly once, no mid-loop flicker.
+    container.innerHTML = cardsHtml;
 
     // Once each list-view thumbnail reads its own metadata, fill in the
     // real ₹ figure instead of the '₹—' placeholder — and separately watch
