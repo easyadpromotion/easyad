@@ -167,6 +167,8 @@
     .empty-msg { text-align: center; margin-top: 60px; color: #aaa; font-size: 12px; line-height: 1.8; }
   </style>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+<script src="i18n.js"></script>
 <script>
   const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
   const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
@@ -181,7 +183,7 @@
   <div class="header">
     <div style="display:flex;align-items:center;">
       <a href="home.html" class="back-btn">←</a>
-      <div class="page-title">Video Ads</div>
+      <div class="page-title" data-i18n="pageTitleVideoAds">Video Ads</div>
     </div>
     <div class="wallet-pill">💰 ₹<span id="headerBalance">0.00</span></div>
   </div>
@@ -193,14 +195,14 @@
   <div class="ad-overlay" id="adOverlay">
 
     <div class="ov-topbar">
-      <div class="ov-topbar-title" id="ovTopTitle">Loading…</div>
+      <div class="ov-topbar-title" id="ovTopTitle" data-i18n="loadingGeneric">Loading…</div>
       <button class="ov-close-btn" onclick="closeOverlay()">✕</button>
     </div>
 
     <!-- True 9:16 (1080x1920) video stage -->
     <div class="ov-video-section">
       <div class="ov-video-bg" id="overlayBg"></div>
-      <video class="full-video" id="overlayVideo" playsinline webkit-playsinline controls></video>
+      <video class="full-video" id="overlayVideo" playsinline webkit-playsinline x5-playsinline preload="metadata" controls></video>
       <iframe class="full-video" id="overlayIframe" style="display:none;border:0;" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
       <div class="ov-external-note" id="ovExternalNote" style="display:none;">
         <div style="font-size:34px;margin-bottom:8px;">🔗</div>
@@ -212,26 +214,26 @@
 
     <div class="ov-content">
       <div class="ov-title-area">
-        <div class="ov-title" id="ovTitle">Loading…</div>
+        <div class="ov-title" id="ovTitle" data-i18n="loadingGeneric">Loading…</div>
         <div class="ov-meta">
           <span class="ov-category" id="ovCatLabel">General</span>
           <span class="ov-dot">•</span>
-          <span class="ov-verified" id="ovVerified">Verified Ad</span>
-          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ Already Viewed</span>
+          <span class="ov-verified" id="ovVerified" data-i18n="ovVerified">Verified Ad</span>
+          <span class="ov-already-tag" id="ovBadge" style="display:none;">✔ <span data-i18n="alreadyViewed">Already Viewed</span></span>
         </div>
       </div>
 
       <div class="ov-desc-area">
-        <div class="ov-desc" id="ovDesc">Loading description…</div>
+        <div class="ov-desc" id="ovDesc" data-i18n="loadingDescription">Loading description…</div>
       </div>
 
       <div class="ov-earn-zone">
         <div id="timerWrap" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
           <div class="timer-ring" id="timerDisplay">10</div>
-          <div class="timer-label" id="timerLabel">Watch to earn ₹1.50</div>
+          <div class="timer-label" id="timerLabel"><span data-i18n="watchToEarn">Watch to earn</span> ₹1.50</div>
         </div>
-        <button class="claim-btn" id="claimBtn" onclick="claimReward()">🎉 Claim ₹1.50 Reward</button>
-        <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()">Close</button>
+        <button class="claim-btn" id="claimBtn" onclick="claimReward()">🎉 <span data-i18n="claimWord">Claim</span> ₹1.50 <span data-i18n="rewardWord">Reward</span></button>
+        <button class="close-ov-btn" id="closeBtn" onclick="closeOverlay()" data-i18n="closeBtn">Close</button>
       </div>
     </div>
   </div>
@@ -243,7 +245,7 @@
   <div class="bottom-sheet" id="shareSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">🔗 Share This Ad</div>
+      <div class="sheet-title">🔗 <span data-i18n="shareThisAd">Share This Ad</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="share-grid">
@@ -262,18 +264,18 @@
   <div class="bottom-sheet" id="referSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">🎁 Refer & Earn</div>
+      <div class="sheet-title">🎁 <span data-i18n="referAndEarn">Refer &amp; Earn</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="refer-body">
       <div style="font-size:42px;">🎁</div>
       <div style="font-size:12px;color:#888;text-align:center;line-height:1.5;">Share this code with friends.<br>Earn bonus when they join EAP!</div>
       <div class="refer-code-box">
-        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;">REFERRAL CODE</div>
+        <div style="font-size:10px;color:#aaa;font-weight:700;margin-bottom:4px;" data-i18n="referralCode">REFERRAL CODE</div>
         <div class="refer-code" id="referCodeDisplay">EAP0000</div>
       </div>
-      <button class="full-btn btn-red" onclick="copyReferCode()">📋 Copy Code</button>
-      <button class="full-btn btn-wa" onclick="shareReferWhatsApp()">💬 Share via WhatsApp</button>
+      <button class="full-btn btn-red" onclick="copyReferCode()">📋 <span data-i18n="copyCode">Copy Code</span></button>
+      <button class="full-btn btn-wa" onclick="shareReferWhatsApp()">💬 <span data-i18n="shareViaWhatsApp">Share via WhatsApp</span></button>
     </div>
   </div>
 
@@ -281,7 +283,7 @@
   <div class="bottom-sheet" id="commentSheet" style="max-height:70%;">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">💬 Comments</div>
+      <div class="sheet-title">💬 <span data-i18n="commentsTitle">Comments</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="comment-body">
@@ -297,7 +299,7 @@
   <div class="bottom-sheet" id="locationSheet">
     <div class="sheet-handle"></div>
     <div class="sheet-header">
-      <div class="sheet-title">📍 Vendor Location</div>
+      <div class="sheet-title">📍 <span data-i18n="vendorLocation">Vendor Location</span></div>
       <button class="sheet-close" onclick="closeAllModals()">✕</button>
     </div>
     <div class="loc-body" id="locBody"></div>
@@ -308,10 +310,10 @@
 
   <!-- BOTTOM NAV -->
   <div class="bottom-nav">
-    <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text">Home</span></a>
-    <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text">Ads</span></a>
-    <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text">Wallet</span></a>
-    <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text">Settings</span></a>
+    <a href="home.html" class="nav-item"><div class="nav-icon">🏠</div><span class="nav-text" data-i18n="navHome">Home</span></a>
+    <a href="frame-ads.html" class="nav-item"><div class="nav-icon">📢</div><span class="nav-text" data-i18n="navAds">Ads</span></a>
+    <a href="wallet.html" class="nav-item"><div class="nav-icon">👛</div><span class="nav-text" data-i18n="navWallet">Wallet</span></a>
+    <a href="settings.html" class="nav-item"><div class="nav-icon">⚙️</div><span class="nav-text" data-i18n="navSettings">Settings</span></a>
   </div>
 
 </div>
@@ -339,9 +341,13 @@
   // YouTube / Instagram page link. A <video> tag can only play the former —
   // YouTube/Instagram need an iframe embed instead, and if we can't safely
   // embed at all we fall back to an "open externally" link.
+  function normalizeMediaUrl(url) {
+    return (url || "").trim().replace(/ /g, "%20");
+  }
+
   function classifyVideoUrl(url) {
     if (!url) return { type: "none" };
-    var u = url.trim();
+    var u = normalizeMediaUrl(url);
 
     var yt = u.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([a-zA-Z0-9_-]{6,})/);
     if (yt) {
@@ -354,7 +360,7 @@
     }
 
     if (/\.(mp4|webm|mov|m3u8|ogg)(\?|#|$)/i.test(u) || u.indexOf("/storage/v1/object/public/") !== -1) {
-      return { type: "file", src: u };
+      return { type: "file", src: u, watchUrl: u, isHls: /\.m3u8(\?|#|$)/i.test(u) };
     }
 
     // Unknown link type (some other page URL) — can't embed reliably, offer an external link instead.
@@ -362,6 +368,7 @@
   }
 
   var activeAdId = null, activeAdObj = null, canEarn = false;
+  var activeHls = null;
   var watchTimer = null;      // fallback interval (YouTube/Instagram/external only)
   var watchElapsed = 0;       // fallback seconds counter (YouTube/Instagram/external only)
   var watchedSeconds = 0;     // real accumulated watched seconds (file-type videos)
@@ -370,6 +377,47 @@
   var _shareAdId = null, _referCode = null, _commentAdId = null;
   var activeMobile = localStorage.getItem("activeUser");
   var user = JSON.parse(localStorage.getItem("userProfile_" + activeMobile)) || { wallet: 0, viewedAds: [], adHistory: [] };
+
+  function teardownActiveHls() {
+    if (activeHls) {
+      activeHls.destroy();
+      activeHls = null;
+    }
+  }
+
+  function safePlay(videoEl) {
+    if (!videoEl || typeof videoEl.play !== "function") return;
+    videoEl.play().catch(function () { /* autoplay may be blocked until user interacts */ });
+  }
+
+  function attachVideoSource(videoEl, vc, posterUrl) {
+    teardownActiveHls();
+    videoEl.pause();
+    videoEl.removeAttribute("src");
+    videoEl.load();
+    videoEl.playsInline = true;
+    videoEl.setAttribute("playsinline", "");
+    videoEl.setAttribute("webkit-playsinline", "");
+    videoEl.setAttribute("x5-playsinline", "");
+    videoEl.setAttribute("preload", "metadata");
+    if (posterUrl) videoEl.poster = posterUrl;
+    else videoEl.removeAttribute("poster");
+
+    if (vc.isHls && window.Hls && window.Hls.isSupported()) {
+      activeHls = new window.Hls({ enableWorker: true });
+      activeHls.loadSource(vc.src);
+      activeHls.attachMedia(videoEl);
+      activeHls.on(window.Hls.Events.ERROR, function (_, data) {
+        if (data && data.fatal) {
+          teardownActiveHls();
+          videoEl.src = vc.src;
+        }
+      });
+      return;
+    }
+
+    videoEl.src = vc.src;
+  }
 
   // ── CLOUD USER SYNC ── wallet + claimed-ad history now live in Supabase
   // ("users" + "user_ad_history"), keyed by mobile — not just this
@@ -410,7 +458,7 @@
       name: (userRow && (userRow.first_name || userRow.last_name)) ? [userRow.first_name, userRow.last_name].filter(Boolean).join(" ") : local.name,
       adHistory: adHistory,
       viewedAds: viewedAds
-    });
+    }
     localStorage.setItem("userProfile_" + mobile, JSON.stringify(merged));
     return merged;
   }
@@ -452,7 +500,7 @@
     var badge = card.querySelector('.reward-tag');
     if (badge) badge.innerText = '₹' + amount.toFixed(2) + ' Reward';
     var btn = card.querySelector('.earn-btn');
-    if (btn && !btn.disabled) btn.innerText = 'Watch & Earn ₹' + amount.toFixed(2);
+    if (btn && !btn.disabled) btn.innerText = t('watchAndEarn') + ' ₹' + amount.toFixed(2);
   }
 
   // ── Supabase-backed loadAds() ── type=Video, status=Active only.
@@ -476,7 +524,7 @@
     if (error) {
       console.error('Supabase loadAds error:', error);
       document.getElementById("adContainer").innerHTML =
-        '<div class="empty-msg">⚠️ Couldn\'t load ads right now.<br>Please try again shortly.</div>';
+        '<div class="empty-msg">⚠️ ' + t('couldntLoadAds') + '<br>' + t('tryAgainShortly') + '</div>';
       return;
     }
 
@@ -498,16 +546,18 @@
 
     var container = document.getElementById("adContainer");
     if (!videoAds.length) {
-      container.innerHTML = '<div class="empty-msg">📭 No active video ads found.<br>Check back soon!</div>';
+      container.innerHTML = '<div class="empty-msg">📭 ' + t('noVideoAdsFound') + '<br>' + t('checkBackSoon') + '</div>';
       return;
     }
     window._videoAds = videoAds;
     container.innerHTML = "";
     var viewed = user.viewedAds || [];
 
-    videoAds.forEach(function (ad) {
+    for (var vi = 0; vi < videoAds.length; vi++) {
+      var ad = videoAds[vi];
       var isClaimed = viewed.indexOf(ad.id) !== -1;
       var title = ad.title || ad.name || "Untitled Ad";
+      if (currentLang !== "en") title = await translateDynamic(title, currentLang);
       var category = ad.category || "General";
       var webLink = ad.webLink || "";
       var mapLink = ad.mapLink || "";
@@ -526,9 +576,9 @@
 
       var thumbHtml;
       if (vc.type === "file") {
-        thumbHtml = '<video id="thumbvid_' + ad.id + '" class="thumb-video" preload="metadata" muted playsinline'
+        thumbHtml = '<video id="thumbvid_' + ad.id + '" class="thumb-video" preload="metadata" muted playsinline webkit-playsinline x5-playsinline autoplay loop'
           + (ad.poster ? ' poster="' + ad.poster + '"' : '')
-          + '><source src="' + vc.src + '#t=0.1"></video>'
+          + ' src="' + vc.src + '#t=0.1"></video>'
           + '<div class="play-icon">▶</div>';
       } else if (vc.type === "youtube") {
         thumbHtml = '<img class="thumb-poster-img" src="' + vc.thumb + '" alt="">'
@@ -545,14 +595,14 @@
         thumbHtml = '<div class="thumb-placeholder">🎬<span>No video uploaded</span></div>';
       }
 
-      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ Claimed</span>' : '<span class="reward-tag">' + rewardText + ' Reward</span>';
+      var badgeHtml = isClaimed ? '<span class="claimed-tag">✔ ' + t('claimedTag') + '</span>' : '<span class="reward-tag">' + rewardText + ' ' + t('rewardWord') + '</span>';
       var btnHtml;
       if (isClaimed) {
-        btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 View Again</button>';
+        btnHtml = '<button class="view-again-btn" onclick="openViewAgain(\'' + ad.id + '\')">👁 ' + t('viewAgain') + '</button>';
       } else if (vc.type === "none") {
-        btnHtml = '<button class="earn-btn" style="background:#ccc;box-shadow:none;cursor:default;" disabled>Video Not Ready</button>';
+        btnHtml = '<button class="earn-btn" style="background:#ccc;box-shadow:none;cursor:default;" disabled>' + t('videoNotReady') + '</button>';
       } else {
-        btnHtml = '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">Watch & Earn ' + rewardText + '</button>';
+        btnHtml = '<button class="earn-btn" onclick="openAd(\'' + ad.id + '\')">' + t('watchAndEarn') + ' ' + rewardText + '</button>';
       }
 
       var webClass = webLink ? "eng-btn eng-web" : "eng-btn eng-web disabled";
@@ -574,7 +624,7 @@
             + '<button class="' + mapClass + '" onclick="openLocation(\'' + encodeURIComponent(mapLink) + '\')"><div class="eng-icon">📍</div><span class="eng-label">Location</span></button>'
           + '</div>'
         + '</div>';
-    });
+    }
 
     // Once each list-view thumbnail reads its own metadata, fill in the
     // real ₹ figure instead of the '₹—' placeholder.
@@ -600,6 +650,7 @@
     var note = document.getElementById("ovExternalNote");
     var bg = document.getElementById("overlayBg");
 
+    teardownActiveHls();
     v.pause(); v.removeAttribute("src"); v.load(); v.style.display = "none";
     f.src = "about:blank"; f.style.display = "none";
     note.style.display = "none";
@@ -610,8 +661,13 @@
 
     if (vc.type === "file") {
       v.style.display = "block";
-      if (ad.poster) v.poster = ad.poster;
-      v.src = vc.src;
+      attachVideoSource(v, vc, ad.poster);
+      v.onerror = function () {
+        v.style.display = "none";
+        note.style.display = "flex";
+        document.getElementById("ovExternalText").innerText = "This video could not play on this device. Use the button below to open it directly.";
+        document.getElementById("ovExternalBtn").style.display = "inline-block";
+      };
     } else if (vc.type === "youtube" || vc.type === "instagram") {
       f.style.display = "block";
       f.src = vc.embedUrl;
@@ -662,12 +718,12 @@
     var isFull = activeDuration > 0 && capped >= activeDuration;
 
     document.getElementById("timerDisplay").innerText = remaining;
-    document.getElementById("timerLabel").innerText = "Earned so far: ₹" + amount.toFixed(2);
+    document.getElementById("timerLabel").innerText = t('earnedSoFar') + ": ₹" + amount.toFixed(2);
 
     var btn = document.getElementById("claimBtn");
     if (capped >= MIN_CLAIM_SECONDS || isFull) {
       btn.style.display = "block";
-      btn.innerText = isFull ? ("🎉 Claim ₹" + amount.toFixed(2) + " (Full)") : ("Claim ₹" + amount.toFixed(2) + " so far");
+      btn.innerText = isFull ? ("🎉 " + t('claimWord') + " ₹" + amount.toFixed(2) + " (" + t('fullWord') + ")") : (t('claimWord') + " ₹" + amount.toFixed(2) + " " + t('soFarWord'));
     } else {
       btn.style.display = "none";
     }
@@ -691,12 +747,13 @@
     document.getElementById("timerWrap").style.display = "flex";
     document.getElementById("claimBtn").style.display = "none";
     document.getElementById("closeBtn").style.display = "none";
+    document.getElementById("adOverlay").style.display = "flex";
 
     stopWatchTracking();
     var v = document.getElementById("overlayVideo");
 
     if (vc.type === "file") {
-      document.getElementById("timerLabel").innerText = "Earned so far: ₹0.00";
+      document.getElementById("timerLabel").innerText = t('earnedSoFar') + ": ₹0.00";
       document.getElementById("timerDisplay").innerText = activeDuration ? Math.ceil(activeDuration) : "--";
 
       v.onloadedmetadata = function () {
@@ -723,11 +780,11 @@
         updateEarnUI();
       };
 
-      v.play().catch(function () { /* autoplay may be blocked; user taps play */ });
+      safePlay(v);
     } else {
       // Non-file media (YouTube/Instagram/external) — can't measure real
       // watch time, so fall back to the old fixed countdown + flat reward.
-      document.getElementById("timerLabel").innerText = "Watch to earn ₹" + FALLBACK_REWARD.toFixed(2);
+      document.getElementById("timerLabel").innerText = t('watchToEarn') + " ₹" + FALLBACK_REWARD.toFixed(2);
       document.getElementById("timerDisplay").innerText = FALLBACK_MIN_SECONDS;
       watchTimer = setInterval(function () {
         watchElapsed++;
@@ -743,7 +800,7 @@
     document.getElementById("timerWrap").style.display = "none";
     var btn = document.getElementById("claimBtn");
     btn.style.display = "block";
-    btn.innerText = "🎉 Claim ₹" + FALLBACK_REWARD.toFixed(2) + " Reward";
+    btn.innerText = "🎉 " + t('claimWord') + " ₹" + FALLBACK_REWARD.toFixed(2) + " " + t('rewardWord');
   }
 
   function openViewAgain(id) {
@@ -758,7 +815,7 @@
     document.getElementById("adOverlay").style.display = "flex";
     stopWatchTracking();
     if (activeVideoClass.type === "file") {
-      document.getElementById("overlayVideo").play().catch(function () {});
+      safePlay(document.getElementById("overlayVideo"));
     }
   }
 
@@ -766,6 +823,7 @@
     stopWatchTracking();
     var v = document.getElementById("overlayVideo");
     v.pause();
+    teardownActiveHls();
     document.getElementById("overlayIframe").src = "about:blank";
     document.getElementById("adOverlay").style.display = "none";
   }
@@ -863,7 +921,7 @@
   function renderComments(adId) {
     var comments = JSON.parse(localStorage.getItem("adComments_" + adId)) || [];
     var list = document.getElementById("commentList");
-    if (!comments.length) { list.innerHTML = '<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">No comments yet. Be first! 💬</div>'; return; }
+    if (!comments.length) { list.innerHTML = '<div style="text-align:center;color:#ccc;font-size:12px;margin-top:20px;">' + t('noCommentsYet') + ' 💬</div>'; return; }
     list.innerHTML = "";
     comments.forEach(function (c) { list.innerHTML += '<div class="comment-item"><div class="c-avatar">' + (c.name || "U").charAt(0).toUpperCase() + '</div><div class="c-body"><div class="c-name">' + c.name + '<span class="c-time">' + c.time + '</span></div><div class="c-text">' + c.text + '</div></div></div>'; });
     list.scrollTop = list.scrollHeight;
@@ -887,14 +945,14 @@
 
   function openLocation(enc) {
     var loc = decodeURIComponent(enc).trim(); var body = document.getElementById("locBody");
-    if (!loc) { body.innerHTML = '<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">Location Not Available</div><div class="loc-not-sub">This vendor has not provided<br>a location for this ad yet.</div></div>'; }
+    if (!loc) { body.innerHTML = '<div class="loc-not-provided"><div class="loc-not-icon">🗺️</div><div class="loc-not-title">' + t('locationNotAvailable') + '</div><div class="loc-not-sub">' + t('vendorNoLocation') + '</div></div>'; }
     else {
       var isUrl = loc.startsWith("http");
       var mapsUrl = isUrl ? loc : "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(loc);
       var embedUrl = isUrl ? "" : "https://www.google.com/maps/embed/v1/place?key=" + EMBED_API_KEY + "&q=" + encodeURIComponent(loc);
       body.innerHTML = (embedUrl ? '<iframe class="loc-map-frame" src="' + embedUrl + '" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>' : '')
         + '<div class="loc-address"><span style="font-size:22px;">📍</span><div class="loc-address-text">' + loc + '</div></div>'
-        + '<button class="open-maps-btn" onclick="openViaA(\'' + mapsUrl + '\')">🗺️ Open in Google Maps</button>';
+        + '<button class="open-maps-btn" onclick="openViaA(\'' + mapsUrl + '\')">🗺️ ' + t('openInGoogleMaps') + '</button>';
     }
     openSheet("locationSheet");
   }
