@@ -766,6 +766,21 @@
   function closeAllModals(){ document.getElementById("backdrop").classList.remove("open"); ["shareSheet","referSheet","commentSheet","locationSheet"].forEach(function(id){ document.getElementById(id).classList.remove("open"); }); }
   function showToast(msg){ var t=document.getElementById("toast"); t.innerText=msg; t.classList.add("show"); setTimeout(function(){ t.classList.remove("show"); },2500); }
   function getAds(){ return window._frameAds||[]; }
+
+  // ── Live language switching, no refresh needed ──────────────────────
+  // i18n.js's applyLang() already re-translates every static data-i18n
+  // element the instant a new language is picked, and then calls
+  // window.onLangChanged(code) if it's defined. The ad cards and overlay
+  // are built from dynamic vendor content (translated via
+  // translateDynamic()), which only lives inside already-generated
+  // innerHTML — so re-running loadAds() (and re-filling an open overlay)
+  // is what actually applies the new language to that content immediately.
+  window.onLangChanged = function () {
+    loadAds();
+    if (document.getElementById("adOverlay").style.display === "flex" && activeAdObj) {
+      fillOverlay(activeAdObj);
+    }
+  };
 </script>
 </body>
 </html>
