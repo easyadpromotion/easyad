@@ -253,7 +253,7 @@ body{
 
 </style>
 </head>
-<body onload="loadStats()">
+<body>
 
 <div class="mobile-screen">
 
@@ -276,7 +276,7 @@ body{
         </a>
         <a href="user_dashboard.html" class="stat-card">
             <span class="stat-num" id="statUsers">…</span>
-            <span class="stat-label">Users</span>
+            <span class="stat-label">New Users</span>
         </a>
         <a href="live_ads.html" class="stat-card">
             <span class="stat-num" id="statLiveAds">…</span>
@@ -286,6 +286,13 @@ body{
             <span class="stat-num" style="color:#d63031;" id="totalPending">…</span>
             <span class="stat-label">Pending</span>
         </div>
+    </div>
+
+    <div class="section-title" style="margin-bottom:0;">Filter Period <span style="font-weight:400;color:var(--muted);text-transform:none;font-size:11px;">— Revenue / New Users / Live Ads below</span></div>
+    <div class="period-row" id="periodRow" style="padding:8px 20px 4px;"></div>
+    <div class="date-range-row" id="dateRangeRow" style="margin:0 20px 6px;">
+        <input type="date" id="dateFrom">
+        <input type="date" id="dateTo">
     </div>
 
     <div class="section-title">Management Tools</div>
@@ -344,218 +351,20 @@ body{
 <script>
 /* ============================================================
    SHARED HELPERS — used by every page in the admin dashboard app
-   All numbers are DEMO / MOCK data generated locally so every
-   page works without a backend. Replace the generate* functions
-   with real API calls when ready.
-
-   Numbers are generated so child values always sum EXACTLY to
-   their parent (state total = sum of district totals; district
-   total = urban + rural) using splitInteger()'s largest-remainder
-   method — so on-screen totals and the downloaded CSV always match.
    ============================================================ */
 
 const PERIODS = ["Day", "Week", "Month", "Half Yearly", "Yearly", "Date Range"];
 
-/* ---- deterministic pseudo-random so numbers don't jump around ---- */
-function hashStr(str){
-  let h = 0;
-  for(let i=0;i<str.length;i++){ h = (h<<5) - h + str.charCodeAt(i); h |= 0; }
-  return Math.abs(h);
-}
-function mulberry32(seed){
-  return function(){
-    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function seededInt(seedStr, min, max){
-  const rnd = mulberry32(hashStr(seedStr));
-  return Math.floor(rnd() * (max - min + 1)) + min;
-}
-
-const PERIOD_SCALE = {
-  "Day":1, "Week":6, "Month":22, "Half Yearly":110, "Yearly":230, "Date Range":40,
-  "Last 30 days":22, "Last 90 days":65, "Last 180 days":130, "Last 365 days":230,
-  "Custom Range":40, "Financial Year":230
-};
-
-/* Splits an integer `total` into parts proportional to `weights`,
-   guaranteeing the parts sum EXACTLY to `total` (largest-remainder method). */
-function splitInteger(total, weights){
-  const sumW = weights.reduce((a,b)=>a+b,0) || 1;
-  const raw = weights.map(w => total * w / sumW);
-  const floors = raw.map(Math.floor);
-  let remainder = total - floors.reduce((a,b)=>a+b,0);
-  const order = raw.map((r,i)=>({ i, frac: r - Math.floor(r) })).sort((a,b)=>b.frac - a.frac);
-  for(let k=0; k<remainder && order.length; k++){ floors[order[k % order.length].i] += 1; }
-  return floors;
-}
-
-/* ============================================================
-   PAN-INDIA GEOGRAPHY — all 28 states + 8 union territories,
-   with a few representative districts each. Urban/Rural locality
-   names are illustrative placeholders (pattern-generated) except
-   for a couple of real examples — swap INDIA_GEO for a full
-   State > District > Village dataset / API when you have one.
-   ============================================================ */
-const INDIA_GEO = {
-  "Andhra Pradesh": ["Visakhapatnam","Vijayawada (NTR)","Guntur"],
-  "Arunachal Pradesh": ["Papum Pare","East Siang","West Kameng"],
-  "Assam": ["Kamrup Metropolitan","Dibrugarh","Cachar"],
-  "Bihar": ["Patna","Gaya","Muzaffarpur"],
-  "Chhattisgarh": ["Raipur","Bilaspur","Durg"],
-  "Goa": ["North Goa","South Goa"],
-  "Gujarat": ["Ahmedabad","Surat","Vadodara"],
-  "Haryana": ["Gurugram","Faridabad","Panipat"],
-  "Himachal Pradesh": ["Shimla","Kangra","Mandi"],
-  "Jharkhand": ["Ranchi","East Singhbhum","Dhanbad"],
-  "Karnataka": ["Bengaluru Urban","Mysuru","Dakshina Kannada"],
-  "Kerala": ["Thiruvananthapuram","Ernakulam","Kozhikode"],
-  "Madhya Pradesh": ["Bhopal","Indore","Jabalpur"],
-  "Maharashtra": ["Mumbai Suburban","Pune","Nagpur"],
-  "Manipur": ["Imphal West","Imphal East"],
-  "Meghalaya": ["East Khasi Hills","West Garo Hills"],
-  "Mizoram": ["Aizawl","Lunglei"],
-  "Nagaland": ["Kohima","Dimapur"],
-  "Odisha": ["Khordha","Cuttack","Puri"],
-  "Punjab": ["Ludhiana","Amritsar","Jalandhar"],
-  "Rajasthan": ["Jaipur","Jodhpur","Udaipur"],
-  "Sikkim": ["East Sikkim","West Sikkim"],
-  "Tamil Nadu": ["Chennai","Coimbatore","Madurai"],
-  "Telangana": ["Hyderabad","Rangareddy","Warangal"],
-  "Tripura": ["West Tripura","Gomati"],
-  "Uttar Pradesh": ["Lucknow","Kanpur Nagar","Varanasi"],
-  "Uttarakhand": ["Dehradun","Haridwar","Nainital"],
-  "West Bengal": ["Kolkata","Howrah","Darjeeling"],
-  "Andaman and Nicobar Islands": ["South Andaman"],
-  "Chandigarh": ["Chandigarh"],
-  "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli","Daman"],
-  "Delhi": ["New Delhi","South Delhi","North Delhi"],
-  "Jammu and Kashmir": ["Srinagar","Jammu"],
-  "Ladakh": ["Leh","Kargil"],
-  "Lakshadweep": ["Lakshadweep"],
-  "Puducherry": ["Puducherry","Karaikal"]
-};
-const INDIA_STATE_NAMES = Object.keys(INDIA_GEO);
-
-/* A few authentic examples; everything else falls back to a clear pattern. */
-const LOCALITY_OVERRIDES = {
-  "Visakhapatnam": { urban:"Gajuwaka", urbanSub:"MVP Colony", rural:"Narava", ruralSub:"Sattivalasa" },
-  "Bengaluru Urban": { urban:"Whitefield", urbanSub:"ITPL Road", rural:"Anekal", ruralSub:"Jigani" },
-  "Chennai": { urban:"Ambattur", urbanSub:"Padi", rural:"Sholavaram", ruralSub:"Puzhal" }
-};
-function districtLocalities(district){
-  if(LOCALITY_OVERRIDES[district]) return LOCALITY_OVERRIDES[district];
-  return {
-    urban: district + " Urban Area",
-    urbanSub: district + " Urban Colony",
-    rural: district + " Rural Area",
-    ruralSub: district + " Village Cluster"
-  };
-}
-
-/* ---- state-level value for a metric+period (top of the hierarchy) ---- */
-function generateStateValue(key, period, state){
-  const scale = PERIOD_SCALE[period] || 1;
-  const base = seededInt(key + period + state, 8, 60);
-  return Math.round(base * scale);
-}
-
-/* ---- all states + values for a metric, sorted highest first ---- */
-function generateStateList(key, period){
-  return INDIA_STATE_NAMES
-    .map(state => ({ state, value: generateStateValue(key, period, state) }))
-    .sort((a,b)=> b.value - a.value);
-}
-
-/* ---- district-wise breakdown for one state; district totals sum
-   EXACTLY to the state's value from generateStateValue(). Each
-   district total is split into Urban + Rural, which also sum exactly. ---- */
-function generateDistrictBreakdown(key, period, state){
-  const stateTotal = generateStateValue(key, period, state);
-  const districts = INDIA_GEO[state] || [state + " District"];
-  const weights = districts.map(d => seededInt(key+period+state+d, 5, 30));
-  const totals = splitInteger(stateTotal, weights);
-  return districts.map((d, i)=>{
-    const loc = districtLocalities(d);
-    const dTotal = totals[i];
-    const urbanW = seededInt(key+d+"urbanshare", 45, 65);
-    const [urbanVal, ruralVal] = splitInteger(dTotal, [urbanW, 100-urbanW]);
-    return {
-      district: d, total: dTotal,
-      urban: { name: loc.urban, value: urbanVal, exampleName: loc.urbanSub, exampleValue: Math.round(urbanVal*0.3) },
-      rural: { name: loc.rural, value: ruralVal, exampleName: loc.ruralSub, exampleValue: Math.round(ruralVal*0.35) }
-    };
-  });
-}
-
-/* ---- CSV rows for one state (State Total / District Total / Urban / Rural) ---- */
-function flattenStateForCSV(metricTitle, key, period, state){
-  const rows = [[metricTitle, state, "", "State Total", state, generateStateValue(key, period, state)]];
-  generateDistrictBreakdown(key, period, state).forEach(d=>{
-    rows.push([metricTitle, state, d.district, "District Total", d.district, d.total]);
-    rows.push([metricTitle, state, d.district, "Urban", d.urban.name, d.urban.value]);
-    rows.push([metricTitle, state, d.district, "Rural", d.rural.name, d.rural.value]);
-  });
-  return rows;
-}
-
-/* ---- CSV rows for the whole country for one metric, plus an All-India total
-   row (computed as the sum of the state rows, so it always matches). ---- */
-function flattenIndiaForCSV(metricTitle, key, period){
-  let rows = [];
-  let indiaTotal = 0;
-  INDIA_STATE_NAMES.forEach(state=>{
-    rows = rows.concat(flattenStateForCSV(metricTitle, key, period, state));
-    indiaTotal += generateStateValue(key, period, state);
-  });
-  rows.push([metricTitle, "ALL INDIA", "", "Country Total", "All India", indiaTotal]);
-  return rows;
-}
-
-/* ---- render a Pan-India state list for one metric, with a
-   "Show All State Names" expander and a click-through link per state ---- */
-function renderStateList(container, key, title, period, linkBuilder){
-  const list = generateStateList(key, period);
-  const indiaTotal = list.reduce((a,b)=>a+b.value, 0);
-  const collapsedCount = 5;
-  let expanded = false;
-
-  function paint(){
-    const shown = expanded ? list : list.slice(0, collapsedCount);
-    container.innerHTML = `
-      <div class="metric-head"><h5>${title}</h5><span class="metric-total">${indiaTotal.toLocaleString()}</span></div>
-      <div class="state-list">
-        ${shown.map(s => `
-          <a class="state-row" href="${linkBuilder(s.state)}">
-            <span class="state-name">${s.state}</span>
-            <span class="state-val">${s.value.toLocaleString()}</span>
-            <span class="state-arrow">›</span>
-          </a>`).join("")}
-      </div>
-      ${list.length > collapsedCount ? `<button class="show-all-btn" id="toggle-${CSS.escape(key)}">${expanded ? "Show less" : `Show All State Names (${list.length})`}</button>` : ""}
-    `;
-    if(list.length > collapsedCount){
-      document.getElementById(`toggle-${CSS.escape(key)}`).onclick = ()=>{ expanded = !expanded; paint(); };
-    }
+function periodRange(period, customFrom, customTo){
+  const to = (period === "Date Range" && customTo) ? new Date(customTo + "T23:59:59") : new Date();
+  const days = { "Day":1, "Week":7, "Month":30, "Half Yearly":182, "Yearly":365 }[period];
+  let from = null;
+  if(period === "Date Range"){
+    from = customFrom ? new Date(customFrom + "T00:00:00") : null;
+  } else if(days){
+    from = new Date(to.getTime() - days*24*60*60*1000);
   }
-  paint();
-}
-
-/* ---- render the district > urban/rural drill-down tree for one state ---- */
-function renderDistrictTree(container, key, period, state){
-  const districts = generateDistrictBreakdown(key, period, state);
-  container.innerHTML = districts.map(d => `
-    <div class="district-block">
-      <div class="geo-row lvl-district"><span class="geo-name">${d.district}</span><span class="geo-val">${d.total.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Urban</span><span class="geo-name">${d.urban.name}</span><span class="geo-val">${d.urban.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.urban.exampleName}</span><span class="geo-val">${d.urban.exampleValue.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Rural</span><span class="geo-name">${d.rural.name}</span><span class="geo-val">${d.rural.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.rural.exampleName}</span><span class="geo-val">${d.rural.exampleValue.toLocaleString()}</span></div>
-    </div>
-  `).join("");
+  return { from, to };
 }
 
 /* ---- period selector chips + date range inputs ----
@@ -578,85 +387,6 @@ function initPeriodSelector(container, onChange, dateRangeContainer){
     container.appendChild(chip);
   });
   return "Month"; // default selected period
-}
-
-/* ============================================================
-   DEPENDENCY-FREE TREND CHART — plain inline SVG bars, no
-   external chart library, so it always renders even when a page
-   is previewed offline or a CDN script is blocked.
-   ============================================================ */
-function renderTrendChart(containerId, seriesKeys, seriesLabels, period){
-  const container = document.getElementById(containerId);
-  if(!container) return;
-  const labels = ["1","2","3","4","5","6"];
-  const colors = ["#6c3ce9","#1565c0","#2e7d32","#e65100","#ad1457","#00796b"];
-  const series = seriesKeys.map((k)=> labels.map((_,idx)=> seededInt(k+period+idx, 5, 100)));
-  const maxV = Math.max(...series.flat(), 1);
-
-  const W = 300, H = 150, padL = 6, padB = 6, padT = 10;
-  const groupW = (W - padL) / labels.length;
-  const barGap = 3;
-  const barW = (groupW - barGap * (seriesKeys.length + 1)) / seriesKeys.length;
-
-  let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:100%;">`;
-  labels.forEach((lab, li)=>{
-    seriesKeys.forEach((k, si)=>{
-      const val = series[si][li];
-      const bh = (val / maxV) * (H - padT - padB);
-      const x = padL + li*groupW + barGap + si*(barW+barGap);
-      const y = H - padB - bh;
-      svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${colors[si % colors.length]}"/>`;
-    });
-  });
-  svg += `</svg>`;
-  container.innerHTML = svg;
-
-  const legendEl = document.getElementById(containerId + "-legend");
-  if(legendEl){
-    legendEl.innerHTML = seriesLabels.map((lab, i)=>
-      `<div class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span>${lab}</div>`
-    ).join("");
-  }
-}
-
-/* ---- CSV export ---- */
-function downloadCSV(filename, headers, rows){
-  let csv = headers.join(",") + "\n";
-  rows.forEach(r=>{ csv += r.map(v => typeof v === "string" && v.includes(",") ? `"${v}"` : v).join(",") + "\n"; });
-  const blob = new Blob([csv], { type:"text/csv" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = filename;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  URL.revokeObjectURL(url);
-}
-
-/* ---- mock transaction history ---- */
-const TX_TYPES = { vendor:["Ad Payout","Commission","Bonus"], user:["Referral Earning","Task Reward","Cashback"], company:["Platform Fee","Ad Revenue","Subscription"], general:["Credit","Debit","Adjustment"] };
-const TX_STATUS = ["success","pending","failed"];
-function generateHistory(key, count){
-  const rnd = mulberry32(hashStr(key + "history"));
-  const types = TX_TYPES[key] || TX_TYPES.general;
-  const rows = [];
-  for(let i=0;i<count;i++){
-    const day = Math.floor(rnd()*27)+1;
-    const month = Math.floor(rnd()*6)+1;
-    const amt = Math.floor(rnd()*9000)+150;
-    const type = types[Math.floor(rnd()*types.length)];
-    const status = TX_STATUS[Math.floor(rnd()*3)];
-    rows.push({
-      id: "TXN" + (100000 + Math.floor(rnd()*899999)),
-      date: `${String(day).padStart(2,"0")}-${String(month).padStart(2,"0")}-2026`,
-      type, amt, status
-    });
-  }
-  return rows;
-}
-
-/* ---- read a query-string param ---- */
-function qParam(name, fallback){
-  const v = new URLSearchParams(window.location.search).get(name);
-  return v || fallback;
 }
 
 /* ---- reusable app logo (inline SVG so no external image needed) ---- */
@@ -687,24 +417,34 @@ function logoSVG(size){
         return "₹ " + n.toFixed(2);
     }
 
-    async function loadStats() {
-        // ── Users: real registered-user count from Supabase `users` ──
+    // ── Revenue / New Users / Live Ads are scoped to the selected Filter
+    // Period (new activity within that window); Pending stays an unfiltered
+    // current snapshot — it's "how many need action right now", not a
+    // historical count. ──
+    async function loadStats(period) {
+        const { from, to } = periodRange(period, document.getElementById("dateFrom").value, document.getElementById("dateTo").value);
+        const fromIso = from ? from.toISOString() : null;
+        const toIso = to.toISOString();
+
+        // ── New Users: users.registered_at within the period ──
         try {
-            const { count, error } = await supabaseClient
-                .from('users').select('*', { count: 'exact', head: true });
+            let q = supabaseClient.from('users').select('*', { count: 'exact', head: true }).lte('registered_at', toIso);
+            if (fromIso) q = q.gte('registered_at', fromIso);
+            const { count, error } = await q;
             if (!error) document.getElementById("statUsers").innerText = (count || 0).toLocaleString();
             else { console.error('users count error:', error); document.getElementById("statUsers").innerText = "—"; }
         } catch (e) { console.error('users count error:', e); document.getElementById("statUsers").innerText = "—"; }
 
-        // ── Live Ads: campaigns currently Active ──
+        // ── Live Ads: campaigns that went Active (approved_at) within the period ──
         try {
-            const { count, error } = await supabaseClient
-                .from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'Active');
+            let q = supabaseClient.from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'Active').lte('approved_at', toIso);
+            if (fromIso) q = q.gte('approved_at', fromIso);
+            const { count, error } = await q;
             if (!error) document.getElementById("statLiveAds").innerText = (count || 0).toLocaleString();
             else { console.error('live ads count error:', error); document.getElementById("statLiveAds").innerText = "—"; }
         } catch (e) { console.error('live ads count error:', e); document.getElementById("statLiveAds").innerText = "—"; }
 
-        // ── Pending: campaigns awaiting approval (was localStorage, now Supabase) ──
+        // ── Pending: campaigns awaiting approval, unfiltered snapshot ──
         try {
             const { count, error } = await supabaseClient
                 .from('campaigns').select('*', { count: 'exact', head: true }).eq('status', 'Pending');
@@ -720,10 +460,11 @@ function logoSVG(size){
             }
         } catch (e) { console.error('pending count error:', e); document.getElementById("totalPending").innerText = "—"; }
 
-        // ── Revenue: total company profit = (total ad views recorded) × ₹0.30 ──
+        // ── Revenue: (ad views recorded within the period) × ₹0.30 ──
         try {
-            const { count, error } = await supabaseClient
-                .from('ad_views').select('*', { count: 'exact', head: true });
+            let q = supabaseClient.from('ad_views').select('*', { count: 'exact', head: true }).lte('viewed_at', toIso);
+            if (fromIso) q = q.gte('viewed_at', fromIso);
+            const { count, error } = await q;
             if (!error) {
                 const revenue = (count || 0) * COMPANY_PROFIT_PER_VIEW;
                 document.getElementById("statRevenue").innerText = formatCompactRupees(revenue);
@@ -743,6 +484,13 @@ function logoSVG(size){
             else { wBadge.style.display = "none"; }
         } catch (e) { console.error('withdrawals badge error:', e); }
     }
+
+    let currentPeriod = "Month";
+    function refresh(period){ currentPeriod = period; loadStats(period); }
+    initPeriodSelector(document.getElementById("periodRow"), refresh, document.getElementById("dateRangeRow"));
+    document.getElementById("dateFrom").onchange = function(){ if(currentPeriod === "Date Range") loadStats(currentPeriod); };
+    document.getElementById("dateTo").onchange = function(){ if(currentPeriod === "Date Range") loadStats(currentPeriod); };
+    loadStats(currentPeriod);
 </script>
 
 </body>
