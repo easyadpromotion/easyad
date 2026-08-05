@@ -459,6 +459,11 @@
         const responses = document.getElementById('responses').value;
         const loc = selLoc.address;
         const mobile = localStorage.getItem("activeVendor");
+        // Vendor name lives only in this browser's vendorProfile_<mobile>
+        // (there's no vendors table in Supabase) — send it along so the
+        // admin's per-state report can show a real name instead of "—".
+        const vendorProfile = JSON.parse(localStorage.getItem("vendorProfile_" + mobile) || "null");
+        const vendorName = (vendorProfile && vendorProfile.name) ? vendorProfile.name : null;
 
         if (!mobile) { alert("You're not signed in — please log in before posting an ad."); return; }
         if (!name) { alert("Please enter Campaign Name"); return; }
@@ -494,6 +499,7 @@
                 .from('campaigns')
                 .insert({
                     vendor_mobile: mobile,
+                    vendor_name: vendorName,
                     type: "Survey",
                     title: name,
                     description: tagline || null,
