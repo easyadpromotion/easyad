@@ -5,6 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Revenue Detail</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const SUPABASE_URL = "https://ofluxzckhnydqgwtzjth.supabase.co";
+      const SUPABASE_KEY = "sb_publishable_qx2bXh00tGoDTrYjhl9Wcg_J9XKdQts";
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    </script>
     <style>
 /* ============================================================
    SHARED STYLES — used by every page in the admin dashboard app
@@ -271,7 +277,7 @@ body{
             <button class="btn-primary btn-secondary" id="statementBtn">My Statement</button>
         </div>
 
-        <p style="font-size:11px; color:var(--muted); margin:10px 2px 0; line-height:1.5;">Pan-India figures below. Tap any state to see its district-wise breakdown.</p>
+        <p style="font-size:11px; color:var(--muted); margin:10px 2px 0; line-height:1.5;" id="pageNote">Pan-India figures below, from live data.</p>
 
         <div class="section-title" style="margin:14px 0 4px;">Filter Period</div>
         <div class="period-row" id="periodRow"></div>
@@ -298,218 +304,135 @@ body{
 <script>
 /* ============================================================
    SHARED HELPERS — used by every page in the admin dashboard app
-   All numbers are DEMO / MOCK data generated locally so every
-   page works without a backend. Replace the generate* functions
-   with real API calls when ready.
-
-   Numbers are generated so child values always sum EXACTLY to
-   their parent (state total = sum of district totals; district
-   total = urban + rural) using splitInteger()'s largest-remainder
-   method — so on-screen totals and the downloaded CSV always match.
+   Real data from Supabase (`campaigns`, `users`, `user_ad_history`).
+   There's no state/district data anywhere in the schema — users and
+   campaigns store a free-text city, not a state — so unlike the old
+   mock version this can only show one honest All-India total per
+   metric, not a per-state breakdown.
    ============================================================ */
 
 const PERIODS = ["Day", "Week", "Month", "Half Yearly", "Yearly", "Date Range"];
 
-/* ---- deterministic pseudo-random so numbers don't jump around ---- */
-function hashStr(str){
-  let h = 0;
-  for(let i=0;i<str.length;i++){ h = (h<<5) - h + str.charCodeAt(i); h |= 0; }
-  return Math.abs(h);
-}
-function mulberry32(seed){
-  return function(){
-    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function seededInt(seedStr, min, max){
-  const rnd = mulberry32(hashStr(seedStr));
-  return Math.floor(rnd() * (max - min + 1)) + min;
+/* ---- turn a period label into a real [from, to] date range.
+   from === null means "all time" (used for Total/Active boxes below,
+   which are intentionally NOT period-scoped — see refresh()). ---- */
+function periodRange(period, customFrom, customTo){
+  const to = (period === "Date Range" && customTo) ? new Date(customTo + "T23:59:59") : new Date();
+  const days = { "Day":1, "Week":7, "Month":30, "Half Yearly":182, "Yearly":365 }[period];
+  let from = null;
+  if(period === "Date Range"){
+    from = customFrom ? new Date(customFrom + "T00:00:00") : null;
+  } else if(days){
+    from = new Date(to.getTime() - days*24*60*60*1000);
+  }
+  return { from, to };
 }
 
-const PERIOD_SCALE = {
-  "Day":1, "Week":6, "Month":22, "Half Yearly":110, "Yearly":230, "Date Range":40,
-  "Last 30 days":22, "Last 90 days":65, "Last 180 days":130, "Last 365 days":230,
-  "Custom Range":40, "Financial Year":230
-};
-
-/* Splits an integer `total` into parts proportional to `weights`,
-   guaranteeing the parts sum EXACTLY to `total` (largest-remainder method). */
-function splitInteger(total, weights){
-  const sumW = weights.reduce((a,b)=>a+b,0) || 1;
-  const raw = weights.map(w => total * w / sumW);
-  const floors = raw.map(Math.floor);
-  let remainder = total - floors.reduce((a,b)=>a+b,0);
-  const order = raw.map((r,i)=>({ i, frac: r - Math.floor(r) })).sort((a,b)=>b.frac - a.frac);
-  for(let k=0; k<remainder && order.length; k++){ floors[order[k % order.length].i] += 1; }
-  return floors;
+/* ---- bucket {date, value} points into N equal sub-intervals of
+   [from, to], summing value per bucket. Powers the trend chart with
+   real data instead of random numbers. ---- */
+function bucketize(points, from, to, n){
+  n = n || 6;
+  const start = (from || new Date(Math.min(to.getTime(), ...points.map(p=>p.date.getTime())))).getTime();
+  const end = to.getTime();
+  const bucketMs = Math.max(end - start, 1) / n;
+  const buckets = new Array(n).fill(0);
+  points.forEach(p=>{
+    const t = p.date.getTime();
+    if(t < start || t > end) return;
+    let idx = Math.floor((t - start) / bucketMs);
+    if(idx >= n) idx = n - 1;
+    if(idx < 0) idx = 0;
+    buckets[idx] += p.value;
+  });
+  return buckets;
 }
 
 /* ============================================================
-   PAN-INDIA GEOGRAPHY — all 28 states + 8 union territories,
-   with a few representative districts each. Urban/Rural locality
-   names are illustrative placeholders (pattern-generated) except
-   for a couple of real examples — swap INDIA_GEO for a full
-   State > District > Village dataset / API when you have one.
+   REAL STATE RESOLUTION — neither `users` nor `campaigns` stores a
+   state, only lat/lng (and a free-text city). To restore a genuine
+   per-state list instead of the old fabricated one, each unique
+   coordinate is reverse-geocoded via OpenStreetMap Nominatim — the
+   same free, key-less API home.html already uses for city detection
+   — and cached so repeat coordinates (common — many rows cluster in
+   the same city) cost one network call, not one per row. Calls are
+   spaced ~1.1s apart to stay within Nominatim's usage policy.
    ============================================================ */
-const INDIA_GEO = {
-  "Andhra Pradesh": ["Visakhapatnam","Vijayawada (NTR)","Guntur"],
-  "Arunachal Pradesh": ["Papum Pare","East Siang","West Kameng"],
-  "Assam": ["Kamrup Metropolitan","Dibrugarh","Cachar"],
-  "Bihar": ["Patna","Gaya","Muzaffarpur"],
-  "Chhattisgarh": ["Raipur","Bilaspur","Durg"],
-  "Goa": ["North Goa","South Goa"],
-  "Gujarat": ["Ahmedabad","Surat","Vadodara"],
-  "Haryana": ["Gurugram","Faridabad","Panipat"],
-  "Himachal Pradesh": ["Shimla","Kangra","Mandi"],
-  "Jharkhand": ["Ranchi","East Singhbhum","Dhanbad"],
-  "Karnataka": ["Bengaluru Urban","Mysuru","Dakshina Kannada"],
-  "Kerala": ["Thiruvananthapuram","Ernakulam","Kozhikode"],
-  "Madhya Pradesh": ["Bhopal","Indore","Jabalpur"],
-  "Maharashtra": ["Mumbai Suburban","Pune","Nagpur"],
-  "Manipur": ["Imphal West","Imphal East"],
-  "Meghalaya": ["East Khasi Hills","West Garo Hills"],
-  "Mizoram": ["Aizawl","Lunglei"],
-  "Nagaland": ["Kohima","Dimapur"],
-  "Odisha": ["Khordha","Cuttack","Puri"],
-  "Punjab": ["Ludhiana","Amritsar","Jalandhar"],
-  "Rajasthan": ["Jaipur","Jodhpur","Udaipur"],
-  "Sikkim": ["East Sikkim","West Sikkim"],
-  "Tamil Nadu": ["Chennai","Coimbatore","Madurai"],
-  "Telangana": ["Hyderabad","Rangareddy","Warangal"],
-  "Tripura": ["West Tripura","Gomati"],
-  "Uttar Pradesh": ["Lucknow","Kanpur Nagar","Varanasi"],
-  "Uttarakhand": ["Dehradun","Haridwar","Nainital"],
-  "West Bengal": ["Kolkata","Howrah","Darjeeling"],
-  "Andaman and Nicobar Islands": ["South Andaman"],
-  "Chandigarh": ["Chandigarh"],
-  "Dadra and Nagar Haveli and Daman and Diu": ["Dadra and Nagar Haveli","Daman"],
-  "Delhi": ["New Delhi","South Delhi","North Delhi"],
-  "Jammu and Kashmir": ["Srinagar","Jammu"],
-  "Ladakh": ["Leh","Kargil"],
-  "Lakshadweep": ["Lakshadweep"],
-  "Puducherry": ["Puducherry","Karaikal"]
-};
-const INDIA_STATE_NAMES = Object.keys(INDIA_GEO);
-
-/* A few authentic examples; everything else falls back to a clear pattern. */
-const LOCALITY_OVERRIDES = {
-  "Visakhapatnam": { urban:"Gajuwaka", urbanSub:"MVP Colony", rural:"Narava", ruralSub:"Sattivalasa" },
-  "Bengaluru Urban": { urban:"Whitefield", urbanSub:"ITPL Road", rural:"Anekal", ruralSub:"Jigani" },
-  "Chennai": { urban:"Ambattur", urbanSub:"Padi", rural:"Sholavaram", ruralSub:"Puzhal" }
-};
-function districtLocalities(district){
-  if(LOCALITY_OVERRIDES[district]) return LOCALITY_OVERRIDES[district];
-  return {
-    urban: district + " Urban Area",
-    urbanSub: district + " Urban Colony",
-    rural: district + " Rural Area",
-    ruralSub: district + " Village Cluster"
-  };
+const stateCache = new Map();
+let lastGeocodeAt = 0;
+async function resolveState(lat, lng){
+  if(lat == null || lng == null) return "Unspecified";
+  const key = lat.toFixed(2) + "," + lng.toFixed(2);
+  if(stateCache.has(key)) return stateCache.get(key);
+  const wait = Math.max(0, 1100 - (Date.now() - lastGeocodeAt));
+  if(wait) await new Promise(r => setTimeout(r, wait));
+  lastGeocodeAt = Date.now();
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=8&addressdetails=1`);
+    const data = await res.json();
+    const state = (data.address && data.address.state) || "Unspecified";
+    stateCache.set(key, state);
+    return state;
+  }catch(e){
+    console.error('resolveState error:', e);
+    stateCache.set(key, "Unspecified");
+    return "Unspecified";
+  }
 }
 
-/* ---- state-level value for a metric+period (top of the hierarchy) ---- */
-function generateStateValue(key, period, state){
-  const scale = PERIOD_SCALE[period] || 1;
-  const base = seededInt(key + period + state, 8, 60);
-  return Math.round(base * scale);
+/* ---- distinct id count per state, e.g. distinct vendors/users — a
+   vendor with campaigns in two states legitimately counts in both. ---- */
+async function bucketDistinctByState(items){
+  const stateSets = {};
+  for(const it of items){
+    const state = await resolveState(it.lat, it.lng);
+    (stateSets[state] || (stateSets[state] = new Set())).add(it.id);
+  }
+  const out = {};
+  Object.keys(stateSets).forEach(s => out[s] = stateSets[s].size);
+  return out;
 }
 
-/* ---- all states + values for a metric, sorted highest first ---- */
-function generateStateList(key, period){
-  return INDIA_STATE_NAMES
-    .map(state => ({ state, value: generateStateValue(key, period, state) }))
-    .sort((a,b)=> b.value - a.value);
+/* ---- summed value per state, e.g. revenue ---- */
+async function bucketSumByState(items){
+  const out = {};
+  for(const it of items){
+    const state = await resolveState(it.lat, it.lng);
+    out[state] = (out[state] || 0) + it.value;
+  }
+  return out;
 }
 
-/* ---- district-wise breakdown for one state; district totals sum
-   EXACTLY to the state's value from generateStateValue(). Each
-   district total is split into Urban + Rural, which also sum exactly. ---- */
-function generateDistrictBreakdown(key, period, state){
-  const stateTotal = generateStateValue(key, period, state);
-  const districts = INDIA_GEO[state] || [state + " District"];
-  const weights = districts.map(d => seededInt(key+period+state+d, 5, 30));
-  const totals = splitInteger(stateTotal, weights);
-  return districts.map((d, i)=>{
-    const loc = districtLocalities(d);
-    const dTotal = totals[i];
-    const urbanW = seededInt(key+d+"urbanshare", 45, 65);
-    const [urbanVal, ruralVal] = splitInteger(dTotal, [urbanW, 100-urbanW]);
-    return {
-      district: d, total: dTotal,
-      urban: { name: loc.urban, value: urbanVal, exampleName: loc.urbanSub, exampleValue: Math.round(urbanVal*0.3) },
-      rural: { name: loc.rural, value: ruralVal, exampleName: loc.ruralSub, exampleValue: Math.round(ruralVal*0.35) }
-    };
-  });
-}
-
-/* ---- CSV rows for one state (State Total / District Total / Urban / Rural) ---- */
-function flattenStateForCSV(metricTitle, key, period, state){
-  const rows = [[metricTitle, state, "", "State Total", state, generateStateValue(key, period, state)]];
-  generateDistrictBreakdown(key, period, state).forEach(d=>{
-    rows.push([metricTitle, state, d.district, "District Total", d.district, d.total]);
-    rows.push([metricTitle, state, d.district, "Urban", d.urban.name, d.urban.value]);
-    rows.push([metricTitle, state, d.district, "Rural", d.rural.name, d.rural.value]);
-  });
-  return rows;
-}
-
-/* ---- CSV rows for the whole country for one metric, plus an All-India total
-   row (computed as the sum of the state rows, so it always matches). ---- */
-function flattenIndiaForCSV(metricTitle, key, period){
-  let rows = [];
-  let indiaTotal = 0;
-  INDIA_STATE_NAMES.forEach(state=>{
-    rows = rows.concat(flattenStateForCSV(metricTitle, key, period, state));
-    indiaTotal += generateStateValue(key, period, state);
-  });
-  rows.push([metricTitle, "ALL INDIA", "", "Country Total", "All India", indiaTotal]);
-  return rows;
-}
-
-/* ---- render a Pan-India state list for one metric, with a
-   "Show All State Names" expander and a click-through link per state ---- */
-function renderStateList(container, key, title, period, linkBuilder){
-  const list = generateStateList(key, period);
-  const indiaTotal = list.reduce((a,b)=>a+b.value, 0);
+/* ---- render a real Pan-India state list for one metric, with a
+   "Show All State Names" expander and a click-through link per state.
+   state_detail.html's vendor/company/user branches are real (not mock),
+   and now also compute a real district/urban-rural tree, so linking
+   there is safe again. ---- */
+function renderStateList(container, title, indiaTotal, stateMap, isCurrency, linkBuilder){
+  const fmt = (v) => isCurrency ? "₹" + v.toLocaleString(undefined, {maximumFractionDigits:2}) : v.toLocaleString();
+  const list = Object.entries(stateMap).map(([state, value]) => ({ state, value })).sort((a,b)=> b.value - a.value);
   const collapsedCount = 5;
   let expanded = false;
 
   function paint(){
     const shown = expanded ? list : list.slice(0, collapsedCount);
     container.innerHTML = `
-      <div class="metric-head"><h5>${title}</h5><span class="metric-total">${indiaTotal.toLocaleString()}</span></div>
+      <div class="metric-head"><h5>${title}</h5><span class="metric-total">${fmt(indiaTotal)}</span></div>
       <div class="state-list">
-        ${shown.map(s => `
+        ${shown.length ? shown.map(s => `
           <a class="state-row" href="${linkBuilder(s.state)}">
             <span class="state-name">${s.state}</span>
-            <span class="state-val">${s.value.toLocaleString()}</span>
+            <span class="state-val">${fmt(s.value)}</span>
             <span class="state-arrow">›</span>
-          </a>`).join("")}
+          </a>`).join("") : `<div class="state-row"><span class="state-name">No data yet</span></div>`}
       </div>
-      ${list.length > collapsedCount ? `<button class="show-all-btn" id="toggle-${CSS.escape(key)}">${expanded ? "Show less" : `Show All State Names (${list.length})`}</button>` : ""}
+      ${list.length > collapsedCount ? `<button class="show-all-btn" id="toggle-${CSS.escape(title)}">${expanded ? "Show less" : `Show All State Names (${list.length})`}</button>` : ""}
     `;
     if(list.length > collapsedCount){
-      document.getElementById(`toggle-${CSS.escape(key)}`).onclick = ()=>{ expanded = !expanded; paint(); };
+      document.getElementById(`toggle-${CSS.escape(title)}`).onclick = ()=>{ expanded = !expanded; paint(); };
     }
   }
   paint();
-}
-
-/* ---- render the district > urban/rural drill-down tree for one state ---- */
-function renderDistrictTree(container, key, period, state){
-  const districts = generateDistrictBreakdown(key, period, state);
-  container.innerHTML = districts.map(d => `
-    <div class="district-block">
-      <div class="geo-row lvl-district"><span class="geo-name">${d.district}</span><span class="geo-val">${d.total.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Urban</span><span class="geo-name">${d.urban.name}</span><span class="geo-val">${d.urban.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.urban.exampleName}</span><span class="geo-val">${d.urban.exampleValue.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Rural</span><span class="geo-name">${d.rural.name}</span><span class="geo-val">${d.rural.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.rural.exampleName}</span><span class="geo-val">${d.rural.exampleValue.toLocaleString()}</span></div>
-    </div>
-  `).join("");
 }
 
 /* ---- period selector chips + date range inputs ----
@@ -537,39 +460,32 @@ function initPeriodSelector(container, onChange, dateRangeContainer){
 /* ============================================================
    DEPENDENCY-FREE TREND CHART — plain inline SVG bars, no
    external chart library, so it always renders even when a page
-   is previewed offline or a CDN script is blocked.
+   is previewed offline or a CDN script is blocked. Fed real
+   bucketed counts (see bucketize() above), one series only —
+   there's a single real signal per revenue type, not three.
    ============================================================ */
-function renderTrendChart(containerId, seriesKeys, seriesLabels, period){
+function renderTrendChart(containerId, buckets, label, color){
   const container = document.getElementById(containerId);
   if(!container) return;
-  const labels = ["1","2","3","4","5","6"];
-  const colors = ["#6c3ce9","#1565c0","#2e7d32","#e65100","#ad1457","#00796b"];
-  const series = seriesKeys.map((k)=> labels.map((_,idx)=> seededInt(k+period+idx, 5, 100)));
-  const maxV = Math.max(...series.flat(), 1);
+  const maxV = Math.max(...buckets, 1);
 
   const W = 300, H = 150, padL = 6, padB = 6, padT = 10;
-  const groupW = (W - padL) / labels.length;
-  const barGap = 3;
-  const barW = (groupW - barGap * (seriesKeys.length + 1)) / seriesKeys.length;
+  const groupW = (W - padL) / buckets.length;
+  const barW = groupW - 6;
 
   let svg = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%;height:100%;">`;
-  labels.forEach((lab, li)=>{
-    seriesKeys.forEach((k, si)=>{
-      const val = series[si][li];
-      const bh = (val / maxV) * (H - padT - padB);
-      const x = padL + li*groupW + barGap + si*(barW+barGap);
-      const y = H - padB - bh;
-      svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${colors[si % colors.length]}"/>`;
-    });
+  buckets.forEach((val, i)=>{
+    const bh = (val / maxV) * (H - padT - padB);
+    const x = padL + i*groupW + 3;
+    const y = H - padB - bh;
+    svg += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${bh.toFixed(1)}" rx="2" fill="${color}"/>`;
   });
   svg += `</svg>`;
   container.innerHTML = svg;
 
   const legendEl = document.getElementById(containerId + "-legend");
   if(legendEl){
-    legendEl.innerHTML = seriesLabels.map((lab, i)=>
-      `<div class="legend-item"><span class="legend-dot" style="background:${colors[i % colors.length]}"></span>${lab}</div>`
-    ).join("");
+    legendEl.innerHTML = `<div class="legend-item"><span class="legend-dot" style="background:${color}"></span>${label}</div>`;
   }
 }
 
@@ -583,28 +499,6 @@ function downloadCSV(filename, headers, rows){
   a.href = url; a.download = filename;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
   URL.revokeObjectURL(url);
-}
-
-/* ---- mock transaction history ---- */
-const TX_TYPES = { vendor:["Ad Payout","Commission","Bonus"], user:["Referral Earning","Task Reward","Cashback"], company:["Platform Fee","Ad Revenue","Subscription"], general:["Credit","Debit","Adjustment"] };
-const TX_STATUS = ["success","pending","failed"];
-function generateHistory(key, count){
-  const rnd = mulberry32(hashStr(key + "history"));
-  const types = TX_TYPES[key] || TX_TYPES.general;
-  const rows = [];
-  for(let i=0;i<count;i++){
-    const day = Math.floor(rnd()*27)+1;
-    const month = Math.floor(rnd()*6)+1;
-    const amt = Math.floor(rnd()*9000)+150;
-    const type = types[Math.floor(rnd()*types.length)];
-    const status = TX_STATUS[Math.floor(rnd()*3)];
-    rows.push({
-      id: "TXN" + (100000 + Math.floor(rnd()*899999)),
-      date: `${String(day).padStart(2,"0")}-${String(month).padStart(2,"0")}-2026`,
-      type, amt, status
-    });
-  }
-  return rows;
 }
 
 /* ---- read a query-string param ---- */
@@ -629,6 +523,12 @@ function logoSVG(size){
 <script>
 document.getElementById("logoSlot").innerHTML = logoSVG(28);
 
+// "Highest Earning Users" has no official product definition yet — this
+// takes it to mean the top 20% of users who've earned anything at all,
+// by wallet balance. Swap for a real business rule (e.g. a fixed rupee
+// threshold) once the product owner defines one.
+const HIGH_EARNER_PERCENTILE = 0.8;
+
 const CONFIG = {
   vendor: {
     title: "Vendor",
@@ -637,8 +537,7 @@ const CONFIG = {
       { title: "Total Vendors", key: "totalVendors" },
       { title: "Active Vendors", key: "activeVendors" },
       { title: "New Added Vendors", key: "newVendors" }
-    ],
-    seriesLabels: ["Total", "Active", "New"]
+    ]
   },
   user: {
     title: "User Earning",
@@ -647,18 +546,16 @@ const CONFIG = {
       { title: "Total Earning Users", key: "totalEarningUsers" },
       { title: "Highest Earning Users", key: "highestEarningUsers" },
       { title: "Newly Added Earning Users", key: "newEarningUsers" }
-    ],
-    seriesLabels: ["Total", "Highest", "New"]
+    ]
   },
   company: {
     title: "Company",
     subtitle: "Revenue > Company",
     boxes: [
-      { title: "Total Company Revenue", key: "totalCompanyRevenue" },
-      { title: "Active Revenue Streams", key: "activeCompanyRevenue" },
-      { title: "New Revenue Sources", key: "newCompanyRevenue" }
-    ],
-    seriesLabels: ["Total", "Active", "New"]
+      { title: "Total Company Revenue", key: "totalCompanyRevenue", isCurrency: true },
+      { title: "Active Revenue Streams", key: "activeCompanyRevenue", isCurrency: true },
+      { title: "New Revenue Sources", key: "newCompanyRevenue", isCurrency: true }
+    ]
   }
 };
 
@@ -677,33 +574,174 @@ let currentPeriod = "Month";
 const periodRow = document.getElementById("periodRow");
 const dateRangeRow = document.getElementById("dateRangeRow");
 const boxGrid = document.getElementById("boxGrid");
+const dateFromInput = document.getElementById("dateFrom");
+const dateToInput = document.getElementById("dateTo");
 
-// Build one card per metric (Total / Active / New), each with its own Pan-India state list
-boxGrid.innerHTML = cfg.boxes.map(b => `<div class="data-box" id="box-${b.key}"></div>`).join("");
+boxGrid.innerHTML = cfg.boxes.map(b =>
+  `<div class="data-box" id="box-${b.key}"><div class="metric-head"><h5>${b.title}</h5><span class="metric-total">Loading…</span></div></div>`
+).join("");
+
+let lastResult = null; // cached for the Download button
+
+/* ---- real Supabase-backed metrics, one loader per revenue type.
+   Total/Active are intentionally all-time (a "currently active" snapshot
+   shouldn't jump around as you change the period filter) — only New and
+   the trend chart are scoped to the selected period. ---- */
+
+async function loadVendorMetrics(from, to){
+  // Vendors have no stored address of their own (no vendors table at
+  // all) — state here comes from each CAMPAIGN's target location, i.e.
+  // "where this vendor's ads are aimed", not "where the vendor lives".
+  const { data, error } = await supabaseClient.from('campaigns').select('vendor_mobile, status, created_at, lat, lng');
+  if(error){ console.error('loadVendorMetrics error:', error); return null; }
+  const rows = (data || []).filter(r => r.vendor_mobile);
+
+  const totalVendors = new Set(rows.map(r=>r.vendor_mobile)).size;
+  const activeRows = rows.filter(r=>r.status === 'Active');
+  const activeVendors = new Set(activeRows.map(r=>r.vendor_mobile)).size;
+
+  const firstRowByVendor = {};
+  rows.forEach(r=>{
+    const cur = firstRowByVendor[r.vendor_mobile];
+    if(!cur || new Date(r.created_at) < new Date(cur.created_at)) firstRowByVendor[r.vendor_mobile] = r;
+  });
+  const newRows = Object.values(firstRowByVendor).filter(r=>{
+    const t = new Date(r.created_at).getTime();
+    return (!from || t >= from.getTime()) && t <= to.getTime();
+  });
+
+  const [totalStates, activeStates, newStates] = await Promise.all([
+    bucketDistinctByState(rows.map(r=>({ lat:r.lat, lng:r.lng, id:r.vendor_mobile }))),
+    bucketDistinctByState(activeRows.map(r=>({ lat:r.lat, lng:r.lng, id:r.vendor_mobile }))),
+    bucketDistinctByState(newRows.map(r=>({ lat:r.lat, lng:r.lng, id:r.vendor_mobile })))
+  ]);
+
+  const trend = bucketize(rows.map(r=>({ date: new Date(r.created_at), value: 1 })), from, to);
+  return {
+    values: { totalVendors, activeVendors, newVendors: newRows.length },
+    stateBreakdown: { totalVendors: totalStates, activeVendors: activeStates, newVendors: newStates },
+    trend, trendLabel: "New vendors", trendColor: "#6c3ce9"
+  };
+}
+
+async function loadUserMetrics(from, to){
+  // State comes from the user's OWN detected lat/lng (users.lat/lng,
+  // written by home.html's GPS location step) — a genuine home location,
+  // unlike the vendor/company loaders which only have a target location.
+  const [usersRes, historyRes] = await Promise.all([
+    supabaseClient.from('users').select('mobile, wallet, lat, lng'),
+    supabaseClient.from('user_ad_history').select('user_mobile, amount, created_at')
+  ]);
+  if(usersRes.error){ console.error('loadUserMetrics users error:', usersRes.error); return null; }
+  if(historyRes.error){ console.error('loadUserMetrics history error:', historyRes.error); }
+
+  const users = usersRes.data || [];
+  const history = historyRes.data || [];
+  const userByMobile = {};
+  users.forEach(u => userByMobile[u.mobile] = u);
+
+  const earners = users.filter(u => (u.wallet || 0) > 0);
+  const sortedWallets = earners.map(u=>u.wallet).sort((a,b)=>a-b);
+  const cutoff = sortedWallets.length ? sortedWallets[Math.floor(sortedWallets.length * HIGH_EARNER_PERCENTILE)] : Infinity;
+  const highestEarners = earners.filter(u => u.wallet >= cutoff);
+
+  const firstEarned = {};
+  history.forEach(r=>{
+    if(!(r.amount > 0)) return;
+    const t = new Date(r.created_at).getTime();
+    if(!(r.user_mobile in firstEarned) || t < firstEarned[r.user_mobile]) firstEarned[r.user_mobile] = t;
+  });
+  const newEarnerMobiles = Object.keys(firstEarned).filter(m => {
+    const t = firstEarned[m];
+    return (!from || t >= from.getTime()) && t <= to.getTime();
+  });
+
+  const [totalStates, highestStates, newStates] = await Promise.all([
+    bucketDistinctByState(earners.map(u=>({ lat:u.lat, lng:u.lng, id:u.mobile }))),
+    bucketDistinctByState(highestEarners.map(u=>({ lat:u.lat, lng:u.lng, id:u.mobile }))),
+    bucketDistinctByState(newEarnerMobiles.map(m=>({ lat: userByMobile[m] && userByMobile[m].lat, lng: userByMobile[m] && userByMobile[m].lng, id: m })))
+  ]);
+
+  const trend = bucketize(history.filter(r=>r.amount > 0).map(r=>({ date: new Date(r.created_at), value: 1 })), from, to);
+  return {
+    values: { totalEarningUsers: earners.length, highestEarningUsers: highestEarners.length, newEarningUsers: newEarnerMobiles.length },
+    stateBreakdown: { totalEarningUsers: totalStates, highestEarningUsers: highestStates, newEarningUsers: newStates },
+    trend, trendLabel: "Earning activity", trendColor: "#2e7d32"
+  };
+}
+
+async function loadCompanyMetrics(from, to){
+  // Same target-location caveat as loadVendorMetrics: this is revenue
+  // by where each campaign is aimed, not by any company address.
+  const { data, error } = await supabaseClient.from('campaigns').select('budget, status, created_at, lat, lng');
+  if(error){ console.error('loadCompanyMetrics error:', error); return null; }
+  const rows = data || [];
+  const sum = (list) => list.reduce((a,r)=>a + (r.budget || 0), 0);
+
+  const activeRows = rows.filter(r=>r.status === 'Active');
+  const newRows = rows.filter(r=>{
+    const t = new Date(r.created_at).getTime();
+    return (!from || t >= from.getTime()) && t <= to.getTime();
+  });
+
+  const [totalStates, activeStates, newStates] = await Promise.all([
+    bucketSumByState(rows.map(r=>({ lat:r.lat, lng:r.lng, value:r.budget||0 }))),
+    bucketSumByState(activeRows.map(r=>({ lat:r.lat, lng:r.lng, value:r.budget||0 }))),
+    bucketSumByState(newRows.map(r=>({ lat:r.lat, lng:r.lng, value:r.budget||0 })))
+  ]);
+
+  const trend = bucketize(rows.map(r=>({ date: new Date(r.created_at), value: r.budget || 0 })), from, to);
+  return {
+    values: { totalCompanyRevenue: sum(rows), activeCompanyRevenue: sum(activeRows), newCompanyRevenue: sum(newRows) },
+    stateBreakdown: { totalCompanyRevenue: totalStates, activeCompanyRevenue: activeStates, newCompanyRevenue: newStates },
+    trend, trendLabel: "Revenue", trendColor: "#e65100"
+  };
+}
+
+const LOADERS = { vendor: loadVendorMetrics, user: loadUserMetrics, company: loadCompanyMetrics };
+
+async function refresh(period){
+  currentPeriod = period;
+  const { from, to } = periodRange(period, dateFromInput.value, dateToInput.value);
+
+  const result = await (LOADERS[type] || LOADERS.vendor)(from, to);
+  if(!result){
+    boxGrid.innerHTML = '<div class="data-box">Couldn\'t load live data — please try again.</div>';
+    return;
+  }
+  lastResult = result;
+
+  cfg.boxes.forEach(b=>{
+    renderStateList(document.getElementById(`box-${b.key}`), b.title, result.values[b.key] || 0, result.stateBreakdown[b.key] || {}, !!b.isCurrency, (state)=>stateLink(b, state));
+  });
+  renderTrendChart("trendChart", result.trend, result.trendLabel, result.trendColor);
+}
 
 function stateLink(box, state){
   const back = encodeURIComponent(location.pathname + location.search);
   return `state_detail.html?type=${encodeURIComponent(type)}&metric=${encodeURIComponent(box.key)}&metricTitle=${encodeURIComponent(box.title)}&state=${encodeURIComponent(state)}&back=${back}`;
 }
 
-function refresh(period){
-  currentPeriod = period;
-  cfg.boxes.forEach(b=>{
-    renderStateList(document.getElementById(`box-${b.key}`), b.key, b.title, period, (state)=>stateLink(b, state));
-  });
-  renderTrendChart("trendChart", cfg.boxes.map(b=>b.key), cfg.seriesLabels, period);
-}
+document.getElementById("pageNote").textContent = type === "user"
+  ? "Pan-India figures below, from live data. State is the user's own detected location. Tap any state to see its district-wise breakdown."
+  : "Pan-India figures below, from live data. State is where each campaign is targeted, not a vendor/company address — neither is stored anywhere. Tap any state to see its district-wise breakdown.";
 
 initPeriodSelector(periodRow, refresh, dateRangeRow);
 refresh(currentPeriod);
+dateFromInput.onchange = ()=> { if(currentPeriod === "Date Range") refresh(currentPeriod); };
+dateToInput.onchange = ()=> { if(currentPeriod === "Date Range") refresh(currentPeriod); };
 
 document.getElementById("downloadBtn").onclick = ()=>{
-  const headers = ["Metric","State","District","Level","Place","Value"];
+  if(!lastResult) return;
+  const headers = ["Metric", "State", "Value"];
   let rows = [];
   cfg.boxes.forEach(b=>{
-    rows = rows.concat(flattenIndiaForCSV(b.title, b.key, currentPeriod));
+    rows.push([b.title, "ALL INDIA", lastResult.values[b.key] || 0]);
+    Object.entries(lastResult.stateBreakdown[b.key] || {})
+      .sort((a,b)=>b[1]-a[1])
+      .forEach(([state, val]) => rows.push([b.title, state, val]));
   });
-  downloadCSV(type + "_pan_india_" + currentPeriod.replace(/\s+/g,"_") + "_report.csv", headers, rows);
+  downloadCSV(type + "_" + currentPeriod.replace(/\s+/g,"_") + "_report.csv", headers, rows);
 };
 </script>
 </body>
