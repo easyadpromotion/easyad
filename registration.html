@@ -303,7 +303,13 @@
                     userData.lastName = row.last_name || "";
                 }
             } catch(e) { console.error('initReg cloud prefill error:', e); }
-            currentStep = 2; // jump straight to DOB
+            // Only skip name entry if a name is actually on file. Accounts
+            // that hit the historical upsert-failure bug (dob/gender/etc.
+            // columns didn't exist yet) never got their name saved either,
+            // even though they typed it originally — for those, "complete
+            // mode" must still collect a name, or finishSignup() would
+            // silently save it as blank again.
+            currentStep = (userData.firstName && userData.lastName) ? 2 : 0;
             updateUI();
         }
     }
@@ -480,7 +486,13 @@
                 // writes to), not 'location' — confirmed directly against the
                 // live Supabase schema. Using the wrong name here silently
                 // failed on every signup until this fix.
-                city: userData.location || null
+                city: userData.location || null,
+                // Stamped fresh on every completed save (initial signup AND
+                // any later "complete your profile" pass) so admin_users.html
+                // can show exactly when these details were last entered —
+                // distinct from created_at, which can predate this by days if
+                // the row started as a bare ensure_user_exists mobile+city row.
+                registered_at: new Date().toISOString()
             }, { onConflict: 'mobile' });
             if(error) throw error;
         } catch(e) {

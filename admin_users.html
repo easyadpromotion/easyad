@@ -76,6 +76,7 @@ body{
 .badge-active{ background:#e8f5e9; color:var(--green); }
 .badge-blocked{ background:#ffebee; color:var(--red); }
 .badge-hold{ background:#fff3e0; color:var(--orange); }
+.badge-incomplete{ background:#eceff1; color:#607d8b; }
 
 .uc-grid{
   display:grid; grid-template-columns:1fr 1fr; gap:8px 10px;
@@ -132,11 +133,11 @@ body{
 <script>
 /* ============================================================
    Real data from Supabase `users`. DOB / Gender / Profession /
-   Specific Role / Location / Blocked / On Hold require the ALTER
-   TABLE migration shared alongside this file — until that's run,
-   those columns come back undefined and show as "—", and the
-   Block/Hold buttons will fail with a clear toast instead of
-   silently doing nothing.
+   Specific Role / Location / Registered At / Blocked / On Hold
+   require the ALTER TABLE migration shared alongside this file —
+   until that's run, those columns come back undefined and show as
+   "—", and the Block/Hold buttons will fail with a clear toast
+   instead of silently doing nothing.
    ============================================================ */
 
 let allUsers = [];
@@ -157,11 +158,27 @@ function fmtDOB(v){
   return d.toLocaleDateString();
 }
 
+function fmtDateTime(v){
+  if(!v) return "—";
+  const d = new Date(v);
+  if(isNaN(d)) return v;
+  return d.toLocaleDateString() + ", " + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+// Same "incomplete" definition as home.html's updateProfileNudge — missing
+// any field only the full registration flow collects. These users are real
+// (mobile + city from ensure_user_exists), just mid-signup, so don't read
+// the blank fields below as a load failure.
+function isIncomplete(u){
+  return !u.dob || !u.gender || !u.profession || !u.specific_role;
+}
+
 function statusBadges(u){
   let html = "";
   if(u.blocked) html += '<span class="badge badge-blocked">Blocked</span>';
   if(u.on_hold) html += '<span class="badge badge-hold">On Hold</span>';
   if(!u.blocked && !u.on_hold) html += '<span class="badge badge-active">Active</span>';
+  if(isIncomplete(u)) html += '<span class="badge badge-incomplete">Incomplete Profile</span>';
   return html;
 }
 
@@ -190,6 +207,7 @@ function renderUsers(list){
           <div><span class="uc-lbl">Profession</span><span class="uc-val">${fmtField(u.profession)}</span></div>
           <div><span class="uc-lbl">Specific Role</span><span class="uc-val">${fmtField(u.specific_role)}</span></div>
           <div class="uc-span2"><span class="uc-lbl">Location</span><span class="uc-val">${fmtField(u.city)}</span></div>
+          <div class="uc-span2"><span class="uc-lbl">Registered</span><span class="uc-val">${fmtDateTime(u.registered_at)}</span></div>
         </div>
         <div class="uc-actions">
           <button class="uc-btn ${u.blocked ? "btn-unblock" : "btn-block"}" onclick="toggleBlock('${u.mobile}', ${!u.blocked})">${u.blocked ? "Unblock" : "Block"}</button>
