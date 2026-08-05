@@ -289,6 +289,12 @@ table.rev-table td.profit{ color:var(--purple); font-weight:700; }
             <input type="date" id="dateTo">
         </div>
 
+        <div class="data-box" id="geoTreeCard">
+            <div class="metric-head"><h5>District &amp; Urban/Rural Breakdown</h5><span class="metric-total" id="geoTreeTotal">0</span></div>
+            <div id="geoTree"></div>
+            <button class="btn-primary btn-secondary" id="downloadGeoBtn" style="margin-top:10px;">Download District Breakdown</button>
+        </div>
+
         <div class="data-box">
             <div class="metric-head"><h5 id="stateLabel">District-wise breakdown</h5><span class="metric-total" id="stateTotal">0</span></div>
             <div id="districtTree"></div>
@@ -303,61 +309,108 @@ table.rev-table td.profit{ color:var(--purple); font-weight:700; }
 <script>
 /* ============================================================
    SHARED HELPERS — used by every page in the admin dashboard app
-   All numbers are DEMO / MOCK data generated locally so every
-   page works without a backend. Replace the generate* functions
-   with real API calls when ready.
-
-   Numbers are generated so child values always sum EXACTLY to
-   their parent (state total = sum of district totals; district
-   total = urban + rural) using splitInteger()'s largest-remainder
-   method — so on-screen totals and the downloaded CSV always match.
    ============================================================ */
 
 const PERIODS = ["Day", "Week", "Month", "Half Yearly", "Yearly", "Date Range"];
 
-/* ---- deterministic pseudo-random so numbers don't jump around ---- */
-function hashStr(str){
-  let h = 0;
-  for(let i=0;i<str.length;i++){ h = (h<<5) - h + str.charCodeAt(i); h |= 0; }
-  return Math.abs(h);
-}
-function mulberry32(seed){
-  return function(){
-    seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
-    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-function seededInt(seedStr, min, max){
-  const rnd = mulberry32(hashStr(seedStr));
-  return Math.floor(rnd() * (max - min + 1)) + min;
-}
-
-const PERIOD_SCALE = {
-  "Day":1, "Week":6, "Month":22, "Half Yearly":110, "Yearly":230, "Date Range":40,
-  "Last 30 days":22, "Last 90 days":65, "Last 180 days":130, "Last 365 days":230,
-  "Custom Range":40, "Financial Year":230
-};
-
-/* Splits an integer `total` into parts proportional to `weights`,
-   guaranteeing the parts sum EXACTLY to `total` (largest-remainder method). */
-function splitInteger(total, weights){
-  const sumW = weights.reduce((a,b)=>a+b,0) || 1;
-  const raw = weights.map(w => total * w / sumW);
-  const floors = raw.map(Math.floor);
-  let remainder = total - floors.reduce((a,b)=>a+b,0);
-  const order = raw.map((r,i)=>({ i, frac: r - Math.floor(r) })).sort((a,b)=>b.frac - a.frac);
-  for(let k=0; k<remainder && order.length; k++){ floors[order[k % order.length].i] += 1; }
-  return floors;
+function periodRangeForState(period){
+  const to = new Date();
+  if(period === "Date Range"){
+    const df = document.getElementById("dateFrom").value;
+    const dt = document.getElementById("dateTo").value;
+    return { from: df ? new Date(df + "T00:00:00") : null, to: dt ? new Date(dt + "T23:59:59") : to };
+  }
+  const days = { "Day":1, "Week":7, "Month":30, "Half Yearly":182, "Yearly":365 }[period];
+  return { from: days ? new Date(to.getTime() - days*24*60*60*1000) : null, to };
 }
 
 /* ============================================================
-   PAN-INDIA GEOGRAPHY — all 28 states + 8 union territories,
-   with a few representative districts each. Urban/Rural locality
-   names are illustrative placeholders (pattern-generated) except
-   for a couple of real examples — swap INDIA_GEO for a full
-   State > District > Village dataset / API when you have one.
+   REAL DISTRICT / URBAN-RURAL RESOLUTION — INDIA_GEO below is only
+   used by the pre-existing matchesState() heuristic in the vendor/
+   company/user sections further down. The tree in THIS section
+   instead reverse-geocodes each row's real lat/lng via OpenStreetMap
+   Nominatim (same free API home.html already uses for city detection)
+   to get an actual state + district + urban/rural classification —
+   the same method the Pan-India list pages (user_dashboard.html,
+   detail.html) use, so a state's tree total here genuinely matches
+   the number you clicked through on. Urban/rural is a heuristic:
+   Nominatim address has city/town/suburb → Urban, village/hamlet →
+   Rural, otherwise defaults to Urban.
+   ============================================================ */
+const geoCache = new Map();
+let lastGeocodeAt = 0;
+async function resolveGeo(lat, lng){
+  if(lat == null || lng == null) return { state:"Unspecified", district:"Unspecified", isUrban:true, place:"Unspecified" };
+  const key = lat.toFixed(3) + "," + lng.toFixed(3);
+  if(geoCache.has(key)) return geoCache.get(key);
+  const wait = Math.max(0, 1100 - (Date.now() - lastGeocodeAt));
+  if(wait) await new Promise(r => setTimeout(r, wait));
+  lastGeocodeAt = Date.now();
+  try{
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=14&addressdetails=1`);
+    const data = await res.json();
+    const addr = data.address || {};
+    const geo = {
+      state: addr.state || "Unspecified",
+      district: addr.state_district || addr.county || ((addr.state || "Unspecified") + " District"),
+      isUrban: !!(addr.city || addr.town || addr.suburb || addr.city_district),
+      place: addr.neighbourhood || addr.suburb || addr.village || addr.city_district || addr.city || addr.town || "Unspecified"
+    };
+    geoCache.set(key, geo);
+    return geo;
+  }catch(e){
+    console.error('resolveGeo error:', e);
+    const geo = { state:"Unspecified", district:"Unspecified", isUrban:true, place:"Unspecified" };
+    geoCache.set(key, geo);
+    return geo;
+  }
+}
+
+/* ---- groups already-resolved {id or value, geo} items into a real
+   district > urban/rural tree, sorted by district total descending.
+   isSum=false counts distinct ids (e.g. distinct vendors/users);
+   isSum=true sums a numeric value (e.g. revenue). ---- */
+function bucketDistrictFromResolved(items, isSum){
+  const tree = {};
+  items.forEach(it=>{
+    const d = it.geo.district;
+    if(!tree[d]) tree[d] = { urbanSet:new Set(), ruralSet:new Set(), urbanSum:0, ruralSum:0, urbanPlace:it.geo.place, ruralPlace:it.geo.place };
+    if(it.geo.isUrban){
+      if(isSum) tree[d].urbanSum += it.value; else tree[d].urbanSet.add(it.id);
+      tree[d].urbanPlace = it.geo.place;
+    } else {
+      if(isSum) tree[d].ruralSum += it.value; else tree[d].ruralSet.add(it.id);
+      tree[d].ruralPlace = it.geo.place;
+    }
+  });
+  return Object.entries(tree).map(([district, v])=>{
+    const urbanVal = isSum ? v.urbanSum : v.urbanSet.size;
+    const ruralVal = isSum ? v.ruralSum : v.ruralSet.size;
+    return { district, total: urbanVal + ruralVal, urban:{ value: urbanVal, place: v.urbanPlace }, rural:{ value: ruralVal, place: v.ruralPlace } };
+  }).sort((a,b)=> b.total - a.total);
+}
+
+function renderRealDistrictTree(container, districts, isCurrency){
+  const fmt = v => isCurrency ? "₹" + v.toLocaleString(undefined, {maximumFractionDigits:2}) : v.toLocaleString();
+  if(!districts.length){
+    container.innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:12px;">No data for this state in this period.</div>';
+    return;
+  }
+  container.innerHTML = districts.map(d => `
+    <div class="district-block">
+      <div class="geo-row lvl-district"><span class="geo-name">${d.district}</span><span class="geo-val">${fmt(d.total)}</span></div>
+      <div class="geo-row lvl-place"><span class="geo-tag">Urban</span><span class="geo-name">${d.urban.place}</span><span class="geo-val">${fmt(d.urban.value)}</span></div>
+      <div class="geo-row lvl-place"><span class="geo-tag">Rural</span><span class="geo-name">${d.rural.place}</span><span class="geo-val">${fmt(d.rural.value)}</span></div>
+    </div>
+  `).join("");
+}
+
+/* ============================================================
+   PAN-INDIA STATE/DISTRICT NAME LIST — used only by matchesState()
+   below, a text-matching heuristic for the vendor/company/user
+   sections further down (pre-existing, real, spreadsheet-verified
+   logic — left as-is). The district/urban-rural TREE above this
+   uses real reverse-geocoded coordinates instead, not this list.
    ============================================================ */
 const INDIA_GEO = {
   "Andhra Pradesh": ["Visakhapatnam","Vijayawada (NTR)","Guntur"],
@@ -398,82 +451,6 @@ const INDIA_GEO = {
   "Puducherry": ["Puducherry","Karaikal"]
 };
 const INDIA_STATE_NAMES = Object.keys(INDIA_GEO);
-
-/* A few authentic examples; everything else falls back to a clear pattern. */
-const LOCALITY_OVERRIDES = {
-  "Visakhapatnam": { urban:"Gajuwaka", urbanSub:"MVP Colony", rural:"Narava", ruralSub:"Sattivalasa" },
-  "Bengaluru Urban": { urban:"Whitefield", urbanSub:"ITPL Road", rural:"Anekal", ruralSub:"Jigani" },
-  "Chennai": { urban:"Ambattur", urbanSub:"Padi", rural:"Sholavaram", ruralSub:"Puzhal" }
-};
-function districtLocalities(district){
-  if(LOCALITY_OVERRIDES[district]) return LOCALITY_OVERRIDES[district];
-  return {
-    urban: district + " Urban Area",
-    urbanSub: district + " Urban Colony",
-    rural: district + " Rural Area",
-    ruralSub: district + " Village Cluster"
-  };
-}
-
-/* ---- state-level value for a metric+period (top of the hierarchy) ---- */
-function generateStateValue(key, period, state){
-  const scale = PERIOD_SCALE[period] || 1;
-  const base = seededInt(key + period + state, 8, 60);
-  return Math.round(base * scale);
-}
-
-/* ---- all states + values for a metric, sorted highest first ---- */
-function generateStateList(key, period){
-  return INDIA_STATE_NAMES
-    .map(state => ({ state, value: generateStateValue(key, period, state) }))
-    .sort((a,b)=> b.value - a.value);
-}
-
-/* ---- district-wise breakdown for one state; district totals sum
-   EXACTLY to the state's value from generateStateValue(). Each
-   district total is split into Urban + Rural, which also sum exactly. ---- */
-function generateDistrictBreakdown(key, period, state){
-  const stateTotal = generateStateValue(key, period, state);
-  const districts = INDIA_GEO[state] || [state + " District"];
-  const weights = districts.map(d => seededInt(key+period+state+d, 5, 30));
-  const totals = splitInteger(stateTotal, weights);
-  return districts.map((d, i)=>{
-    const loc = districtLocalities(d);
-    const dTotal = totals[i];
-    const urbanW = seededInt(key+d+"urbanshare", 45, 65);
-    const [urbanVal, ruralVal] = splitInteger(dTotal, [urbanW, 100-urbanW]);
-    return {
-      district: d, total: dTotal,
-      urban: { name: loc.urban, value: urbanVal, exampleName: loc.urbanSub, exampleValue: Math.round(urbanVal*0.3) },
-      rural: { name: loc.rural, value: ruralVal, exampleName: loc.ruralSub, exampleValue: Math.round(ruralVal*0.35) }
-    };
-  });
-}
-
-/* ---- CSV rows for one state (State Total / District Total / Urban / Rural) ---- */
-function flattenStateForCSV(metricTitle, key, period, state){
-  const rows = [[metricTitle, state, "", "State Total", state, generateStateValue(key, period, state)]];
-  generateDistrictBreakdown(key, period, state).forEach(d=>{
-    rows.push([metricTitle, state, d.district, "District Total", d.district, d.total]);
-    rows.push([metricTitle, state, d.district, "Urban", d.urban.name, d.urban.value]);
-    rows.push([metricTitle, state, d.district, "Rural", d.rural.name, d.rural.value]);
-  });
-  return rows;
-}
-
-/* ---- render the district > urban/rural drill-down tree for one state ---- */
-function renderDistrictTree(container, key, period, state){
-  const districts = generateDistrictBreakdown(key, period, state);
-  container.innerHTML = districts.map(d => `
-    <div class="district-block">
-      <div class="geo-row lvl-district"><span class="geo-name">${d.district}</span><span class="geo-val">${d.total.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Urban</span><span class="geo-name">${d.urban.name}</span><span class="geo-val">${d.urban.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.urban.exampleName}</span><span class="geo-val">${d.urban.exampleValue.toLocaleString()}</span></div>
-      <div class="geo-row lvl-place"><span class="geo-tag">Rural</span><span class="geo-name">${d.rural.name}</span><span class="geo-val">${d.rural.value.toLocaleString()}</span></div>
-      <div class="geo-row lvl-sub"><span class="geo-name">e.g. ${d.rural.exampleName}</span><span class="geo-val">${d.rural.exampleValue.toLocaleString()}</span></div>
-    </div>
-  `).join("");
-}
 
 /* ---- period selector chips + date range inputs ----
    container: element to render chips into
@@ -588,7 +565,10 @@ function getVendorName(row){
   return row.vendor_name || row.vendorName || row.owner_name || row.name || null;
 }
 function getVendorContact(row){
-  return row.vendor_contact || row.vendor_phone || row.contact_number || row.phone || null;
+  // vendor_contact/vendor_phone/contact_number/phone don't exist on any
+  // campaigns row — but vendor_mobile does (it's how every campaign is
+  // linked to its vendor), and IS the vendor's contact number.
+  return row.vendor_contact || row.vendor_phone || row.contact_number || row.phone || row.vendor_mobile || null;
 }
 function getTargetUsers(row){
   const v = row.post_of_users ?? row.target_users ?? row.budget_users ?? row.target_views ?? null;
@@ -687,6 +667,177 @@ function renderCompanyTable(container, rows){
 let currentRevenueRows = [];
 let currentUserViews = [];
 
+/* ============================================================
+   REAL DISTRICT / URBAN-RURAL TREE — one computeXDistrictTree per
+   metric family, mirroring the exact Total/Active/New filters the
+   Pan-India list pages use (user_dashboard.html, detail.html), so a
+   state's tree total here always matches the number you clicked
+   through on. metricKey tells us which of the three was clicked.
+   ============================================================ */
+const HIGH_EARNER_PERCENTILE = 0.8; // must match detail.html's definition exactly
+
+async function computeUserDistrictTree(period, metricKey){
+  const [usersRes, viewsRes] = await Promise.all([
+    supabaseClient.from('users').select('mobile, lat, lng, registered_at'),
+    supabaseClient.from('ad_views').select('viewer_mobile')
+  ]);
+  if(usersRes.error) throw usersRes.error;
+  const users = usersRes.data || [];
+  const activeMobiles = new Set((viewsRes.data || []).map(v=>v.viewer_mobile).filter(Boolean));
+  const { from, to } = periodRangeForState(period);
+
+  let subset = users;
+  if(metricKey === "activeUsers") subset = users.filter(u=>activeMobiles.has(u.mobile));
+  else if(metricKey === "newUsers") subset = users.filter(u=>{
+    if(!u.registered_at) return false;
+    const t = new Date(u.registered_at).getTime();
+    return (!from || t >= from.getTime()) && t <= to.getTime();
+  });
+
+  const inState = [];
+  for(const u of subset){
+    const geo = await resolveGeo(u.lat, u.lng);
+    if(geo.state === state) inState.push({ id: u.mobile, geo });
+  }
+  return { total: inState.length, districts: bucketDistrictFromResolved(inState, false), isCurrency: false };
+}
+
+async function computeEarningUserDistrictTree(period, metricKey){
+  const [usersRes, historyRes] = await Promise.all([
+    supabaseClient.from('users').select('mobile, wallet, lat, lng'),
+    supabaseClient.from('user_ad_history').select('user_mobile, amount, created_at')
+  ]);
+  if(usersRes.error) throw usersRes.error;
+  const users = usersRes.data || [];
+  const history = historyRes.data || [];
+  const userByMobile = {};
+  users.forEach(u => userByMobile[u.mobile] = u);
+  const { from, to } = periodRangeForState(period);
+
+  const earners = users.filter(u => (u.wallet || 0) > 0);
+  let subset = earners;
+
+  if(metricKey === "highestEarningUsers"){
+    const sortedWallets = earners.map(u=>u.wallet).sort((a,b)=>a-b);
+    const cutoff = sortedWallets.length ? sortedWallets[Math.floor(sortedWallets.length * HIGH_EARNER_PERCENTILE)] : Infinity;
+    subset = earners.filter(u => u.wallet >= cutoff);
+  } else if(metricKey === "newEarningUsers"){
+    const firstEarned = {};
+    history.forEach(r=>{
+      if(!(r.amount > 0)) return;
+      const t = new Date(r.created_at).getTime();
+      if(!(r.user_mobile in firstEarned) || t < firstEarned[r.user_mobile]) firstEarned[r.user_mobile] = t;
+    });
+    const newMobiles = Object.keys(firstEarned).filter(m => {
+      const t = firstEarned[m];
+      return (!from || t >= from.getTime()) && t <= to.getTime();
+    });
+    subset = newMobiles.map(m => userByMobile[m]).filter(Boolean);
+  }
+
+  const inState = [];
+  for(const u of subset){
+    const geo = await resolveGeo(u.lat, u.lng);
+    if(geo.state === state) inState.push({ id: u.mobile, geo });
+  }
+  return { total: inState.length, districts: bucketDistrictFromResolved(inState, false), isCurrency: false };
+}
+
+async function computeVendorDistrictTree(period, metricKey){
+  const { data, error } = await supabaseClient.from('campaigns').select('vendor_mobile, status, created_at, lat, lng');
+  if(error) throw error;
+  const rows = (data || []).filter(r => r.vendor_mobile);
+  const { from, to } = periodRangeForState(period);
+
+  let subsetRows = rows;
+  if(metricKey === "activeVendors") subsetRows = rows.filter(r=>r.status === 'Active');
+  else if(metricKey === "newVendors"){
+    const firstRowByVendor = {};
+    rows.forEach(r=>{
+      const cur = firstRowByVendor[r.vendor_mobile];
+      if(!cur || new Date(r.created_at) < new Date(cur.created_at)) firstRowByVendor[r.vendor_mobile] = r;
+    });
+    subsetRows = Object.values(firstRowByVendor).filter(r=>{
+      const t = new Date(r.created_at).getTime();
+      return (!from || t >= from.getTime()) && t <= to.getTime();
+    });
+  }
+
+  const inState = [];
+  for(const r of subsetRows){
+    const geo = await resolveGeo(r.lat, r.lng);
+    if(geo.state === state) inState.push({ id: r.vendor_mobile, geo });
+  }
+  const total = new Set(inState.map(x=>x.id)).size;
+  return { total, districts: bucketDistrictFromResolved(inState, false), isCurrency: false };
+}
+
+async function computeCompanyDistrictTree(period, metricKey){
+  const { data, error } = await supabaseClient.from('campaigns').select('budget, status, created_at, lat, lng');
+  if(error) throw error;
+  const rows = data || [];
+  const { from, to } = periodRangeForState(period);
+
+  let subsetRows = rows;
+  if(metricKey === "activeCompanyRevenue") subsetRows = rows.filter(r=>r.status === 'Active');
+  else if(metricKey === "newCompanyRevenue") subsetRows = rows.filter(r=>{
+    const t = new Date(r.created_at).getTime();
+    return (!from || t >= from.getTime()) && t <= to.getTime();
+  });
+
+  const inState = [];
+  for(const r of subsetRows){
+    const geo = await resolveGeo(r.lat, r.lng);
+    if(geo.state === state) inState.push({ value: r.budget || 0, geo });
+  }
+  const total = inState.reduce((a,x)=>a+x.value, 0);
+  return { total, districts: bucketDistrictFromResolved(inState, true), isCurrency: true };
+}
+
+const REVENUE_USER_KEYS = ["totalEarningUsers", "highestEarningUsers", "newEarningUsers"];
+
+async function computeDistrictTree(period, metricKey){
+  if(type === "vendor") return computeVendorDistrictTree(period, metricKey);
+  if(type === "company") return computeCompanyDistrictTree(period, metricKey);
+  if(type === "user") return REVENUE_USER_KEYS.includes(metricKey)
+    ? computeEarningUserDistrictTree(period, metricKey)
+    : computeUserDistrictTree(period, metricKey);
+  return null;
+}
+
+let lastGeoTreeResult = null;
+
+async function refreshGeoTree(period){
+  const card = document.getElementById("geoTreeCard");
+  if(!IS_REVENUE_TYPE && !IS_USER_TYPE){ card.style.display = "none"; return; }
+  card.style.display = "";
+  document.getElementById("geoTree").innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:12px;">Loading…</div>';
+  try{
+    const result = await computeDistrictTree(period, metricKey);
+    lastGeoTreeResult = result;
+    document.getElementById("geoTreeTotal").textContent = result.isCurrency
+      ? "₹" + result.total.toLocaleString(undefined, {maximumFractionDigits:2})
+      : result.total.toLocaleString();
+    renderRealDistrictTree(document.getElementById("geoTree"), result.districts, result.isCurrency);
+  }catch(e){
+    console.error('geo tree error:', e);
+    lastGeoTreeResult = null;
+    document.getElementById("geoTree").innerHTML = '<div style="text-align:center;color:#c62828;padding:16px;font-size:12px;">Couldn\'t load district data.</div>';
+  }
+}
+
+document.getElementById("downloadGeoBtn").onclick = ()=>{
+  if(!lastGeoTreeResult) return;
+  const headers = ["Metric", "State", "District", "Level", "Place", "Value"];
+  const rows = [[metricTitle, state, "", "State Total", state, lastGeoTreeResult.total]];
+  lastGeoTreeResult.districts.forEach(d=>{
+    rows.push([metricTitle, state, d.district, "District Total", d.district, d.total]);
+    rows.push([metricTitle, state, d.district, "Urban", d.urban.place, d.urban.value]);
+    rows.push([metricTitle, state, d.district, "Rural", d.rural.place, d.rural.value]);
+  });
+  downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + "_districts.csv", headers, rows);
+};
+
 /* ── Real "User" breakdown for one state ──────────────────────────────
    No mock numbers here: counts real rows in `ad_views` whose
    viewer_location matches this state (same heuristic as vendor/company —
@@ -781,15 +932,17 @@ async function refreshRevenueTable(period){
 
 function refresh(period){
   currentPeriod = period;
+  refreshGeoTree(period);
   if(IS_REVENUE_TYPE){
     refreshRevenueTable(period);
   } else if(IS_USER_TYPE){
     refreshUserTable(period);
   } else {
-    // Unknown/unexpected type — no real data source identified for this yet.
+    // Unknown/unexpected type — every real linking page sends type=vendor/user/company,
+    // so this shouldn't be reachable. No fake numbers as a fallback.
     document.getElementById("stateLabel").textContent = metricTitle + " — Districts";
-    document.getElementById("stateTotal").textContent = generateStateValue(metricKey, period, state).toLocaleString();
-    renderDistrictTree(document.getElementById("districtTree"), metricKey, period, state);
+    document.getElementById("stateTotal").textContent = "—";
+    document.getElementById("districtTree").innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:12px;">Unknown data type — no real data source for this yet.</div>';
   }
 }
 
@@ -813,11 +966,9 @@ document.getElementById("downloadBtn").onclick = ()=>{
       return [v.viewer_mobile || "—", v.viewer_location || "—", v.created_at || "—"];
     });
     downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
-  } else {
-    const headers = ["Metric","State","District","Level","Place","Value"];
-    const rows = flattenStateForCSV(metricTitle, metricKey, currentPeriod, state);
-    downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
   }
+  // Unknown type: nothing real to export here — use the "Download District
+  // Breakdown" button above instead, which always has real data.
 };
 </script>
 </body>
