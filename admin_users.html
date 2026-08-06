@@ -103,6 +103,13 @@ body{
 }
 .toast.show{ opacity:1; }
 
+.btn-primary{
+  display:block; width:100%; background:var(--purple); color:#fff; border:none;
+  padding:12px; border-radius:14px; font-size:13px; font-weight:700; font-family:inherit;
+  cursor:pointer; text-align:center; box-shadow:0 6px 14px rgba(108,60,233,0.35);
+}
+.btn-primary:active{ background:#5629d6; }
+
 @media (max-width:400px){
   body{ padding:0; }
   .mobile-screen{ border-radius:0; border:none; min-height:100vh; }
@@ -120,6 +127,7 @@ body{
 
     <div class="search-wrap">
         <input type="text" class="search-box" id="searchInput" placeholder="🔍 Search Users...">
+        <button class="btn-primary" id="downloadBtn" style="margin-top:10px;">Download Report</button>
     </div>
 
     <div class="content" id="userList">
@@ -279,6 +287,33 @@ function showToast(msg){
   t.classList.add("show");
   setTimeout(function(){ t.classList.remove("show"); }, 2500);
 }
+
+function downloadCSV(filename, headers, rows){
+  let csv = headers.join(",") + "\n";
+  rows.forEach(r=>{ csv += r.map(v => typeof v === "string" && v.includes(",") ? `"${v}"` : v).join(",") + "\n"; });
+  const blob = new Blob([csv], { type:"text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Exports exactly what's currently on screen (respects the search box),
+// same real fields the cards show — no fabricated columns.
+document.getElementById("downloadBtn").onclick = function(){
+  const list = currentFiltered();
+  const headers = ["Mobile","Name","Status","DOB","Gender","Profession","Specific Role","Location","Wallet","Registered"];
+  const rows = list.map(function(u){
+    const name = ((u.first_name || "") + " " + (u.last_name || "")).trim() || "Unnamed User";
+    const status = u.blocked ? "Blocked" : (u.on_hold ? "On Hold" : "Active") + (isIncomplete(u) ? " (Incomplete Profile)" : "");
+    return [
+      u.mobile || "", name, status, fmtDOB(u.dob), fmtField(u.gender), fmtField(u.profession),
+      fmtField(u.specific_role), fmtField(u.city), parseFloat(u.wallet || 0).toFixed(2), fmtDateTime(u.registered_at)
+    ];
+  });
+  downloadCSV("users_report_" + new Date().toISOString().slice(0,10) + ".csv", headers, rows);
+};
 
 loadUsers();
 </script>

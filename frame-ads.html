@@ -670,17 +670,44 @@
     document.getElementById("adOverlay").style.display = "none";
   }
 
-  function claimReward(){
+  async function claimReward(){
     if(!canEarn) return; canEarn=false;
-    user.wallet = parseFloat(user.wallet||0)+0.70;
-    user.adHistory = user.adHistory||[];
-    user.adHistory.push({ id:activeAdId, name:activeAdObj?(activeAdObj.title||activeAdObj.name):activeAdId, type:"Frame", amount:0.70, date:new Date().toLocaleDateString(), time:new Date().toLocaleTimeString() });
-    user.viewedAds = user.viewedAds||[];
-    if(user.viewedAds.indexOf(activeAdId)===-1) user.viewedAds.push(activeAdId);
-    localStorage.setItem("userProfile_"+activeMobile, JSON.stringify(user));
-    document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
-    closeOverlay(); loadAds(); showToast("₹0.70 Credited! 🎉");
-    recordAdView(activeAdId); // fire-and-forget — doesn't block the reward UX
+    var amount = 0.70;
+    var claimedAdId = activeAdId, claimedAdObj = activeAdObj;
+    var adName = claimedAdObj ? (claimedAdObj.title || claimedAdObj.name) : claimedAdId;
+
+    closeOverlay();
+    showToast("Crediting reward…");
+
+    // This used to only touch localStorage — the wallet bump looked real on
+    // screen but was never written to Supabase, so it silently reverted on
+    // the next cloud sync (that's why claimed Frame Ads showed up as +₹0.00
+    // in Recent Transactions instead of the real amount). Now matches the
+    // real cloud-synced pattern video-ads.html/surveys.html already use.
+    try {
+      const { error: insErr } = await supabaseClient.from('user_ad_history').insert({
+        user_mobile: activeMobile, campaign_id: claimedAdId, ad_name: adName, ad_type: "Frame", amount: amount
+      });
+      if (insErr) throw insErr;
+
+      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: amount });
+      if (rpcErr) throw rpcErr;
+
+      user.wallet = newBalance;
+      user.adHistory = user.adHistory || [];
+      user.adHistory.push({ id: claimedAdId, name: adName, type: "Frame", amount: amount, date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString() });
+      user.viewedAds = user.viewedAds || [];
+      if (user.viewedAds.indexOf(claimedAdId) === -1) user.viewedAds.push(claimedAdId);
+      localStorage.setItem("userProfile_" + activeMobile, JSON.stringify(user));
+      document.getElementById("headerBalance").innerText = parseFloat(user.wallet).toFixed(2);
+      loadAds();
+      showToast("₹" + amount.toFixed(2) + " Credited! 🎉");
+      recordAdView(claimedAdId); // fire-and-forget — doesn't block the reward UX
+    } catch (e) {
+      console.error('claimReward cloud error:', e);
+      showToast("Couldn't credit reward — check connection and try again.");
+      canEarn = true; // let them retry rather than silently losing the claim
+    }
   }
 
   function openShare(adId){ _shareAdId=adId; openSheet("shareSheet"); }

@@ -528,6 +528,8 @@ const periodRow = document.getElementById("periodRow");
 const dateRangeRow = document.getElementById("dateRangeRow");
 const IS_REVENUE_TYPE = (type === "vendor" || type === "company");
 const IS_USER_TYPE = (type === "user");
+const AD_CATEGORY_TYPES = { frame: "Frame", video: "Video", survey: "Survey" };
+const IS_ADCAT_TYPE = !!AD_CATEGORY_TYPES[type];
 
 /* ============================================================
    REAL VENDOR / COMPANY REVENUE TABLES
@@ -794,6 +796,19 @@ async function computeCompanyDistrictTree(period, metricKey){
   return { total, districts: bucketDistrictFromResolved(inState, true), isCurrency: true };
 }
 
+async function computeAdCategoryDistrictTree(period, dbType){
+  const { data, error } = await supabaseClient.from('campaigns').select('lat, lng').eq('type', dbType).eq('status', 'Active');
+  if(error) throw error;
+  const rows = data || [];
+
+  const inState = [];
+  for(let i = 0; i < rows.length; i++){
+    const geo = await resolveGeo(rows[i].lat, rows[i].lng);
+    if(geo.state === state) inState.push({ id: i, geo });
+  }
+  return { total: inState.length, districts: bucketDistrictFromResolved(inState, false), isCurrency: false };
+}
+
 const REVENUE_USER_KEYS = ["totalEarningUsers", "highestEarningUsers", "newEarningUsers"];
 
 async function computeDistrictTree(period, metricKey){
@@ -802,6 +817,7 @@ async function computeDistrictTree(period, metricKey){
   if(type === "user") return REVENUE_USER_KEYS.includes(metricKey)
     ? computeEarningUserDistrictTree(period, metricKey)
     : computeUserDistrictTree(period, metricKey);
+  if(AD_CATEGORY_TYPES[type]) return computeAdCategoryDistrictTree(period, AD_CATEGORY_TYPES[type]);
   return null;
 }
 
@@ -809,7 +825,7 @@ let lastGeoTreeResult = null;
 
 async function refreshGeoTree(period){
   const card = document.getElementById("geoTreeCard");
-  if(!IS_REVENUE_TYPE && !IS_USER_TYPE){ card.style.display = "none"; return; }
+  if(!IS_REVENUE_TYPE && !IS_USER_TYPE && !IS_ADCAT_TYPE){ card.style.display = "none"; return; }
   card.style.display = "";
   document.getElementById("geoTree").innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:12px;">Loading…</div>';
   try{
@@ -930,6 +946,48 @@ async function refreshRevenueTable(period){
   }
 }
 
+let currentAdCategoryRows = [];
+
+/* ── Real Frame/Video/Survey ad list for one state ─────────────────────
+   Same matchesState() location-text heuristic as vendor/company, filtered
+   to this ad type and to currently-Active campaigns (matches the "Live
+   Ads > [Category]" framing on ad_category.html). ── */
+async function refreshAdCategoryTable(period){
+  const treeEl = document.getElementById("districtTree");
+  document.getElementById("stateLabel").textContent = metricTitle + " — " + state;
+  treeEl.innerHTML = '<div style="text-align:center;color:#aaa;padding:20px;font-size:12px;">Loading…</div>';
+
+  let fromDate = periodToFromDate(period);
+  if(period === "Date Range"){
+    const df = document.getElementById("dateFrom").value;
+    fromDate = df ? new Date(df) : null;
+  }
+
+  try {
+    const { data: campaigns, error } = await supabaseClient
+      .from('campaigns').select('title, location, created_at')
+      .eq('type', AD_CATEGORY_TYPES[type]).eq('status', 'Active');
+    if(error) throw error;
+
+    const matched = (campaigns || []).filter(function(c){
+      if(!matchesState(c.location, state)) return false;
+      if(fromDate && c.created_at && new Date(c.created_at) < fromDate) return false;
+      return true;
+    });
+    currentAdCategoryRows = matched;
+
+    document.getElementById("stateTotal").textContent = matched.length + " ads";
+    treeEl.innerHTML = matched.length
+      ? matched.map(function(c){
+          return '<div class="geo-row lvl-place"><span class="geo-name">' + (c.title || "Untitled") + '</span><span class="geo-val">' + fmtDateTime(c.created_at) + '</span></div>';
+        }).join("") + '<div class="rev-note">Matched by location text against ' + state + ' and its known districts — may miss ads posted with a town/mandal name not in that list.</div>'
+      : '<div style="text-align:center;color:#aaa;padding:16px;font-size:12px;">No ' + metricTitle + ' found for this state in this period.</div>';
+  } catch(e){
+    console.error('ad category table error:', e);
+    treeEl.innerHTML = '<div style="text-align:center;color:#c62828;padding:20px;font-size:12px;">Couldn\'t load data — please try again.</div>';
+  }
+}
+
 function refresh(period){
   currentPeriod = period;
   refreshGeoTree(period);
@@ -937,9 +995,11 @@ function refresh(period){
     refreshRevenueTable(period);
   } else if(IS_USER_TYPE){
     refreshUserTable(period);
+  } else if(IS_ADCAT_TYPE){
+    refreshAdCategoryTable(period);
   } else {
-    // Unknown/unexpected type — every real linking page sends type=vendor/user/company,
-    // so this shouldn't be reachable. No fake numbers as a fallback.
+    // Unknown/unexpected type — every real linking page sends type=vendor/user/company/
+    // frame/video/survey, so this shouldn't be reachable. No fake numbers as a fallback.
     document.getElementById("stateLabel").textContent = metricTitle + " — Districts";
     document.getElementById("stateTotal").textContent = "—";
     document.getElementById("districtTree").innerHTML = '<div style="text-align:center;color:#aaa;padding:16px;font-size:12px;">Unknown data type — no real data source for this yet.</div>';
@@ -964,6 +1024,12 @@ document.getElementById("downloadBtn").onclick = ()=>{
     const headers = ["Viewer Mobile","Viewer Location","Viewed At"];
     const rows = currentUserViews.map(function(v){
       return [v.viewer_mobile || "—", v.viewer_location || "—", v.created_at || "—"];
+    });
+    downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
+  } else if(IS_ADCAT_TYPE){
+    const headers = ["Title","Location","Posted"];
+    const rows = currentAdCategoryRows.map(function(c){
+      return [c.title || "Untitled", c.location || "—", c.created_at || "—"];
     });
     downloadCSV(type + "_" + state.replace(/\s+/g,"_") + "_" + currentPeriod.replace(/\s+/g,"_") + ".csv", headers, rows);
   }
