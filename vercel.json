@@ -1,5 +1,5 @@
 {
-  "buildCommand": null,
-  "installCommand": null,
-  "outputDirectory": "."
+  "installCommand": "echo 'no install needed — build-www.mjs uses only Node builtins'",
+  "buildCommand": "node scripts/build-www.mjs",
+  "outputDirectory": "www"
 }

@@ -6,15 +6,22 @@ browser. This adds a thin [Capacitor](https://capacitorjs.com) shell so the
 same pages can be packaged as an installable Android/iOS app instead of only
 being viewable in a mobile browser.
 
-## Production web deploy is unaffected
+## Production web deploy stays a plain static site
 
-The live site is deployed to Vercel as a plain static site. Adding
-`package.json` here would otherwise make Vercel auto-detect a Node.js build
-(running `npm install` + this project's `build` script, whose output is
-`www/`, not what the static site expects). `vercel.json` explicitly disables
-the install/build steps and keeps the repo root as the output directory, so
-the production deploy keeps working exactly as before — this Capacitor setup
-only matters when you run the `npm`/`npx cap` commands yourself.
+The live site is deployed to Vercel. Adding `package.json` here makes Vercel
+auto-detect a Node.js build, so rather than fight that (Vercel's dashboard
+build-command default takes precedence over trying to disable it in
+`vercel.json`), `vercel.json` cooperates with it explicitly:
+
+- `installCommand` is a no-op — `scripts/build-www.mjs` only uses Node
+  builtins, so there's no need to `npm install` the Capacitor dependencies
+  just to deploy the website.
+- `buildCommand` runs `node scripts/build-www.mjs` directly.
+- `outputDirectory` is `www`, matching what that script produces.
+
+The deployed site is therefore functionally identical to the previous plain
+static deploy (same HTML/JS/image files), just assembled into `www/` first
+instead of served straight from the repo root.
 
 ## Layout
 
