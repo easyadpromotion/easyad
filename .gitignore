@@ -1,0 +1,27 @@
+# Node
+node_modules/
+
+# Generated Capacitor web bundle (rebuilt via `npm run build`)
+/www/
+
+# Android
+/android/app/build/
+/android/build/
+/android/.gradle/
+/android/local.properties
+/android/.idea/
+/android/captures/
+/android/app/release/
+/android/*.iml
+
+# iOS
+/ios/App/Pods/
+/ios/App/output/
+/ios/App/build/
+/ios/App/App.xcworkspace/xcuserdata/
+/ios/App/*.xcworkspace/xcshareddata/
+/ios/DerivedData/
+*.xcuserstate
+
+# OS
+.DS_Store

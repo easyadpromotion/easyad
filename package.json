@@ -1,0 +1,24 @@
+{
+  "name": "easy-ad-promotion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Easy Ad Promotion (EAP) mobile app - Capacitor native wrapper around the static HTML screens",
+  "scripts": {
+    "build": "node scripts/build-www.mjs",
+    "cap:sync": "npm run build && npx cap sync",
+    "cap:add:android": "npx cap add android",
+    "cap:add:ios": "npx cap add ios",
+    "cap:open:android": "npx cap open android",
+    "cap:open:ios": "npx cap open ios",
+    "assets:generate": "npx capacitor-assets generate"
+  },
+  "dependencies": {
+    "@capacitor/android": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.5.0"
+  }
+}

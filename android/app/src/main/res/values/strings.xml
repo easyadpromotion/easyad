@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Easy Ad Promotion</string>
+    <string name="title_activity_main">Easy Ad Promotion</string>
+    <string name="package_name">com.easyadpromotion.app</string>
+    <string name="custom_url_scheme">com.easyadpromotion.app</string>
+</resources>

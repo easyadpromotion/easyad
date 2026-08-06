@@ -6,7 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 "Easy Ad Promotion" (EAP) is an Indian pay-to-view advertising platform: users watch video/banner/survey ads to earn money, vendors post and pay for ad campaigns, and admins approve campaigns and manage users/payouts.
 
-This is a **flat collection of self-contained static HTML files** — there is no framework, no build step, no package manager, and no server-side code in this repo. Each `.html` file is a full mobile-app "screen" (styled as a phone-frame mockup) with its own inline `<style>` and `<script>` blocks. Navigation between screens is plain `<a href="other.html">` / `window.location.href` — there is no client-side router or component framework.
+This is a **flat collection of self-contained static HTML files** — there is no framework, no build step, and no server-side code in this repo. Each `.html` file is a full mobile-app "screen" (styled as a phone-frame mockup) with its own inline `<style>` and `<script>` blocks. Navigation between screens is plain `<a href="other.html">` / `window.location.href` — there is no client-side router or component framework.
+
+A `package.json` and Capacitor config were added on top of this to package the same HTML pages as a native Android/iOS app — see `MOBILE_APP.md`. It does not change how the pages themselves work; `npm run build` just copies them into `www/` for the native shell to load.
 
 ## Running the app
 
