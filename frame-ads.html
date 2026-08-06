@@ -682,16 +682,16 @@
     // This used to only touch localStorage — the wallet bump looked real on
     // screen but was never written to Supabase, so it silently reverted on
     // the next cloud sync (that's why claimed Frame Ads showed up as +₹0.00
-    // in Recent Transactions instead of the real amount). Now matches the
-    // real cloud-synced pattern video-ads.html/surveys.html already use.
+    // in Recent Transactions instead of the real amount).
     try {
-      const { error: insErr } = await supabaseClient.from('user_ad_history').insert({
-        user_mobile: activeMobile, campaign_id: claimedAdId, ad_name: adName, ad_type: "Frame", amount: amount
+      // Single atomic call — records the claim AND credits the wallet in one
+      // database transaction, so a mid-claim network failure can't leave a
+      // history row with no matching wallet credit (or vice versa) the way
+      // two separate calls could.
+      const { data: newBalance, error: claimErr } = await supabaseClient.rpc('claim_ad_reward', {
+        p_mobile: activeMobile, p_campaign_id: claimedAdId, p_ad_name: adName, p_ad_type: "Frame", p_amount: amount
       });
-      if (insErr) throw insErr;
-
-      const { data: newBalance, error: rpcErr } = await supabaseClient.rpc('increment_user_wallet', { p_mobile: activeMobile, p_delta: amount });
-      if (rpcErr) throw rpcErr;
+      if (claimErr) throw claimErr;
 
       user.wallet = newBalance;
       user.adHistory = user.adHistory || [];
