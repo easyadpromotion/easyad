@@ -1,0 +1,12 @@
+{
+  "appId": "com.easyadpromotion.app",
+  "appName": "Easy Ad Promotion",
+  "webDir": "www",
+  "backgroundColor": "#29b6f6",
+  "android": {
+    "backgroundColor": "#29b6f6"
+  },
+  "ios": {
+    "backgroundColor": "#29b6f6"
+  }
+}
