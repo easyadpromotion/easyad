@@ -1047,7 +1047,7 @@
   function openWeb(enc) { var url = decodeURIComponent(enc); if (!url.startsWith("http")) url = "https://" + url; var a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.style.display = "none"; document.body.appendChild(a); a.click(); setTimeout(function () { document.body.removeChild(a); }, 300); }
 
   // Official Maps Embed API key — same one already restricted to this domain in frame-ads.html.
-  var EMBED_API_KEY = "AIzaSyB_RipP0Lg8bgfYkOmZTMMKJQP__azFMm0";
+  var EMBED_API_KEY = "AIzaSyBBanS7ZEjSiuialuuznPuWFizmEBRYHf0";
 
   function openLocation(enc) {
     var loc = decodeURIComponent(enc).trim(); var body = document.getElementById("locBody");
